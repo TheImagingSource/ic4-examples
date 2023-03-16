@@ -588,7 +588,7 @@ static void set_env_var( std::string env_name, std::string value )
 
 int main( int argc, char** argv )
 {
-    CLI::App app{ "desc", "ic4-ctrl"};
+    CLI::App app{ "Simple ic4 camera control utility", "ic4-ctrl"};
     app.set_help_flag();
     app.set_help_all_flag( "-h,--help", "Expand all help" );
 
@@ -628,7 +628,7 @@ int main( int argc, char** argv )
     image_cmd->add_option( "--timeout", timeout, "Timeout in milliseconds." )->default_val( timeout );
     image_cmd->add_option( "--type", image_type, "Image file type to save. [bmp,png,jpeg,tiff]" )->default_val( image_type );
 
-    auto live_cmd = app.add_subcommand( "live", "Save a single image from the specified device 'ic4-ctrl-cpp live -d <device-id>'." );
+    auto live_cmd = app.add_subcommand( "live", "Display live stream. 'ic4-ctrl-cpp live -d <device-id>'." );
     live_cmd->add_option( "-d,--device", arg_device_id, 
         "Device to open. If '0' is specified (and no device with this id is present), the first device is opened." )->required();
 
@@ -666,6 +666,11 @@ int main( int argc, char** argv )
         }
         else if( set_props_cmd->parsed() ) {
             set_props( arg_device_id, set_props_cmd->remaining() );
+        }
+        else
+        {
+            fmt::print("No arguments given\n\n");
+            fmt::print("{}\n", app.get_formatter()->make_help(&app, app.get_name(), CLI::AppFormatMode::All));
         }
     }
     catch( const std::exception& ex )

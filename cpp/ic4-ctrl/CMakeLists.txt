@@ -13,10 +13,12 @@ add_executable (ic4-ctrl
 )
 
 target_link_libraries( ic4-ctrl
-PRIVATE 
+PRIVATE
 	ic4::core 
 	CLI11::CLI11
 	fmt::fmt
 )
 
 set_property(TARGET ic4-ctrl PROPERTY CXX_STANDARD 20)
+
+ic4_copy_runtime_to_target(ic4-ctrl)
