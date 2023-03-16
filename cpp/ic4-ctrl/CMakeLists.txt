@@ -1,4 +1,4 @@
-﻿
+
 cmake_minimum_required (VERSION 3.21)
 
 project ("ic4-ctrl")
@@ -19,6 +19,6 @@ PRIVATE
 	fmt::fmt
 )
 
-set_property(TARGET ic4-ctrl PROPERTY CXX_STANDARD 20)
+set_property(TARGET ic4-ctrl PROPERTY CXX_STANDARD 17)
 
 ic4_copy_runtime_to_target(ic4-ctrl)

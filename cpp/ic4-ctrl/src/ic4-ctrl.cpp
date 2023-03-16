@@ -5,8 +5,8 @@
 #include <fmt/core.h>
 
 #include <charconv>
+#include <mutex>
 #include <optional>
-#include <semaphore>
 #include <stdlib.h>
 #include <string>
 
@@ -81,7 +81,7 @@ auto fetch_PropertyMethod_value( Tprop& prop, TMethod method_address ) -> std::s
         }
         return "err";
     }
-    return std::format( "{}", v );
+    return fmt::format( "{}", v );
 }
 
 static void    print_property( const ic4::Property& property )
@@ -383,13 +383,14 @@ static void save_image( std::string id, std::string filename, int count, int tim
 
     g.acquisitionStop( ic4::throwError );
 
-    for( int idx = 0; auto && image : images )
+    int idx = 0;
+    for( auto && image : images )
     {
         std::string actual_filename = filename;
         if( filename.find_first_of( '{' ) != std::string::npos
             && filename.find_first_of( '}' ) != std::string::npos )
         {
-            actual_filename = std::vformat( filename, std::make_format_args( idx++ ) );
+            actual_filename = fmt::vformat( filename, fmt::make_format_args( idx++ ) );
         }
         if( image_type == "bmp" ) {
             ic4::imageBufferSaveAsBitmap( *image, actual_filename, {}, ic4::throwError );
@@ -420,12 +421,18 @@ static void show_live( std::string id )
     auto display = ic4::Display::create( ic4::DisplayType::Default, nullptr, ic4::throwError );
     g.streamSetup( display, ic4::StreamSetupOption::AcquisitionStart, ic4::throwError );
 
-    std::binary_semaphore sem{ 0 };
+    std::mutex mtx;
+    bool ended = false;
+    std::condition_variable cond;
 
-    display->eventAddWindowClosed( [&]( auto& ) { sem.release( 1 ); } );
+    display->eventAddWindowClosed( [&]( auto& ) { std::lock_guard lck{ mtx }; ended = true; cond.notify_all(); } );
 
-    sem.acquire();
-
+    {
+        std::unique_lock lck{ mtx };
+        while( !ended ) {
+            cond.wait( lck );
+        }
+    }
     g.acquisitionStop( ic4::throwError );
 }
 
