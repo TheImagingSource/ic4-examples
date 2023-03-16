@@ -1,13 +1,15 @@
 
-cmake_minimum_required (VERSION 3.21)
+cmake_minimum_required(VERSION 3.8)
 
-project ("ic4-ctrl")
+project("ic4-ctrl")
 
-find_package( ic4 REQUIRED )
+find_package( ic4 
+	REQUIRED
+)
 find_package( CLI11 REQUIRED )
 find_package( fmt REQUIRED )
 
-add_executable (ic4-ctrl 
+add_executable( ic4-ctrl 
 	"src/ic4-ctrl.cpp"
 	"src/ic4_enum_to_string.h"
 )
