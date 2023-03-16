@@ -6,42 +6,15 @@
 
 #include <condition_variable>
 #include <mutex>
-#include <stdlib.h> // getenv, setenv
 #include <string>
 
 #include "ic4_enum_to_string.h"
+#include "ic4-ctrl-helper.h"
 
-using namespace std;
-
-template<typename T>
-auto from_chars_helper( const std::string& str, T& value ) -> bool = delete;
-
-template<>
-auto from_chars_helper<int64_t>( const std::string& str, int64_t& value ) -> bool
+template<class ... Targs>
+void print( fmt::format_string<Targs...> fmt, Targs&& ... args )
 {
-    try
-    {
-        value = std::stoll( str, nullptr, 10 );
-        return true;
-    }
-    catch( const std::exception& /*ex*/ )
-    {
-        return false;
-    }
-}
-
-template<>
-auto from_chars_helper<double>( const std::string& str, double& value ) -> bool
-{
-    try
-    {
-        value = std::stod( str, nullptr );
-        return true;
-    }
-    catch( const std::exception& /*ex*/ )
-    {
-        return false;
-    }
+    fmt::print( fmt, std::forward<Targs>( args )... );
 }
 
 static auto list_devices() -> void
@@ -87,17 +60,11 @@ static auto find_device( std::string id ) -> std::unique_ptr<ic4::DeviceInfo>
         }
     }
     int64_t index = 0;
-    if( from_chars_helper( id, index ) && index >= 0 )
+    if( helper::from_chars_helper( id, index ) && index >= 0 )
     {
         return std::make_unique<ic4::DeviceInfo>( list.at( index ) );
     }
     return {};
-}
-
-template<class ... Targs>
-void print( fmt::format_string<Targs...> fmt, Targs&& ... args )
-{
-    fmt::print( fmt, std::forward<Targs>(args)... );
 }
 
 template<typename TPropType, class Tprop, class TMethod>
@@ -339,10 +306,8 @@ static void    print_property( const ic4::Property& property )
     print( "\n" );
 }
 
-static void dump_properties( std::string id, std::vector<std::string> lst )
+static void print_properties( std::string id, std::vector<std::string> lst )
 {
-    using namespace ic4_helper;
-
     auto dev = find_device( id );
     if( !dev ) {
         print( "Failed to find device for id '{}'", id );
@@ -531,7 +496,7 @@ static void set_props( std::string id, std::vector<std::string> lst )
         case ic4::PropType::Integer:
         {
             int64_t value_to_set = 0;
-            if( !from_chars_helper( prop_value, value_to_set ) ) {
+            if( !helper::from_chars_helper( prop_value, value_to_set ) ) {
                 print( "Failed to parse value for property '{}'. Value: '{}'\n", prop_name, prop_value );
                 break;
             }
@@ -545,7 +510,7 @@ static void set_props( std::string id, std::vector<std::string> lst )
         case ic4::PropType::Float:
         {
             double value_to_set = 0;
-            if( !from_chars_helper( prop_value, value_to_set ) ) {
+            if( !helper::from_chars_helper( prop_value, value_to_set ) ) {
                 print( "Failed to parse value for property '{}'. Value: '{}'\n", prop_name, prop_value );
                 break;
             }
@@ -570,7 +535,7 @@ static void set_props( std::string id, std::vector<std::string> lst )
             else
             {
                 int64_t value_to_set = 0;
-                if( !from_chars_helper( prop_value, value_to_set ) ) {
+                if( !helper::from_chars_helper( prop_value, value_to_set ) ) {
                     print( "Failed to parse value for property '{}'. Value: '{}'\n", prop_name, prop_value );
                     break;
                 }
@@ -599,26 +564,6 @@ static void set_props( std::string id, std::vector<std::string> lst )
     }
 }
 
-static auto get_env_var( std::string env_name ) -> std::string
-{
-    auto ptr = ::getenv( env_name.c_str() );
-    if( !ptr ) {
-        return {};
-    }
-    return std::string{ ptr };
-}
-
-#if defined WIN32
-static void set_env_var( std::string env_name, std::string value )
-{
-    ::SetEnvironmentVariableA( env_name.c_str(), value.c_str() );
-}
-#else
-static void set_env_var( std::string env_name, std::string value )
-{
-    ::setenv( env_name.c_str(), value.c_str(), 1 );
-}
-#endif
 
 int main( int argc, char** argv )
 {
@@ -626,7 +571,7 @@ int main( int argc, char** argv )
     app.set_help_flag();
     app.set_help_all_flag( "-h,--help", "Expand all help" );
 
-    std::string gentl_path = get_env_var( "GENICAM_GENTL64_PATH" );
+    std::string gentl_path = helper::get_env_var( "GENICAM_GENTL64_PATH" );
     app.add_option( "--gentl-path", gentl_path, "GenTL path environment variable to set." )->default_val( gentl_path );
     
     auto list_cmd = app.add_subcommand( "list", "List available devices" );
@@ -676,7 +621,7 @@ int main( int argc, char** argv )
     }
 
     if( !gentl_path.empty() ) {
-        set_env_var( "GENICAM_GENTL64_PATH", gentl_path );
+        helper::set_env_var( "GENICAM_GENTL64_PATH", gentl_path );
     }
 
     ic4::InitLibrary();
@@ -687,7 +632,7 @@ int main( int argc, char** argv )
             list_devices();
         }
         else if( list_props_cmd->parsed() ) {
-            dump_properties( arg_device_id, list_props_cmd->remaining() );
+            print_properties( arg_device_id, list_props_cmd->remaining() );
         }
         else if( save_props_cmd->parsed() ) {
             save_properties( arg_device_id, arg_filename );
