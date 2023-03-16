@@ -4,15 +4,45 @@
 #include <CLI/CLI.hpp>
 #include <fmt/core.h>
 
-#include <charconv>
+#include <condition_variable>
 #include <mutex>
-#include <optional>
-#include <stdlib.h>
+#include <stdlib.h> // getenv, setenv
 #include <string>
 
 #include "ic4_enum_to_string.h"
 
 using namespace std;
+
+template<typename T>
+auto from_chars_helper( const std::string& str, T& value ) -> bool = delete;
+
+template<>
+auto from_chars_helper<int64_t>( const std::string& str, int64_t& value ) -> bool
+{
+    try
+    {
+        value = std::stoll( str, nullptr, 10 );
+        return true;
+    }
+    catch( const std::exception& /*ex*/ )
+    {
+        return false;
+    }
+}
+
+template<>
+auto from_chars_helper<double>( const std::string& str, double& value ) -> bool
+{
+    try
+    {
+        value = std::stod( str, nullptr );
+        return true;
+    }
+    catch( const std::exception& /*ex*/ )
+    {
+        return false;
+    }
+}
 
 static auto list_devices() -> void
 {
@@ -30,7 +60,7 @@ static auto list_devices() -> void
     }
 }
 
-static auto find_device( std::string id ) -> std::optional<ic4::DeviceInfo>
+static auto find_device( std::string id ) -> std::unique_ptr<ic4::DeviceInfo>
 {
     ic4::DeviceEnum devEnum;
     auto list = devEnum.getAvailableVideoCaptureDevices();
@@ -41,31 +71,31 @@ static auto find_device( std::string id ) -> std::optional<ic4::DeviceInfo>
     for( auto&& dev : list )
     {
         if( dev.getSerial() == id ) {
-            return dev;
+            return std::make_unique<ic4::DeviceInfo>( dev );
         }
     }
     for( auto&& dev : list )
     {
         if( dev.getUniqueName() == id ) {
-            return dev;
+            return std::make_unique<ic4::DeviceInfo>( dev );
         }
     }
     for( auto&& dev : list )
     {
         if( dev.getModelName() == id ) {
-            return dev;
+            return std::make_unique<ic4::DeviceInfo>( dev );
         }
     }
-    unsigned int index = 0;
-    if( auto [pos, err] = std::from_chars( id.data(), id.data() + id.size(), index ); err == std::errc() )
+    int64_t index = 0;
+    if( from_chars_helper( id, index ) && index >= 0 )
     {
-        return list.at( index );
+        return std::make_unique<ic4::DeviceInfo>( list.at( index ) );
     }
     return {};
 }
 
 template<class ... Targs>
-auto print( fmt::format_string<Targs...> fmt, Targs&& ... args )
+void print( fmt::format_string<Targs...> fmt, Targs&& ... args )
 {
     fmt::print( fmt, std::forward<Targs>(args)... );
 }
@@ -425,10 +455,10 @@ static void show_live( std::string id )
     bool ended = false;
     std::condition_variable cond;
 
-    display->eventAddWindowClosed( [&]( auto& ) { std::lock_guard lck{ mtx }; ended = true; cond.notify_all(); } );
+    display->eventAddWindowClosed( [&]( auto& ) { std::lock_guard<std::mutex> lck{ mtx }; ended = true; cond.notify_all(); } );
 
     {
-        std::unique_lock lck{ mtx };
+        std::unique_lock<std::mutex> lck{ mtx };
         while( !ended ) {
             cond.wait( lck );
         }
@@ -501,8 +531,7 @@ static void set_props( std::string id, std::vector<std::string> lst )
         case ic4::PropType::Integer:
         {
             int64_t value_to_set = 0;
-            auto [pos, ec] = std::from_chars( prop_value.data(), prop_value.data() + prop_value.size(), value_to_set );
-            if( ec != std::errc{} ) {
+            if( !from_chars_helper( prop_value, value_to_set ) ) {
                 print( "Failed to parse value for property '{}'. Value: '{}'\n", prop_name, prop_value );
                 break;
             }
@@ -516,8 +545,7 @@ static void set_props( std::string id, std::vector<std::string> lst )
         case ic4::PropType::Float:
         {
             double value_to_set = 0;
-            auto [pos, ec] = std::from_chars( prop_value.data(), prop_value.data() + prop_value.size(), value_to_set );
-            if( ec != std::errc{} ) {
+            if( !from_chars_helper( prop_value, value_to_set ) ) {
                 print( "Failed to parse value for property '{}'. Value: '{}'\n", prop_name, prop_value );
                 break;
             }
@@ -542,8 +570,7 @@ static void set_props( std::string id, std::vector<std::string> lst )
             else
             {
                 int64_t value_to_set = 0;
-                auto [pos, ec] = std::from_chars( prop_value.data(), prop_value.data() + prop_value.size(), value_to_set );
-                if( ec != std::errc{} ) {
+                if( !from_chars_helper( prop_value, value_to_set ) ) {
                     print( "Failed to parse value for property '{}'. Value: '{}'\n", prop_name, prop_value );
                     break;
                 }
