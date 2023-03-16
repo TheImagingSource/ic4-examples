@@ -102,6 +102,7 @@ static auto list_devices() -> void
     ic4::DeviceEnum devEnum;
     auto list = devEnum.getAvailableVideoCaptureDevices();
 
+    fmt::print( "Device list:\n" );
     fmt::print( "    {:24} {:8} {}\n", "ModelName", "Serial", "InterfaceName" );
     int index = 0;
     for( auto&& e : list ) {
@@ -120,10 +121,8 @@ static auto list_interfaces() -> void
     fmt::print( "Interface list:\n" );
 
     for( auto&& e : list ) {
-        print( 0, "{}\n", e.getName() );
-        print( 1, "TransportLayerName: {}\n", e.getTransportLayerName() );
-        print( 1, "TransportVersion: {}\n", e.getTransportVersion() );
-        print( 1, "TransportLayerType: {}\n", ic4_helper::toString( e.getTransportLayerType() ) );
+        print( 1, "{}\n", e.getName() );
+        print( 2, "TransportLayerName: {}\n", e.getTransportLayerName() );
     }
     if( list.empty() ) {
         fmt::print( "No Interfaces found\n" );
@@ -716,17 +715,24 @@ int main( int argc, char** argv )
     app.add_option( "--gentl-path", gentl_path, "GenTL path environment variable to set." )->default_val( gentl_path );
 
     std::string arg_device_id;
-    auto list_cmd = app.add_subcommand( "list", "List available devices." );
-    list_cmd->add_option( "-d,--device", arg_device_id,
-        "Device to open. If '0' is specified (and no device with this id is present), the first device is opened." );
+    auto list_cmd = app.add_subcommand( "list",
+        "List available devices.\n"
+    );
 
-    auto list_gentl_cmd = app.add_subcommand( "interface", 
+    auto device_cmd = app.add_subcommand( "device",
+        "When no additional parameters are give, all devices are listed otherwise information for the device-id specified is printed.\n"
+        "\te.g. `ic4-ctrl interface` lists all device\n"
+        "\tOne device can be specified by adding its name or index at the end of the parameter list.\n"
+        "\te.g. `ic4-ctrl device \"<id>\"` this lists information about the device identified by <id>."
+    );
+    device_cmd->allow_extras();
+    auto interface_cmd = app.add_subcommand( "interface", 
         "List interfaces.\n"
         "\te.g. `ic4-ctrl interface` lists all interfaces\n"
-        "\tA specific interface can be specified by adding its name or index to the end.\n"
-        "\te.g. `ic4-ctrl interface \"<id>\"` this lists information about the interface named <id>."
+        "\tOne interface can be specified by adding its name or index at the end of the parameter list.\n"
+        "\te.g. `ic4-ctrl interface \"<id>\"` this lists information about the interface identified by <id>."
     );
-    list_gentl_cmd->allow_extras();
+    interface_cmd->allow_extras();
 
     auto list_props_cmd = app.add_subcommand( "list-prop", 
         "List properties of device specified by 'ic4-ctrl-cpp list-prop -d <device-id>'. You can specify properties to list by adding their names." );
@@ -781,44 +787,26 @@ int main( int argc, char** argv )
     {
         if( list_cmd->parsed() )
         {
+            list_interfaces();
+            print( "\n" );
+            list_devices();
+        }
+        else if( device_cmd->parsed() )
+        {
             auto list = list_cmd->remaining();
             if( list.empty() ) {
                 list_devices();
-            }
-            else
-            {
-                for( auto&& dev : list )
-                {
-                    try
-                    {
-                        print_device( dev );
-                    }
-                    catch( const std::exception& ex )
-                    {
-                        fmt::print( stderr, "Error: {}\n", ex.what() );
-                    }
-                }
+            } else {
+                print_device( list.front() );
             }
         }
-        else if( list_gentl_cmd->parsed() )
+        else if( interface_cmd->parsed() )
         {
-            auto list = list_gentl_cmd->remaining();
+            auto list = interface_cmd->remaining();
             if( list.empty() ) {
                 list_interfaces();
-            } 
-            else
-            {
-                for( auto&& dev : list )
-                {
-                    try
-                    {
-                        print_interface( dev );
-                    }
-                    catch( const std::exception& ex )
-                    {
-                        fmt::print( stderr, "Error: {}\n", ex.what() );
-                    }
-                }
+            } else {
+                print_interface( list.front() );
             }
         }
         else if( list_props_cmd->parsed() ) {
