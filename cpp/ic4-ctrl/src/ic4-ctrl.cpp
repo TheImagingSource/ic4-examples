@@ -11,9 +11,20 @@
 #include "ic4_enum_to_string.h"
 #include "ic4-ctrl-helper.h"
 
+void    print_property( int offset, const ic4::Property& property );
+
 template<class ... Targs>
 void print( fmt::format_string<Targs...> fmt, Targs&& ... args )
 {
+    fmt::print( fmt, std::forward<Targs>( args )... );
+}
+
+template<class ... Targs>
+void print( int offset, fmt::format_string<Targs...> fmt, Targs&& ... args )
+{
+    for( int i = 0; i < offset; ++i ) {
+        fmt::print( "\t" );
+    }
     fmt::print( fmt, std::forward<Targs>( args )... );
 }
 
@@ -54,6 +65,37 @@ static auto find_device( std::string id ) -> std::unique_ptr<ic4::DeviceInfo>
     return {};
 }
 
+static auto find_inteface( std::string id ) -> std::unique_ptr<ic4::Interface>
+{
+    ic4::DeviceEnum devEnum;
+    auto list = devEnum.getAvailableInterfaces();
+    if( list.size() == 0 ) {
+        throw std::runtime_error( "No devices are available" );
+    }
+
+    for( auto&& dev : list )
+    {
+        if( dev.getName() == id ) {
+            return std::make_unique<ic4::Interface>( dev );
+        }
+    }
+    for( auto&& dev : list )
+    {
+        if( dev.getTransportLayerName() == id ) {
+            return std::make_unique<ic4::Interface>( dev );
+        }
+    }
+    int64_t index = 0;
+    if( helper::from_chars_helper( id, index ) )
+    {
+        if( index < 0 || index >= static_cast<int64_t>(list.size()) )
+            return {};
+
+        return std::make_unique<ic4::Interface>( list.at( index ) );
+    }
+    return {};
+}
+
 
 static auto list_devices() -> void
 {
@@ -75,19 +117,18 @@ static auto list_interfaces() -> void
     ic4::DeviceEnum devEnum;
     auto list = devEnum.getAvailableInterfaces( ic4::throwError );
 
-    fmt::print( "Interface list:" );
+    fmt::print( "Interface list:\n" );
 
     for( auto&& e : list ) {
-        print( "{}\n", e.getName() );
-        print( "\tTransportLayerName: {}\n", e.getTransportLayerName() );
-        print( "\tTransportVersion: {}\n", e.getTransportVersion() );
-        print( "\tTransportLayerType: {}\n", ic4_helper::toString( e.getTransportLayerType() ) );
+        print( 0, "{}\n", e.getName() );
+        print( 1, "TransportLayerName: {}\n", e.getTransportLayerName() );
+        print( 1, "TransportVersion: {}\n", e.getTransportVersion() );
+        print( 1, "TransportLayerType: {}\n", ic4_helper::toString( e.getTransportLayerType() ) );
     }
     if( list.empty() ) {
         fmt::print( "No Interfaces found\n" );
     }
 }
-
 
 static void print_device( std::string id )
 {
@@ -103,6 +144,25 @@ static void print_device( std::string id )
     fmt::print( "InterfaceName: '{}'\n", dev->getInterface().getTransportLayerName() );
 }
 
+static void print_interface( std::string id )
+{
+    auto dev = find_inteface( id );
+    if( !dev ) {
+        throw std::runtime_error( fmt::format( "Failed to find device for id '{}'\n", id ) );
+    }
+
+    fmt::print( "Name: '{}'\n", dev->getName() );
+    fmt::print( "TransportLayerName: '{}'\n", dev->getTransportLayerName() );
+    fmt::print( "TransportLayerType: '{}'\n", ic4_helper::toString( dev->getTransportLayerType() ) );
+    fmt::print( "getTransportVersion: '{}'\n", dev->getTransportVersion() );
+    
+    fmt::print( "Interface Properties:\n" );
+    auto map = dev->itfPropertyMap( ic4::throwError );
+    for( auto&& property : map.getAll( ic4::throwError ) )
+    {
+        print_property( 1, property );
+    }
+}
 
 template<typename TPropType, class Tprop, class TMethod>
 auto fetch_PropertyMethod_value( Tprop& prop, TMethod method_address ) -> std::string
@@ -118,22 +178,62 @@ auto fetch_PropertyMethod_value( Tprop& prop, TMethod method_address ) -> std::s
     return fmt::format( "{}", v );
 }
 
-static void    print_property( const ic4::Property& property )
+template<class TMethod>
+auto fetch_PropertyMethod_value( ic4::PropInteger& prop, TMethod method_address, ic4::PropIntRepresentation int_rep ) -> std::string
+{
+    int64_t v;
+    ic4::Error err;
+    if( !(prop.*method_address)(v, err) ) {
+        if( err.getValue() == ic4::ErrorCode::GenICamNotImplemented ) {
+            return "n/a";
+        }
+        return "err";
+    }
+    if( int_rep == ic4::PropIntRepresentation::MACAddress )
+    {
+        uint64_t v0 = (v >> 0) & 0xFF;
+        uint64_t v1 = (v >> 8) & 0xFF;
+        uint64_t v2 = (v >> 16) & 0xFF;
+        uint64_t v3 = (v >> 24) & 0xFF;
+        uint64_t v4 = (v >> 32) & 0xFF;
+        uint64_t v5 = (v >> 40) & 0xFF;
+        return fmt::format( "{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}", v5, v4, v3, v2, v1, v0 );
+    }
+    else if( int_rep == ic4::PropIntRepresentation::IPV4Address )
+    {
+        uint64_t v0 = (v >> 0) & 0xFF;
+        uint64_t v1 = (v >> 8) & 0xFF;
+        uint64_t v2 = (v >> 16) & 0xFF;
+        uint64_t v3 = (v >> 24) & 0xFF;
+        return fmt::format( "{}.{}.{}.{}", v3, v2, v1, v0 );
+    }
+    else if( int_rep == ic4::PropIntRepresentation::HexNumber )
+    {
+        return fmt::format( "0x{:X}", v );
+    }
+    else if( int_rep == ic4::PropIntRepresentation::Boolean )
+    {
+        return fmt::format( "{}", v != 0 ? 1 : 0 );
+    }
+    return fmt::format( "{}", v );
+}
+
+static void    print_property( int offset, const ic4::Property& property )
 {
     using namespace ic4_helper;
 
     auto prop_type = property.getType();
-    print( "{:24} - Type: {}, DisplayName: {}\n", property.getName(), toString( prop_type ), property.getDisplayName() );
-    print( "\tDescription: {}\n", property.getDescription() );
-    print( "\tTooltip: {}\n", property.getTooltip() );
-    print( "\tVisibility: {}, Available: {}, Locked: {}, ReadOnly: {}\n", toString( property.getVisibility() ), property.isAvailable(), property.isLocked(), property.isReadOnly() );
+    print( offset + 0, "{:24} - Type: {}, DisplayName: {}\n", property.getName(), toString( prop_type ), property.getDisplayName() );
+    print( offset + 1, "Description: {}\n", property.getDescription() );
+    print( offset + 1, "Tooltip: {}\n", property.getTooltip() );
+    print( offset + 1, "Visibility: {}, Available: {}, Locked: {}, ReadOnly: {}\n", toString( property.getVisibility() ), property.isAvailable(), property.isLocked(), property.isReadOnly() );
 
     if( property.isSelector( ic4::throwError ) )
     {
-        print( "\tSelected properties:\n" );
+        print( offset + 1, "Selected properties:\n" );
         for( auto&& selected : property.getSelectedProperties( ic4::throwError ) )
         {
-            print( "\t\t{}\n", selected.getName() );
+            print( offset + 2, "{}\n", selected.getName() );
         }
     }
 
@@ -143,39 +243,43 @@ static void    print_property( const ic4::Property& property )
     {
         ic4::PropInteger prop = property.asInteger();
         auto inc_mode = prop.getIncrementMode();
+        auto rep = prop.getRepresentation();
 
-        print( "\tRepresentation: '{}', Unit: '{}', IncrementMode: '{}'\n", toString( prop.getRepresentation() ), prop.getUnit(), toString( inc_mode ) );
+        print( offset + 1, "Representation: '{}', Unit: '{}', IncrementMode: '{}'\n", toString( rep ), prop.getUnit(), toString( inc_mode ) );
 
         if( prop.isAvailable() )
         {
             if( !prop.isReadOnly() ) {
-                print( "\tMin: {}, Max: {}\n",
-                    fetch_PropertyMethod_value<int64_t>( prop, &ic4::PropInteger::getMinimum ),
-                    fetch_PropertyMethod_value<int64_t>( prop, &ic4::PropInteger::getMaximum )
+                print( offset + 1, "Min: {}, Max: {}\n",
+                    fetch_PropertyMethod_value( prop, &ic4::PropInteger::getMinimum, rep ),
+                    fetch_PropertyMethod_value( prop, &ic4::PropInteger::getMaximum, rep )
                 );
             }
             if( inc_mode == ic4::PropIncrementMode::Increment ) {
-                print( "\tInc: {}\n",
-                    fetch_PropertyMethod_value<int64_t>( prop, &ic4::PropInteger::getIncrement )
-                );
+                if( !prop.isReadOnly() )
+                {
+                    print( offset + 1, "Inc: {}\n",
+                        fetch_PropertyMethod_value( prop, &ic4::PropInteger::getIncrement, rep )
+                    );
+                }
             }
             else if( inc_mode == ic4::PropIncrementMode::ValueSet )
             {
                 std::vector<int64_t> vvset;
                 if( !prop.getValidValueSet( vvset, ic4::ignoreError ) ) {
-                    print( "\tFailed to fetch ValidValueSet\n" );
+                    print( offset + 1, "Failed to fetch ValidValueSet\n" );
                 }
                 else
                 {
-                    print( "\tValidValueSet:" );
+                    print( offset + 1, "ValidValueSet:" );
                     for( auto&& val : vvset ) {
-                        print( "\t\t{}\n", val );
+                        print( offset + 2, "{}\n", val );
                     }
                     print( "\n" );
                 }
             }
-            print( "\tValue: {}\n",
-                fetch_PropertyMethod_value<int64_t>( prop, &ic4::PropInteger::getValue )
+            print( offset + 1, "Value: {}\n",
+                fetch_PropertyMethod_value( prop, &ic4::PropInteger::getValue, rep )
             );
         }
         break;
@@ -185,20 +289,20 @@ static void    print_property( const ic4::Property& property )
         ic4::PropFloat prop = property.asFloat();
         auto inc_mode = prop.getIncrementMode();
 
-        print( "\tRepresentation: '{}', Unit: '{}', IncrementMode: '{}', DisplayNotation: {}, DisplayPrecision: {}\n",
+        print( offset + 1, "Representation: '{}', Unit: '{}', IncrementMode: '{}', DisplayNotation: {}, DisplayPrecision: {}\n",
             toString( prop.getRepresentation() ), prop.getUnit(), toString( inc_mode ), toString( prop.getDisplayNotation() ), prop.getDisplayPrecision() );
 
         if( prop.isAvailable() )
         {
             if( !prop.isReadOnly() ) {
-                print( "\tMin: {}, Max: {}\n",
+                print( offset + 1, "Min: {}, Max: {}\n",
                     fetch_PropertyMethod_value<double>( prop, &ic4::PropFloat::getMinimum ),
                     fetch_PropertyMethod_value<double>( prop, &ic4::PropFloat::getMaximum )
                 );
             }
 
             if( inc_mode == ic4::PropIncrementMode::Increment ) {
-                print( "\tInc: {}\n",
+                print( offset + 1, "Inc: {}\n",
                     fetch_PropertyMethod_value<double>( prop, &ic4::PropFloat::getIncrement )
                 );
             }
@@ -206,19 +310,19 @@ static void    print_property( const ic4::Property& property )
             {
                 //std::vector<double> vvset;
                 //if( !prop.getValidValueSet( vvset, ic4::ignoreError ) ) {
-                //    print( "\tFailed to fetch ValidValueSet\n" );
+                //    print( offset + 1, "Failed to fetch ValidValueSet\n" );
                 //}
                 //else
                 //{
-                //    print( "\tValidValueSet:" );
+                //    print( offset + 1, "ValidValueSet:" );
                 //    for( auto&& val : vvset ) {
-                //        print( "\t\t{}\n", val );
+                //        print( offset + 2, "{}\n", val );
                 //    }
                 //    print( "\n" );
                 //}
             }
 
-            print( "\tValue: {}\n",
+            print( offset + 1, "Value: {}\n",
                 fetch_PropertyMethod_value<double>( prop, &ic4::PropFloat::getValue )
             );
         }
@@ -227,19 +331,19 @@ static void    print_property( const ic4::Property& property )
     case ic4::PropType::Enumeration:
     {
         auto prop = property.asEnumeration();
-        print( "\tEnumEntries:\n" );
+        print( offset + 1, "EnumEntries:\n" );
         for( auto&& entry : prop.getEntries( ic4::ignoreError ) )
         {
             auto prop_enum_entry = entry.asEnumEntry();
 
-            print( "\t\t{}, DisplayName: {}\n", prop_enum_entry.getName(), prop_enum_entry.getDisplayName() );
-            print( "\t\t\tDescription: {}\n", prop_enum_entry.getDescription() );
-            print( "\t\t\tTooltip: {}\n", prop_enum_entry.getTooltip() );
-            print( "\t\t\tVisibility: {}, Available: {}, Locked: {}, ReadOnly: {}\n",
+            print( offset + 2, "{}, DisplayName: {}\n", prop_enum_entry.getName(), prop_enum_entry.getDisplayName() );
+            print( offset + 3, "Description: {}\n", prop_enum_entry.getDescription() );
+            print( offset + 3, "Tooltip: {}\n", prop_enum_entry.getTooltip() );
+            print( offset + 3, "Visibility: {}, Available: {}, Locked: {}, ReadOnly: {}\n",
                 toString( prop_enum_entry.getVisibility() ), prop_enum_entry.isAvailable(), prop_enum_entry.isLocked(), prop_enum_entry.isReadOnly() );
 
             if( prop_enum_entry.isAvailable() ) {
-                print( "\t\t\tValue: {}\n", fetch_PropertyMethod_value<int64_t>( prop_enum_entry, &ic4::PropEnumEntry::getValue ) );
+                print( offset + 3, "Value: {}\n", fetch_PropertyMethod_value<int64_t>( prop_enum_entry, &ic4::PropEnumEntry::getValue ) );
             }
             print( "\n" );
         }
@@ -249,11 +353,11 @@ static void    print_property( const ic4::Property& property )
             ic4::Error err;
             auto selected_entry = prop.getSelectedEntry( err );
             if( err ) {
-                print( "\tValue: {}, SelectedEntry.Name: '{}'\n", "err", "err" );
+                print( offset + 1, "Value: {}, SelectedEntry.Name: '{}'\n", "err", "err" );
             }
             else
             {
-                print( "\tValue: {}, SelectedEntry.Name: '{}'\n",
+                print( offset + 1, "Value: {}, SelectedEntry.Name: '{}'\n",
                     fetch_PropertyMethod_value<int64_t>( prop, &ic4::PropEnumeration::getValue ),
                     selected_entry.getName()
                 );
@@ -266,7 +370,7 @@ static void    print_property( const ic4::Property& property )
         auto prop = property.asBoolean();
 
         if( prop.isAvailable() ) {
-            print( "\tValue: {}\n",
+            print( offset + 1, "Value: {}\n",
                 fetch_PropertyMethod_value<bool>( prop, &ic4::PropBoolean::getValue )
             );
         }
@@ -277,7 +381,7 @@ static void    print_property( const ic4::Property& property )
         auto prop = property.asString();
 
         if( prop.isAvailable() ) {
-            print( "\tValue: '{}', MaxLength: {}\n",
+            print( offset + 1, "Value: '{}', MaxLength: {}\n",
                 fetch_PropertyMethod_value<std::string>( prop, &ic4::PropString::getValue ),
                 fetch_PropertyMethod_value<uint64_t>( prop, &ic4::PropString::getMaxLength )
             );
@@ -292,10 +396,10 @@ static void    print_property( const ic4::Property& property )
     case ic4::PropType::Category:
     {
         auto prop = property.asCategory();
-        print( "\tFeatures:\n" );
+        print( offset + 1, "Features:\n" );
         for( auto&& feature : prop.getFeatures( ic4::ignoreError ) )
         {
-            print( "\t\t{}\n", feature.getName() );
+            print( offset + 2, "{}\n", feature.getName() );
         }
         break;
     }
@@ -303,13 +407,13 @@ static void    print_property( const ic4::Property& property )
     {
         ic4::PropRegister prop = property.asRegister();
 
-        print( "\tSize: {}", 
+        print( offset + 1, "Size: {}", 
             fetch_PropertyMethod_value<uint64_t>( prop, &ic4::PropRegister::getSize )
         );
         if( prop.isAvailable() ) {
             std::vector<uint8_t> vec;
             if( prop.getValue( vec, ic4::ignoreError ) ) {
-                print( "\tValue: 'err'" );
+                print( offset + 1, "Value: 'err'" );
             }
             else {
                 std::string str;
@@ -321,7 +425,7 @@ static void    print_property( const ic4::Property& property )
                 if( vec.size() > max_entries_to_print ) {
                     str += "...";
                 }
-                print( "\tValue: [{}], Value-Size: {}\n", str, vec.size() );
+                print( offset + 1, "Value: [{}], Value-Size: {}\n", str, vec.size() );
             }
         }
         print( "\n" );
@@ -359,7 +463,7 @@ static void print_properties( std::string id, std::vector<std::string> lst )
     {
         for( auto&& property : map.getAll( ic4::throwError ) )
         {
-            print_property( property );
+            print_property( 0, property );
         }
     }
     else
@@ -368,7 +472,7 @@ static void print_properties( std::string id, std::vector<std::string> lst )
         {
             auto property = map.get( entry.c_str() );
             if( property.is_valid() ) {
-                print_property( property );
+                print_property( 0, property );
             } else {
                 print( "Failed to find property for name: '{}'\n", entry );
             }
@@ -616,7 +720,13 @@ int main( int argc, char** argv )
     list_cmd->add_option( "-d,--device", arg_device_id,
         "Device to open. If '0' is specified (and no device with this id is present), the first device is opened." );
 
-    auto list_gentl_cmd = app.add_subcommand( "list-interfaces", "List available interfaces" );
+    auto list_gentl_cmd = app.add_subcommand( "interface", 
+        "List interfaces.\n"
+        "\te.g. `ic4-ctrl interface` lists all interfaces\n"
+        "\tA specific interface can be specified by adding its name or index to the end.\n"
+        "\te.g. `ic4-ctrl interface \"<id>\"` this lists information about the interface named <id>."
+    );
+    list_gentl_cmd->allow_extras();
 
     auto list_props_cmd = app.add_subcommand( "list-prop", 
         "List properties of device specified by 'ic4-ctrl-cpp list-prop -d <device-id>'. You can specify properties to list by adding their names." );
@@ -669,14 +779,47 @@ int main( int argc, char** argv )
 
     try
     {
-        if( list_cmd->parsed() ) {
-            if( arg_device_id.empty() )
+        if( list_cmd->parsed() )
+        {
+            auto list = list_cmd->remaining();
+            if( list.empty() ) {
                 list_devices();
+            }
             else
-                print_device( arg_device_id );
+            {
+                for( auto&& dev : list )
+                {
+                    try
+                    {
+                        print_device( dev );
+                    }
+                    catch( const std::exception& ex )
+                    {
+                        fmt::print( stderr, "Error: {}\n", ex.what() );
+                    }
+                }
+            }
         }
-        else if( list_gentl_cmd->parsed() ) {
-            list_interfaces();
+        else if( list_gentl_cmd->parsed() )
+        {
+            auto list = list_gentl_cmd->remaining();
+            if( list.empty() ) {
+                list_interfaces();
+            } 
+            else
+            {
+                for( auto&& dev : list )
+                {
+                    try
+                    {
+                        print_interface( dev );
+                    }
+                    catch( const std::exception& ex )
+                    {
+                        fmt::print( stderr, "Error: {}\n", ex.what() );
+                    }
+                }
+            }
         }
         else if( list_props_cmd->parsed() ) {
             print_properties( arg_device_id, list_props_cmd->remaining() );

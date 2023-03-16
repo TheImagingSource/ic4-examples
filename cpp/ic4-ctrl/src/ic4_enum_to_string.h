@@ -80,14 +80,13 @@ namespace ic4_helper
     {
         switch( val )
         {
-        case ic4::PropIncrementMode::Increment:     return "Incrmeent";
+        case ic4::PropIncrementMode::Increment:     return "Increment";
         case ic4::PropIncrementMode::ValueSet:      return "valueSet";
         case ic4::PropIncrementMode::None:          return "None";
         default:
             return "";
         }
     }
-
 
     inline const char* toString( ic4::TransportLayerType val ) noexcept
     {
