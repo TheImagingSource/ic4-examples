@@ -43,6 +43,31 @@ namespace helper
     }
 
 
+
+#if defined WIN32
+    inline void set_env_var( std::string env_name, std::string value )
+    {
+        ::SetEnvironmentVariableA( env_name.c_str(), value.c_str() );
+    }
+
+    inline auto get_env_var( std::string env_name ) -> std::string
+    {
+        char* buf = nullptr;
+        size_t buf_len = 0;
+        auto err = ::_dupenv_s( &buf, &buf_len, env_name.c_str() );
+        if( err || buf == nullptr ) { 
+            return {};
+        }
+        std::string str{ buf, buf_len };
+        ::free( buf );
+        return str;
+    }
+#else
+    inline void set_env_var( std::string env_name, std::string value )
+    {
+        ::setenv( env_name.c_str(), value.c_str(), 1 );
+    }
+
     inline auto get_env_var( std::string env_name ) -> std::string
     {
         auto ptr = ::getenv( env_name.c_str() );
@@ -50,17 +75,6 @@ namespace helper
             return {};
         }
         return std::string{ ptr };
-    }
-
-#if defined WIN32
-    inline void set_env_var( std::string env_name, std::string value )
-    {
-        ::SetEnvironmentVariableA( env_name.c_str(), value.c_str() );
-    }
-#else
-    inline void set_env_var( std::string env_name, std::string value )
-    {
-        ::setenv( env_name.c_str(), value.c_str(), 1 );
     }
 #endif
 

@@ -87,4 +87,18 @@ namespace ic4_helper
             return "";
         }
     }
+
+
+    inline const char* toString( ic4::TransportLayerType val ) noexcept
+    {
+        switch( val )
+        {
+        case ic4::TransportLayerType::Unknown:      return "Unknown";
+        case ic4::TransportLayerType::GigEVision:   return "Unknown";
+        case ic4::TransportLayerType::USB3Vision:   return "Unknown";
+        default:
+            return "";
+        }
+    }
+
 }

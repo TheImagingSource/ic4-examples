@@ -17,22 +17,6 @@ void print( fmt::format_string<Targs...> fmt, Targs&& ... args )
     fmt::print( fmt, std::forward<Targs>( args )... );
 }
 
-static auto list_devices() -> void
-{
-    ic4::DeviceEnum devEnum;
-    auto list = devEnum.getAvailableVideoCaptureDevices();
-    if( list.empty() ) {
-        fmt::print("No devices found\n");
-        return;
-    }
-
-    fmt::print( "{:24} {:8} {:32}\n", "ModelName", "Serial", "UniqueName" );
-
-    for( auto&& e : list ) {
-        fmt::print( "{:24} {:8} {:32}\n", e.getModelName(), e.getSerial(), e.getUniqueName() );
-    }
-}
-
 static auto find_device( std::string id ) -> std::unique_ptr<ic4::DeviceInfo>
 {
     ic4::DeviceEnum devEnum;
@@ -60,12 +44,65 @@ static auto find_device( std::string id ) -> std::unique_ptr<ic4::DeviceInfo>
         }
     }
     int64_t index = 0;
-    if( helper::from_chars_helper( id, index ) && index >= 0 )
+    if( helper::from_chars_helper( id, index ) )
     {
+        if( index < 0 || index >= static_cast<int64_t>(list.size()) )
+            return {};
+
         return std::make_unique<ic4::DeviceInfo>( list.at( index ) );
     }
     return {};
 }
+
+
+static auto list_devices() -> void
+{
+    ic4::DeviceEnum devEnum;
+    auto list = devEnum.getAvailableVideoCaptureDevices();
+
+    fmt::print( "    {:24} {:8} {}\n", "ModelName", "Serial", "InterfaceName" );
+    int index = 0;
+    for( auto&& e : list ) {
+        fmt::print( "{:>3} {:24} {:8} {}\n", index, e.getModelName(), e.getSerial(), e.getInterface().getTransportLayerName() );
+    }
+    if( list.empty() ) {
+        fmt::print( "    No devices found\n" );
+    }
+}
+
+static auto list_interfaces() -> void
+{
+    ic4::DeviceEnum devEnum;
+    auto list = devEnum.getAvailableInterfaces( ic4::throwError );
+
+    fmt::print( "Interface list:" );
+
+    for( auto&& e : list ) {
+        print( "{}\n", e.getName() );
+        print( "\tTransportLayerName: {}\n", e.getTransportLayerName() );
+        print( "\tTransportVersion: {}\n", e.getTransportVersion() );
+        print( "\tTransportLayerType: {}\n", ic4_helper::toString( e.getTransportLayerType() ) );
+    }
+    if( list.empty() ) {
+        fmt::print( "No Interfaces found\n" );
+    }
+}
+
+
+static void print_device( std::string id )
+{
+    auto dev = find_device( id );
+    if( !dev ) {
+        throw std::runtime_error( fmt::format( "Failed to find device for id '{}'\n", id ) );
+    }
+
+    fmt::print( "ModelName: '{}'\n", dev->getModelName() );
+    fmt::print( "Serial: '{}'\n", dev->getSerial() );
+    fmt::print( "UniqueName: '{}'\n", dev->getUniqueName() );
+    fmt::print( "getDeviceVersion: '{}'\n", dev->getDeviceVersion() );
+    fmt::print( "InterfaceName: '{}'\n", dev->getInterface().getTransportLayerName() );
+}
+
 
 template<typename TPropType, class Tprop, class TMethod>
 auto fetch_PropertyMethod_value( Tprop& prop, TMethod method_address ) -> std::string
@@ -573,13 +610,17 @@ int main( int argc, char** argv )
 
     std::string gentl_path = helper::get_env_var( "GENICAM_GENTL64_PATH" );
     app.add_option( "--gentl-path", gentl_path, "GenTL path environment variable to set." )->default_val( gentl_path );
-    
-    auto list_cmd = app.add_subcommand( "list", "List available devices" );
+
+    std::string arg_device_id;
+    auto list_cmd = app.add_subcommand( "list", "List available devices." );
+    list_cmd->add_option( "-d,--device", arg_device_id,
+        "Device to open. If '0' is specified (and no device with this id is present), the first device is opened." );
+
+    auto list_gentl_cmd = app.add_subcommand( "list-interfaces", "List available interfaces" );
 
     auto list_props_cmd = app.add_subcommand( "list-prop", 
         "List properties of device specified by 'ic4-ctrl-cpp list-prop -d <device-id>'. You can specify properties to list by adding their names." );
     list_props_cmd->allow_extras();
-    std::string arg_device_id;
     list_props_cmd->add_option( "-d,--device", arg_device_id,
         "Device to open. If '0' is specified (and no device with this id is present), the first device is opened." )->required();
 
@@ -629,7 +670,13 @@ int main( int argc, char** argv )
     try
     {
         if( list_cmd->parsed() ) {
-            list_devices();
+            if( arg_device_id.empty() )
+                list_devices();
+            else
+                print_device( arg_device_id );
+        }
+        else if( list_gentl_cmd->parsed() ) {
+            list_interfaces();
         }
         else if( list_props_cmd->parsed() ) {
             print_properties( arg_device_id, list_props_cmd->remaining() );
