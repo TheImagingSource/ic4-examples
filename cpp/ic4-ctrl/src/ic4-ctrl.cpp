@@ -31,7 +31,7 @@ void print( int offset, fmt::format_string<Targs...> fmt, Targs&& ... args )
 static auto find_device( std::string id ) -> std::unique_ptr<ic4::DeviceInfo>
 {
     ic4::DeviceEnum devEnum;
-    auto list = devEnum.getAvailableVideoCaptureDevices();
+    auto list = devEnum.getDevices();
     if( list.size() == 0 ) {
         throw std::runtime_error( "No devices are available" );
     }
@@ -65,10 +65,10 @@ static auto find_device( std::string id ) -> std::unique_ptr<ic4::DeviceInfo>
     return {};
 }
 
-static auto find_inteface( std::string id ) -> std::unique_ptr<ic4::Interface>
+static auto find_interface( std::string id ) -> std::unique_ptr<ic4::Interface>
 {
     ic4::DeviceEnum devEnum;
-    auto list = devEnum.getAvailableInterfaces();
+    auto list = devEnum.getInterfaces();
     if( list.size() == 0 ) {
         throw std::runtime_error( "No devices are available" );
     }
@@ -100,7 +100,7 @@ static auto find_inteface( std::string id ) -> std::unique_ptr<ic4::Interface>
 static auto list_devices() -> void
 {
     ic4::DeviceEnum devEnum;
-    auto list = devEnum.getAvailableVideoCaptureDevices();
+    auto list = devEnum.getDevices();
 
     print( "Device list:\n" );
     print( "    {:24} {:8} {}\n", "ModelName", "Serial", "InterfaceName" );
@@ -116,7 +116,7 @@ static auto list_devices() -> void
 static auto list_interfaces() -> void
 {
     ic4::DeviceEnum devEnum;
-    auto list = devEnum.getAvailableInterfaces( ic4::throwError );
+    auto list = devEnum.getInterfaces();
 
     print( "Interface list:\n" );
 
@@ -139,13 +139,13 @@ static void print_device( std::string id )
     print( "ModelName: '{}'\n", dev->getModelName() );
     print( "Serial: '{}'\n", dev->getSerial() );
     print( "UniqueName: '{}'\n", dev->getUniqueName() );
-    print( "getDeviceVersion: '{}'\n", dev->getDeviceVersion() );
+    print( "DeviceVersion: '{}'\n", dev->getDeviceVersion() );
     print( "InterfaceName: '{}'\n", dev->getInterface().getTransportLayerName() );
 }
 
 static void print_interface( std::string id )
 {
-    auto dev = find_inteface( id );
+    auto dev = find_interface( id );
     if( !dev ) {
         throw std::runtime_error( fmt::format( "Failed to find device for id '{}'\n", id ) );
     }
@@ -153,11 +153,11 @@ static void print_interface( std::string id )
     print( "Name: '{}'\n", dev->getName() );
     print( "TransportLayerName: '{}'\n", dev->getTransportLayerName() );
     print( "TransportLayerType: '{}'\n", ic4_helper::toString( dev->getTransportLayerType() ) );
-    print( "getTransportVersion: '{}'\n", dev->getTransportVersion() );
+    print( "TransportVersion: '{}'\n", dev->getTransportVersion() );
     
     print( "Interface Properties:\n" );
-    auto map = dev->itfPropertyMap( ic4::throwError );
-    for( auto&& property : map.getAll( ic4::throwError ) )
+    auto map = dev->itfPropertyMap();
+    for( auto&& property : map.getAll() )
     {
         print_property( 1, property );
     }
@@ -188,7 +188,19 @@ auto fetch_PropertyMethod_value( ic4::PropInteger& prop, TMethod method_address,
         }
         return "err";
     }
-    if( int_rep == ic4::PropIntRepresentation::MACAddress )
+    switch( int_rep )
+    {
+    case ic4::PropIntRepresentation::Boolean:       return fmt::format( "{}", v != 0 ? 1 : 0 );
+    case ic4::PropIntRepresentation::HexNumber:     return fmt::format( "0x{:X}", v );
+    case ic4::PropIntRepresentation::IPV4Address:
+    {
+        uint64_t v0 = (v >> 0) & 0xFF;
+        uint64_t v1 = (v >> 8) & 0xFF;
+        uint64_t v2 = (v >> 16) & 0xFF;
+        uint64_t v3 = (v >> 24) & 0xFF;
+        return fmt::format( "{}.{}.{}.{}", v3, v2, v1, v0 );
+    }
+    case ic4::PropIntRepresentation::MACAddress:
     {
         uint64_t v0 = (v >> 0) & 0xFF;
         uint64_t v1 = (v >> 8) & 0xFF;
@@ -198,23 +210,12 @@ auto fetch_PropertyMethod_value( ic4::PropInteger& prop, TMethod method_address,
         uint64_t v5 = (v >> 40) & 0xFF;
         return fmt::format( "{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}", v5, v4, v3, v2, v1, v0 );
     }
-    else if( int_rep == ic4::PropIntRepresentation::IPV4Address )
-    {
-        uint64_t v0 = (v >> 0) & 0xFF;
-        uint64_t v1 = (v >> 8) & 0xFF;
-        uint64_t v2 = (v >> 16) & 0xFF;
-        uint64_t v3 = (v >> 24) & 0xFF;
-        return fmt::format( "{}.{}.{}.{}", v3, v2, v1, v0 );
+    case ic4::PropIntRepresentation::Linear:
+    case ic4::PropIntRepresentation::Logarithmic:
+    case ic4::PropIntRepresentation::PureNumber:
+    default:
+        return fmt::format( "{}", v );
     }
-    else if( int_rep == ic4::PropIntRepresentation::HexNumber )
-    {
-        return fmt::format( "0x{:X}", v );
-    }
-    else if( int_rep == ic4::PropIntRepresentation::Boolean )
-    {
-        return fmt::format( "{}", v != 0 ? 1 : 0 );
-    }
-    return fmt::format( "{}", v );
 }
 
 static void    print_property( int offset, const ic4::Property& property )
@@ -227,10 +228,10 @@ static void    print_property( int offset, const ic4::Property& property )
     print( offset + 1, "Tooltip: {}\n", property.getTooltip() );
     print( offset + 1, "Visibility: {}, Available: {}, Locked: {}, ReadOnly: {}\n", toString( property.getVisibility() ), property.isAvailable(), property.isLocked(), property.isReadOnly() );
 
-    if( property.isSelector( ic4::throwError ) )
+    if( property.isSelector() )
     {
         print( offset + 1, "Selected properties:\n" );
-        for( auto&& selected : property.getSelectedProperties( ic4::throwError ) )
+        for( auto&& selected : property.getSelectedProperties() )
         {
             print( offset + 2, "{}\n", selected.getName() );
         }
@@ -446,21 +447,11 @@ static void    print_property( int offset, const ic4::Property& property )
     print( "\n" );
 }
 
-static void print_properties( std::string id, std::vector<std::string> lst )
+static void print_PropertyMap( const ic4::PropertyMap& map, const std::vector<std::string>& lst )
 {
-    auto dev = find_device( id );
-    if( !dev ) {
-        print( "Failed to find device for id '{}'", id );
-        return;
-    }
-    ic4::Grabber g;
-    g.deviceOpen( *dev, ic4::throwError );
-
-    auto map = g.devicePropertyMap();
-
     if( lst.empty() )
     {
-        for( auto&& property : map.getAll( ic4::throwError ) )
+        for( auto&& property : map.getAll() )
         {
             print_property( 0, property );
         }
@@ -469,7 +460,7 @@ static void print_properties( std::string id, std::vector<std::string> lst )
     {
         for( auto&& entry : lst )
         {
-            auto property = map.get( entry.c_str() );
+            auto property = map.get( entry );
             if( property.is_valid() ) {
                 print_property( 0, property );
             } else {
@@ -479,17 +470,58 @@ static void print_properties( std::string id, std::vector<std::string> lst )
     }
 }
 
-static void save_properties( std::string id, std::string filename )
+static void print_properties( std::string id, bool force_interface, const std::vector<std::string>& lst )
 {
-    auto dev = find_device( id );
-    if( !dev ) {
-        print( "Failed to find device for id '{}'", id );
-        return;
+    if(force_interface)
+    {
+        auto dev = find_interface( id );
+        if( !dev ) {
+            print( "Failed to find interface for id '{}'", id );
+            return;
+        }
+        auto map = dev->itfPropertyMap();
+        print_PropertyMap( map, lst );
     }
-    ic4::Grabber g;
-    g.deviceOpen( *dev, ic4::throwError );
+    else
+    {
+        auto dev = find_device( id );
+        if( !dev ) {
+            print( "Failed to find device for id '{}'", id );
+            return;
+        }
+        ic4::Grabber g;
+        g.deviceOpen( *dev );
 
-    g.devicePropertyMap().serialize( filename, ic4::throwError );
+        auto map = g.devicePropertyMap();
+        print_PropertyMap( map, lst );
+    }
+}
+
+static void save_properties( std::string id, bool force_interface, std::string filename )
+{
+    if( force_interface )
+    {
+        auto dev = find_interface( id );
+        if( !dev ) {
+            print( "Failed to find interface for id '{}'", id );
+            return;
+        }
+        auto map = dev->itfPropertyMap();
+        map.serialize( filename );
+    }
+    else
+    {
+        auto dev = find_device( id );
+        if( !dev ) {
+            print( "Failed to find device for id '{}'", id );
+            return;
+        }
+        ic4::Grabber g;
+        g.deviceOpen( *dev );
+
+        auto map = g.devicePropertyMap();
+        map.serialize( filename );
+    }
 }
 
 static void save_image( std::string id, std::string filename, int count, int timeout_in_ms, std::string image_type )
@@ -500,10 +532,10 @@ static void save_image( std::string id, std::string filename, int count, int tim
         return;
     }
     ic4::Grabber g;
-    g.deviceOpen( *dev, ic4::throwError );
+    g.deviceOpen( *dev );
 
-    auto snap_sink = ic4::SnapSink::create( ic4::throwError );
-    g.streamSetup( snap_sink, ic4::StreamSetupOption::AcquisitionStart, ic4::throwError );
+    auto snap_sink = ic4::SnapSink::create();
+    g.streamSetup( snap_sink, ic4::StreamSetupOption::AcquisitionStart );
 
     ic4::Error err;
     auto images = snap_sink->snapSequence( count, timeout_in_ms, err );
@@ -516,7 +548,7 @@ static void save_image( std::string id, std::string filename, int count, int tim
         throw err;
     }
 
-    g.acquisitionStop( ic4::throwError );
+    g.acquisitionStop();
 
     int idx = 0;
     for( auto && image : images )
@@ -528,20 +560,19 @@ static void save_image( std::string id, std::string filename, int count, int tim
             actual_filename = fmt::vformat( filename, fmt::make_format_args( idx++ ) );
         }
         if( image_type == "bmp" ) {
-            ic4::imageBufferSaveAsBitmap( *image, actual_filename, {}, ic4::throwError );
+            ic4::imageBufferSaveAsBitmap( *image, actual_filename, {} );
         }
         else if( image_type == "png" ) {
-            ic4::imageBufferSaveAsPng( *image, actual_filename, {}, ic4::throwError );
+            ic4::imageBufferSaveAsPng( *image, actual_filename, {} );
         }
         else if( image_type == "tiff" ) {
-            ic4::imageBufferSaveAsTiff( *image, actual_filename, {}, ic4::throwError );
+            ic4::imageBufferSaveAsTiff( *image, actual_filename, {} );
         }
         else if( image_type == "jpeg" ) {
-            ic4::imageBufferSaveAsJpeg( *image, actual_filename, {}, ic4::throwError );
+            ic4::imageBufferSaveAsJpeg( *image, actual_filename, {} );
         }
     }
 }
-
 
 static void show_live( std::string id )
 {
@@ -551,10 +582,10 @@ static void show_live( std::string id )
         return;
     }
     ic4::Grabber g;
-    g.deviceOpen( *dev, ic4::throwError );
+    g.deviceOpen( *dev );
 
-    auto display = ic4::Display::create( ic4::DisplayType::Default, nullptr, ic4::throwError );
-    g.streamSetup( display, ic4::StreamSetupOption::AcquisitionStart, ic4::throwError );
+    auto display = ic4::Display::create( ic4::DisplayType::Default, nullptr );
+    g.streamSetup( display, ic4::StreamSetupOption::AcquisitionStart );
 
     std::mutex mtx;
     bool ended = false;
@@ -568,32 +599,26 @@ static void show_live( std::string id )
             cond.wait( lck );
         }
     }
-    g.acquisitionStop( ic4::throwError );
+    g.acquisitionStop();
 }
 
-static void set_props( std::string id, std::vector<std::string> lst )
+
+static void set_property_in_map( ic4::PropertyMap& property_map, const std::vector<std::string>& prop_assign_list )
 {
-    auto dev = find_device( id );
-    if( !dev ) {
-        print( "Failed to find device for id '{}'", id );
-        return;
-    }
-    ic4::Grabber g;
-    g.deviceOpen( *dev, ic4::throwError );
-
-    auto property_map = g.devicePropertyMap();
-
-    for( auto&& e : lst )
+    for( auto&& prop_assign_entry : prop_assign_list )
     {
-        auto f = e.find( '=' );
-        if( f == std::string::npos ) continue;
+        auto f = prop_assign_entry.find( '=' );
+        if( f == std::string::npos ) {
+            print( "Failed to parse '{}', should be in 'a=b'\n", prop_assign_entry );
+            continue;
+        }
 
-        auto prop_name = e.substr( 0, f );
-        auto prop_value = e.substr( f + 1 );
+        auto prop_name = prop_assign_entry.substr( 0, f );
+        auto prop_value = prop_assign_entry.substr( f + 1 );
 
         print( "Trying to set property '{}' to '{}'\n", prop_name, prop_value );
 
-        auto prop = property_map.get( prop_name.c_str() );
+        auto prop = property_map.get( prop_name.c_str(), ic4::ignoreError );
         switch( prop.getType() )
         {
         case ic4::PropType::Boolean:
@@ -611,7 +636,7 @@ static void set_props( std::string id, std::vector<std::string> lst )
             ic4::Error err;
             if( !prop.asBoolean().setValue( value_to_set, err ) )
             {
-                print( "Failed to set value '{}' on property '{}' , due to err:{}\n", value_to_set, prop_name, err.getMessage() );
+                print( "Failed to set value '{}' on property '{}'. Message: {}\n", value_to_set, prop_name, err.getMessage() );
             }
             break;
         }
@@ -620,7 +645,7 @@ static void set_props( std::string id, std::vector<std::string> lst )
             ic4::Error err;
             if( !prop.asString().setValue( prop_value, err ) )
             {
-                print( "Failed to set value '{}' on property '{}' , due to err:{}\n", prop_value, prop_name, err.getMessage() );
+                print( "Failed to set value '{}' on property '{}'. Message: {}\n", prop_value, prop_name, err.getMessage() );
             }
             break;
         }
@@ -629,7 +654,7 @@ static void set_props( std::string id, std::vector<std::string> lst )
             ic4::Error err;
             if( !prop.asCommand().execute( err ) )
             {
-                print( "Failed execute on Command property '{}' , due to err:{}\n", prop_name, err.getMessage() );
+                print( "Failed execute on Command property '{}'. Message: {}\n", prop_name, err.getMessage() );
             }
             break;
         }
@@ -643,7 +668,7 @@ static void set_props( std::string id, std::vector<std::string> lst )
             ic4::Error err;
             if( !prop.asInteger().setValue( value_to_set, err ) )
             {
-                print( "Failed to set value '{}' on property '{}' , due to err:{}\n", value_to_set, prop_name, err.getMessage() );
+                print( "Failed to set value '{}' on property '{}'. Message: {}\n", value_to_set, prop_name, err.getMessage() );
             }
             break;
         }
@@ -657,7 +682,7 @@ static void set_props( std::string id, std::vector<std::string> lst )
             ic4::Error err;
             if( !prop.asFloat().setValue( value_to_set, err ) )
             {
-                print( "Failed to set value '{}' on property '{}' , due to err:{}\n", value_to_set, prop_name, err.getMessage() );
+                print( "Failed to set value '{}' on property '{}'. Message: {}\n", value_to_set, prop_name, err.getMessage() );
             }
             break;
         }
@@ -669,7 +694,7 @@ static void set_props( std::string id, std::vector<std::string> lst )
                 ic4::Error err;
                 if( !enum_prop.selectEntry( prop_value, err ) )
                 {
-                    print( "Failed to select entry '{}' on property '{}' , due to err:{}\n", prop_value, prop_name, err.getMessage() );
+                    print( "Failed to select entry '{}' on property '{}'. Message: {}\n", prop_value, prop_name, err.getMessage() );
                 }
             }
             else
@@ -683,7 +708,7 @@ static void set_props( std::string id, std::vector<std::string> lst )
                 ic4::Error err;
                 if( !enum_prop.setValue( value_to_set, err ) )
                 {
-                    print( "Failed to set value '{}' on property '{}' , due to err:{}\n", value_to_set, prop_name, err.getMessage() );
+                    print( "Failed to set value '{}' on property '{}'. Message: {}\n", value_to_set, prop_name, err.getMessage() );
                 }
             }
             break;
@@ -692,7 +717,7 @@ static void set_props( std::string id, std::vector<std::string> lst )
         case ic4::PropType::Register:
         case ic4::PropType::Port:
         case ic4::PropType::EnumEntry:
-            print( "Cannot set a value for a {} property. Name: '{}'\n", ic4_helper::toString( prop.getType() ), prop_name );
+            print( "Cannot set a value on a {} property. Name: '{}'\n", ic4_helper::toString( prop.getType() ), prop_name );
             break;
         case ic4::PropType::Invalid:
             print( "Failed to find property. Name: '{}'\n", prop_name );
@@ -701,6 +726,34 @@ static void set_props( std::string id, std::vector<std::string> lst )
             print( "Invalid property type. Value: {}\n", static_cast<int>(prop.getType()) );
             break;
         };
+    }
+}
+
+
+static void set_props( std::string id, bool id_is_interface, const std::vector<std::string>& prop_assign_list )
+{
+    if( id_is_interface )
+    {
+        auto dev = find_interface( id );
+        if( !dev ) {
+            print( "Failed to find interface for id '{}'", id );
+            return;
+        }
+        auto map = dev->itfPropertyMap();
+        set_property_in_map( map, prop_assign_list );
+    }
+    else
+    {
+        auto dev = find_device( id );
+        if( !dev ) {
+            print( "Failed to find device for id '{}'", id );
+            return;
+        }
+        ic4::Grabber g;
+        g.deviceOpen( *dev );
+
+        auto map = g.devicePropertyMap();
+        set_property_in_map( map, prop_assign_list );
     }
 }
 
@@ -715,58 +768,69 @@ int main( int argc, char** argv )
     app.add_option( "--gentl-path", gentl_path, "GenTL path environment variable to set." )->default_val( gentl_path );
 
     std::string arg_device_id;
+    bool force_interface = false;
+
     auto list_cmd = app.add_subcommand( "list",
-        "List available devices.\n"
+        "List available devices and interfaces."
     );
 
     auto device_cmd = app.add_subcommand( "device",
-        "When no additional parameters are give, all devices are listed otherwise information for the device-id specified is printed.\n"
-        "\te.g. `ic4-ctrl interface` lists all device\n"
-        "\tOne device can be specified by adding its name or index at the end of the parameter list.\n"
-        "\te.g. `ic4-ctrl device \"<id>\"` this lists information about the device identified by <id>."
+        "List devices or a show information for a single device.\n"
+        "\tTo list all devices use: `ic4-ctrl device`\n"
+        "\tTo show only a specific device: `ic4-ctrl device \"<id>\"\n"
     );
-    device_cmd->allow_extras();
-    auto interface_cmd = app.add_subcommand( "interface", 
-        "List interfaces.\n"
-        "\te.g. `ic4-ctrl interface` lists all interfaces\n"
-        "\tOne interface can be specified by adding its name or index at the end of the parameter list.\n"
-        "\te.g. `ic4-ctrl interface \"<id>\"` this lists information about the interface identified by <id>."
+    device_cmd->add_option( "device-id", arg_device_id,
+        "If specified only information for this device is printed, otherwise all device are listed. You can specify an index e.g. '0'." );
+
+    auto interface_cmd = app.add_subcommand( "interface",
+        "List devices or a show information for a single interface.\n"
+        "\tTo list all interfaces: `ic4-ctrl interface`\n"
+        "\tTo show only a specific interface: `ic4-ctrl interface \"<id>\"\n"
     );
-    interface_cmd->allow_extras();
+    interface_cmd->add_option( "interface-id", arg_device_id,
+        "If specified only information for this interface is printed, otherwise all interfaces are listed. You can specify an index e.g. '0'." );
 
     auto list_props_cmd = app.add_subcommand( "list-prop", 
-        "List properties of device specified by 'ic4-ctrl-cpp list-prop -d <device-id>'. You can specify properties to list by adding their names." );
+        "List properties of the specified device\n."
+        "\tTo list all properties for a device: 'ic4-ctrl list-prop <device-id>'.\n"
+        "\tYou can specify properties to only list those: 'ic4-ctrl list-prop <device-id> <prop-name-0> <prop-name-1>'." );
     list_props_cmd->allow_extras();
-    list_props_cmd->add_option( "-d,--device", arg_device_id,
-        "Device to open. If '0' is specified (and no device with this id is present), the first device is opened." )->required();
+    list_props_cmd->add_flag( "--interface", force_interface,
+        "If set the <device-id> is interpreted as an interface-id." );
+    list_props_cmd->add_option( "device-id", arg_device_id,
+        "Specifies the device to open. You can specify an index e.g. '0'." )->required();
 
-    auto set_props_cmd = app.add_subcommand( "set-prop", "Set a list of properties 'ic4-ctrl-cpp set-prop -d <device-id> ExposureAuto=false Exposure=0.3 '." );
+    auto set_props_cmd = app.add_subcommand( "set-prop", 
+        "Set a list of properties 'ic4-ctrl set-prop <device-id> ExposureAuto=false Exposure=0.3'." );
     set_props_cmd->allow_extras();
-    set_props_cmd->add_option( "-d,--device", arg_device_id,
-        "Device to open. If '0' is specified (and no device with this id is present), the first device is opened." )->required();
+    set_props_cmd->add_flag( "--interface", force_interface,
+        "If set the <device-id> is interpreted as an interface-id." );
+    set_props_cmd->add_option( "device-id", arg_device_id,
+        "Specifies the device to open. You can specify an index e.g. '0'." )->required();
 
-    auto save_props_cmd = app.add_subcommand( "save-prop", "Save properties for the specified device 'ic4-ctrl-cpp save-prop -d <device-id>' -f <filename>." );
+    auto save_props_cmd = app.add_subcommand( "save-prop", 
+        "Save properties for the specified device 'ic4-ctrl save-prop -f <filename> <device-id>'." );
     std::string arg_filename;
-    save_props_cmd->add_option( "-d,--device", arg_device_id,
-        "Device to open. If '0' is specified (and no device with this id is present), the first device is opened." )->required();
     save_props_cmd->add_option( "-f,--filename", arg_filename, "Filename to save into." )->required();
+    save_props_cmd->add_option( "device-id", arg_device_id,
+        "Specifies the device to open. You can specify an index e.g. '0'." )->required();
 
     auto image_cmd = app.add_subcommand( "image", 
-        "Save one or more images from the specified device 'ic4-ctrl-cpp image -d <device-id> -f <filename> --count 3 --timeout 2000 --type bmp'."
+        "Save one or more images from the specified device 'ic4-ctrl image -f <filename> --count 3 --timeout 2000 --type bmp <device-id>'."
     );
     int count = 1;
     int timeout = 1000;
     std::string image_type = "bmp";
-    image_cmd->add_option( "-d,--device", arg_device_id,
-        "Device to open. If '0' is specified (and no device with this id is present), the first device is opened." )->required();
     image_cmd->add_option( "-f,--filename", arg_filename, "Filename. Use '{}' to specify where a counter should be placed (e.g. 'test-{}.bmp'." )->required();
     image_cmd->add_option( "--count", count, "Count of frames to capture." )->default_val( count );
     image_cmd->add_option( "--timeout", timeout, "Timeout in milliseconds." )->default_val( timeout );
     image_cmd->add_option( "--type", image_type, "Image file type to save. [bmp,png,jpeg,tiff]" )->default_val( image_type );
+    image_cmd->add_option( "device-id", arg_device_id,
+        "Specifies the device to open. You can specify an index e.g. '0'." )->required();
 
-    auto live_cmd = app.add_subcommand( "live", "Display live stream. 'ic4-ctrl-cpp live -d <device-id>'." );
-    live_cmd->add_option( "-d,--device", arg_device_id, 
-        "Device to open. If '0' is specified (and no device with this id is present), the first device is opened." )->required();
+    auto live_cmd = app.add_subcommand( "live", "Display a live stream. 'ic4-ctrl live <device-id>'." );
+    live_cmd->add_option( "device-id", arg_device_id,
+        "Specifies the device to open. You can specify an index e.g. '0'." )->required();
 
     try
     {
@@ -781,7 +845,7 @@ int main( int argc, char** argv )
         helper::set_env_var( "GENICAM_GENTL64_PATH", gentl_path );
     }
 
-    ic4::InitLibrary();
+    ic4::InitLibrary( ic4::ErrorHandlerBehavior::Throw );
 
     try
     {
@@ -793,36 +857,34 @@ int main( int argc, char** argv )
         }
         else if( device_cmd->parsed() )
         {
-            auto list = list_cmd->remaining();
-            if( list.empty() ) {
+            if( arg_device_id.empty() ) {
                 list_devices();
             } else {
-                print_device( list.front() );
+                print_device( arg_device_id );
             }
         }
         else if( interface_cmd->parsed() )
         {
-            auto list = interface_cmd->remaining();
-            if( list.empty() ) {
+            if( arg_device_id.empty() ) {
                 list_interfaces();
             } else {
-                print_interface( list.front() );
+                print_interface( arg_device_id );
             }
         }
         else if( list_props_cmd->parsed() ) {
-            print_properties( arg_device_id, list_props_cmd->remaining() );
+            print_properties( arg_device_id, force_interface, list_props_cmd->remaining() );
+        }
+        else if( set_props_cmd->parsed() ) {
+            set_props( arg_device_id, force_interface, set_props_cmd->remaining() );
         }
         else if( save_props_cmd->parsed() ) {
-            save_properties( arg_device_id, arg_filename );
+            save_properties( arg_device_id, force_interface, arg_filename );
         }
         else if( image_cmd->parsed() ) {
             save_image( arg_device_id, arg_filename, count, timeout, image_type );
         }
         else if( live_cmd->parsed() ) {
             show_live( arg_device_id );
-        }
-        else if( set_props_cmd->parsed() ) {
-            set_props( arg_device_id, set_props_cmd->remaining() );
         }
         else
         {
@@ -836,5 +898,6 @@ int main( int argc, char** argv )
     }
 
 	ic4::ExitLibrary();
+
 	return 0;
 }
