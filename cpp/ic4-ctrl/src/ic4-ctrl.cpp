@@ -102,14 +102,14 @@ static auto list_devices() -> void
     ic4::DeviceEnum devEnum;
     auto list = devEnum.getAvailableVideoCaptureDevices();
 
-    fmt::print( "Device list:\n" );
-    fmt::print( "    {:24} {:8} {}\n", "ModelName", "Serial", "InterfaceName" );
+    print( "Device list:\n" );
+    print( "    {:24} {:8} {}\n", "ModelName", "Serial", "InterfaceName" );
     int index = 0;
     for( auto&& e : list ) {
-        fmt::print( "{:>3} {:24} {:8} {}\n", index, e.getModelName(), e.getSerial(), e.getInterface().getTransportLayerName() );
+        print( "{:>3} {:24} {:8} {}\n", index, e.getModelName(), e.getSerial(), e.getInterface().getTransportLayerName() );
     }
     if( list.empty() ) {
-        fmt::print( "    No devices found\n" );
+        print( "    No devices found\n" );
     }
 }
 
@@ -118,14 +118,14 @@ static auto list_interfaces() -> void
     ic4::DeviceEnum devEnum;
     auto list = devEnum.getAvailableInterfaces( ic4::throwError );
 
-    fmt::print( "Interface list:\n" );
+    print( "Interface list:\n" );
 
     for( auto&& e : list ) {
         print( 1, "{}\n", e.getName() );
         print( 2, "TransportLayerName: {}\n", e.getTransportLayerName() );
     }
     if( list.empty() ) {
-        fmt::print( "No Interfaces found\n" );
+        print( 1, "No Interfaces found\n" );
     }
 }
 
@@ -136,11 +136,11 @@ static void print_device( std::string id )
         throw std::runtime_error( fmt::format( "Failed to find device for id '{}'\n", id ) );
     }
 
-    fmt::print( "ModelName: '{}'\n", dev->getModelName() );
-    fmt::print( "Serial: '{}'\n", dev->getSerial() );
-    fmt::print( "UniqueName: '{}'\n", dev->getUniqueName() );
-    fmt::print( "getDeviceVersion: '{}'\n", dev->getDeviceVersion() );
-    fmt::print( "InterfaceName: '{}'\n", dev->getInterface().getTransportLayerName() );
+    print( "ModelName: '{}'\n", dev->getModelName() );
+    print( "Serial: '{}'\n", dev->getSerial() );
+    print( "UniqueName: '{}'\n", dev->getUniqueName() );
+    print( "getDeviceVersion: '{}'\n", dev->getDeviceVersion() );
+    print( "InterfaceName: '{}'\n", dev->getInterface().getTransportLayerName() );
 }
 
 static void print_interface( std::string id )
@@ -150,12 +150,12 @@ static void print_interface( std::string id )
         throw std::runtime_error( fmt::format( "Failed to find device for id '{}'\n", id ) );
     }
 
-    fmt::print( "Name: '{}'\n", dev->getName() );
-    fmt::print( "TransportLayerName: '{}'\n", dev->getTransportLayerName() );
-    fmt::print( "TransportLayerType: '{}'\n", ic4_helper::toString( dev->getTransportLayerType() ) );
-    fmt::print( "getTransportVersion: '{}'\n", dev->getTransportVersion() );
+    print( "Name: '{}'\n", dev->getName() );
+    print( "TransportLayerName: '{}'\n", dev->getTransportLayerName() );
+    print( "TransportLayerType: '{}'\n", ic4_helper::toString( dev->getTransportLayerType() ) );
+    print( "getTransportVersion: '{}'\n", dev->getTransportVersion() );
     
-    fmt::print( "Interface Properties:\n" );
+    print( "Interface Properties:\n" );
     auto map = dev->itfPropertyMap( ic4::throwError );
     for( auto&& property : map.getAll( ic4::throwError ) )
     {
@@ -826,8 +826,8 @@ int main( int argc, char** argv )
         }
         else
         {
-            fmt::print("No arguments given\n\n");
-            fmt::print("{}\n", app.get_formatter()->make_help(&app, app.get_name(), CLI::AppFormatMode::All));
+            print("No arguments given\n\n");
+            print("{}\n", app.get_formatter()->make_help(&app, app.get_name(), CLI::AppFormatMode::All));
         }
     }
     catch( const std::exception& ex )
