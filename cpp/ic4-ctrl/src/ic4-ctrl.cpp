@@ -226,6 +226,7 @@ static void    print_property( int offset, const ic4::Property& property )
     print( offset + 0, "{:24} - Type: {}, DisplayName: {}\n", property.getName(), toString( prop_type ), property.getDisplayName() );
     print( offset + 1, "Description: {}\n", property.getDescription() );
     print( offset + 1, "Tooltip: {}\n", property.getTooltip() );
+    print( offset + 3, "\n" );
     print( offset + 1, "Visibility: {}, Available: {}, Locked: {}, ReadOnly: {}\n", toString( property.getVisibility() ), property.isAvailable(), property.isLocked(), property.isReadOnly() );
 
     if( property.isSelector() )
@@ -336,15 +337,7 @@ static void    print_property( int offset, const ic4::Property& property )
         {
             auto prop_enum_entry = entry.asEnumEntry();
 
-            print( offset + 2, "{}, DisplayName: {}\n", prop_enum_entry.getName(), prop_enum_entry.getDisplayName() );
-            print( offset + 3, "Description: {}\n", prop_enum_entry.getDescription() );
-            print( offset + 3, "Tooltip: {}\n", prop_enum_entry.getTooltip() );
-            print( offset + 3, "Visibility: {}, Available: {}, Locked: {}, ReadOnly: {}\n",
-                toString( prop_enum_entry.getVisibility() ), prop_enum_entry.isAvailable(), prop_enum_entry.isLocked(), prop_enum_entry.isReadOnly() );
-
-            if( prop_enum_entry.isAvailable() ) {
-                print( offset + 3, "Value: {}\n", fetch_PropertyMethod_value<int64_t>( prop_enum_entry, &ic4::PropEnumEntry::getValue ) );
-            }
+            print_property( offset + 2, prop_enum_entry );
             print( "\n" );
         }
 
@@ -407,12 +400,12 @@ static void    print_property( int offset, const ic4::Property& property )
     {
         ic4::PropRegister prop = property.asRegister();
 
-        print( offset + 1, "Size: {}", 
+        print( offset + 1, "Size: {}\n", 
             fetch_PropertyMethod_value<uint64_t>( prop, &ic4::PropRegister::getSize )
         );
         if( prop.isAvailable() ) {
             std::vector<uint8_t> vec;
-            if( prop.getValue( vec, ic4::ignoreError ) ) {
+            if( !prop.getValue( vec, ic4::ignoreError ) ) {
                 print( offset + 1, "Value: 'err'" );
             }
             else {
@@ -438,6 +431,11 @@ static void    print_property( int offset, const ic4::Property& property )
     }
     case ic4::PropType::EnumEntry:
     {
+        ic4::PropEnumEntry prop = property.asEnumEntry();
+
+        if( prop.isAvailable() ) {
+            print( offset + 1, "Value: {}\n", fetch_PropertyMethod_value<int64_t>( prop, &ic4::PropEnumEntry::getValue ) );
+        }
         print( "\n" );
         break;
     }
