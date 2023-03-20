@@ -16,7 +16,8 @@ add_executable( ic4-ctrl
 
 target_link_libraries( ic4-ctrl
 PRIVATE
-	ic4::core 
+	ic4::core
+	ic4::gui
 	CLI11::CLI11
 	fmt::fmt
 )
