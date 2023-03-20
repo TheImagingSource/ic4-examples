@@ -1,5 +1,6 @@
 ﻿
 #include <ic4/ic4.h>
+#include <ic4-gui/ic4gui.h>
 
 #include <CLI/CLI.hpp>
 #include <fmt/core.h>
@@ -755,6 +756,32 @@ static void set_props( std::string id, bool id_is_interface, const std::vector<s
     }
 }
 
+static void show_prop_page( std::string id, bool id_is_interface )
+{
+    if( id_is_interface )
+    {
+        auto dev = find_interface( id );
+        if( !dev ) {
+            print( "Failed to find interface for id '{}'", id );
+            return;
+        }
+        auto map = dev->itfPropertyMap();
+        ic4::showPropertyDialog( 0, map );
+    }
+    else
+    {
+        auto dev = find_device( id );
+        if( !dev ) {
+            print( "Failed to find device for id '{}'", id );
+            return;
+        }
+        ic4::Grabber g;
+        g.deviceOpen( *dev );
+
+        auto map = g.devicePropertyMap();
+        ic4::showPropertyDialog( 0, map );
+    }
+}
 
 int main( int argc, char** argv )
 {
@@ -830,6 +857,12 @@ int main( int argc, char** argv )
     live_cmd->add_option( "device-id", arg_device_id,
         "Specifies the device to open. You can specify an index e.g. '0'." )->required();
 
+    auto show_prop_page_cmd = app.add_subcommand( "show-prop", "Display the property page for the device or interface id. 'ic4-ctrl show-prop <id>'." );
+    show_prop_page_cmd->add_option( "device-id", arg_device_id,
+        "Specifies the device to open. You can specify an index e.g. '0'." )->required();
+    show_prop_page_cmd->add_flag( "--interface", force_interface,
+        "If set the <device-id> is interpreted as an interface-id." );
+
     try
     {
         app.parse( argc, argv );
@@ -883,6 +916,9 @@ int main( int argc, char** argv )
         }
         else if( live_cmd->parsed() ) {
             show_live( arg_device_id );
+        }
+        else if( show_prop_page_cmd->parsed() ) {
+            show_prop_page( arg_device_id, force_interface );
         }
         else
         {
