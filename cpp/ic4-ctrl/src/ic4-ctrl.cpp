@@ -446,7 +446,131 @@ static void    print_property( int offset, const ic4::Property& property )
     print( "\n" );
 }
 
-static void print_PropertyMap( const ic4::PropertyMap& map, const std::vector<std::string>& lst )
+static auto split_prop_entry( const std::string& prop_string ) -> std::pair<std::string,std::string>
+{
+    auto f = prop_string.find( '=' );
+    if( f == std::string::npos ) {
+        return { prop_string, std::string{} };
+    }
+
+    return { prop_string.substr( 0, f ), prop_string.substr( f + 1 ) };
+}
+
+static void set_property_from_assign_entry( ic4::PropertyMap& property_map, const std::string& prop_name, const std::string& prop_value )
+{
+    print( "Setting property '{}' to '{}'\n", prop_name, prop_value );
+
+    auto prop = property_map.get( prop_name.c_str(), ic4::ignoreError );
+    switch( prop.getType() )
+    {
+    case ic4::PropType::Boolean:
+    {
+        bool value_to_set = false;
+        if( prop_value == "true" ) {
+            value_to_set = true;
+        }
+        else if( prop_value == "false" ) {
+            value_to_set = false;
+        } else {
+            print( "Failed to parse value for property '{}'. Value: '{}'\n", prop_name, prop_value );
+            break;
+        }
+        ic4::Error err;
+        if( !prop.asBoolean().setValue( value_to_set, err ) )
+        {
+            print( "Failed to set value '{}' on property '{}'. Message: {}\n", value_to_set, prop_name, err.getMessage() );
+        }
+        break;
+    }
+    case ic4::PropType::String:
+    {
+        ic4::Error err;
+        if( !prop.asString().setValue( prop_value, err ) )
+        {
+            print( "Failed to set value '{}' on property '{}'. Message: {}\n", prop_value, prop_name, err.getMessage() );
+        }
+        break;
+    }
+    case ic4::PropType::Command:
+    {
+        ic4::Error err;
+        if( !prop.asCommand().execute( err ) )
+        {
+            print( "Failed execute on Command property '{}'. Message: {}\n", prop_name, err.getMessage() );
+        }
+        break;
+    }
+    case ic4::PropType::Integer:
+    {
+        int64_t value_to_set = 0;
+        if( !helper::from_chars_helper( prop_value, value_to_set ) ) {
+            print( "Failed to parse value for property '{}'. Value: '{}'\n", prop_name, prop_value );
+            break;
+        }
+        ic4::Error err;
+        if( !prop.asInteger().setValue( value_to_set, err ) )
+        {
+            print( "Failed to set value '{}' on property '{}'. Message: {}\n", value_to_set, prop_name, err.getMessage() );
+        }
+        break;
+    }
+    case ic4::PropType::Float:
+    {
+        double value_to_set = 0;
+        if( !helper::from_chars_helper( prop_value, value_to_set ) ) {
+            print( "Failed to parse value for property '{}'. Value: '{}'\n", prop_name, prop_value );
+            break;
+        }
+        ic4::Error err;
+        if( !prop.asFloat().setValue( value_to_set, err ) )
+        {
+            print( "Failed to set value '{}' on property '{}'. Message: {}\n", value_to_set, prop_name, err.getMessage() );
+        }
+        break;
+    }
+    case ic4::PropType::Enumeration:
+    {
+        auto enum_prop = prop.asEnumeration();
+        if( enum_prop.findEntry( prop_value, ic4::ignoreError ).is_valid() )
+        {
+            ic4::Error err;
+            if( !enum_prop.selectEntry( prop_value, err ) )
+            {
+                print( "Failed to select entry '{}' on property '{}'. Message: {}\n", prop_value, prop_name, err.getMessage() );
+            }
+        }
+        else
+        {
+            int64_t value_to_set = 0;
+            if( !helper::from_chars_helper( prop_value, value_to_set ) ) {
+                print( "Failed to parse value for property '{}'. Value: '{}'\n", prop_name, prop_value );
+                break;
+            }
+
+            ic4::Error err;
+            if( !enum_prop.setValue( value_to_set, err ) )
+            {
+                print( "Failed to set value '{}' on property '{}'. Message: {}\n", value_to_set, prop_name, err.getMessage() );
+            }
+        }
+        break;
+    }
+    case ic4::PropType::Category:
+    case ic4::PropType::Register:
+    case ic4::PropType::Port:
+    case ic4::PropType::EnumEntry:
+        print( "Cannot set a value on a {} property. Name: '{}'\n", ic4_helper::toString( prop.getType() ), prop_name );
+        break;
+    case ic4::PropType::Invalid:
+        print( "Failed to find property. Name: '{}'\n", prop_name );
+        break;
+    default:
+        print( "Invalid property type. Value: {}\n", static_cast<int>(prop.getType()) );
+        break;
+    };
+}
+
+static void print_or_set_PropertyMap_entries( ic4::PropertyMap& map, const std::vector<std::string>& lst )
 {
     if( lst.empty() )
     {
@@ -459,19 +583,27 @@ static void print_PropertyMap( const ic4::PropertyMap& map, const std::vector<st
     {
         for( auto&& entry : lst )
         {
-            auto property = map.get( entry );
-            if( property.is_valid() ) {
-                print_property( 0, property );
-            } else {
-                print( "Failed to find property for name: '{}'\n", entry );
+            auto parse_entry = split_prop_entry( entry );
+            if( !parse_entry.second.empty() )
+            {
+                set_property_from_assign_entry( map, parse_entry.first, parse_entry.second );
+            }
+            else
+            {
+                auto property = map.get( entry );
+                if( property.is_valid() ) {
+                    print_property( 0, property );
+                } else {
+                    print( "Failed to find property for name: '{}'\n", entry );
+                }
             }
         }
     }
 }
 
-static void print_properties( std::string id, bool force_interface, const std::vector<std::string>& lst )
+static void exec_prop_cmd( std::string id, bool force_interface, const std::vector<std::string>& lst )
 {
-    if(force_interface)
+    if( force_interface )
     {
         auto dev = find_interface( id );
         if( !dev ) {
@@ -479,7 +611,7 @@ static void print_properties( std::string id, bool force_interface, const std::v
             return;
         }
         auto map = dev->itfPropertyMap();
-        print_PropertyMap( map, lst );
+        print_or_set_PropertyMap_entries( map, lst );
     }
     else
     {
@@ -492,7 +624,7 @@ static void print_properties( std::string id, bool force_interface, const std::v
         g.deviceOpen( *dev );
 
         auto map = g.devicePropertyMap();
-        print_PropertyMap( map, lst );
+        print_or_set_PropertyMap_entries( map, lst );
     }
 }
 
@@ -601,161 +733,6 @@ static void show_live( std::string id )
     g.acquisitionStop();
 }
 
-
-static void set_property_in_map( ic4::PropertyMap& property_map, const std::vector<std::string>& prop_assign_list )
-{
-    for( auto&& prop_assign_entry : prop_assign_list )
-    {
-        auto f = prop_assign_entry.find( '=' );
-        if( f == std::string::npos ) {
-            print( "Failed to parse '{}', should be in 'a=b'\n", prop_assign_entry );
-            continue;
-        }
-
-        auto prop_name = prop_assign_entry.substr( 0, f );
-        auto prop_value = prop_assign_entry.substr( f + 1 );
-
-        print( "Trying to set property '{}' to '{}'\n", prop_name, prop_value );
-
-        auto prop = property_map.get( prop_name.c_str(), ic4::ignoreError );
-        switch( prop.getType() )
-        {
-        case ic4::PropType::Boolean:
-        {
-            bool value_to_set = false;
-            if( prop_value == "true" ) {
-                value_to_set = true;
-            }
-            else if( prop_value == "false" ) {
-                value_to_set = false;
-            } else {
-                print( "Failed to parse value for property '{}'. Value: '{}'\n", prop_name, prop_value );
-                break;
-            }
-            ic4::Error err;
-            if( !prop.asBoolean().setValue( value_to_set, err ) )
-            {
-                print( "Failed to set value '{}' on property '{}'. Message: {}\n", value_to_set, prop_name, err.getMessage() );
-            }
-            break;
-        }
-        case ic4::PropType::String:
-        {
-            ic4::Error err;
-            if( !prop.asString().setValue( prop_value, err ) )
-            {
-                print( "Failed to set value '{}' on property '{}'. Message: {}\n", prop_value, prop_name, err.getMessage() );
-            }
-            break;
-        }
-        case ic4::PropType::Command:
-        {
-            ic4::Error err;
-            if( !prop.asCommand().execute( err ) )
-            {
-                print( "Failed execute on Command property '{}'. Message: {}\n", prop_name, err.getMessage() );
-            }
-            break;
-        }
-        case ic4::PropType::Integer:
-        {
-            int64_t value_to_set = 0;
-            if( !helper::from_chars_helper( prop_value, value_to_set ) ) {
-                print( "Failed to parse value for property '{}'. Value: '{}'\n", prop_name, prop_value );
-                break;
-            }
-            ic4::Error err;
-            if( !prop.asInteger().setValue( value_to_set, err ) )
-            {
-                print( "Failed to set value '{}' on property '{}'. Message: {}\n", value_to_set, prop_name, err.getMessage() );
-            }
-            break;
-        }
-        case ic4::PropType::Float:
-        {
-            double value_to_set = 0;
-            if( !helper::from_chars_helper( prop_value, value_to_set ) ) {
-                print( "Failed to parse value for property '{}'. Value: '{}'\n", prop_name, prop_value );
-                break;
-            }
-            ic4::Error err;
-            if( !prop.asFloat().setValue( value_to_set, err ) )
-            {
-                print( "Failed to set value '{}' on property '{}'. Message: {}\n", value_to_set, prop_name, err.getMessage() );
-            }
-            break;
-        }
-        case ic4::PropType::Enumeration:
-        {
-            auto enum_prop = prop.asEnumeration();
-            if( enum_prop.findEntry( prop_value, ic4::ignoreError ).is_valid() )
-            {
-                ic4::Error err;
-                if( !enum_prop.selectEntry( prop_value, err ) )
-                {
-                    print( "Failed to select entry '{}' on property '{}'. Message: {}\n", prop_value, prop_name, err.getMessage() );
-                }
-            }
-            else
-            {
-                int64_t value_to_set = 0;
-                if( !helper::from_chars_helper( prop_value, value_to_set ) ) {
-                    print( "Failed to parse value for property '{}'. Value: '{}'\n", prop_name, prop_value );
-                    break;
-                }
-
-                ic4::Error err;
-                if( !enum_prop.setValue( value_to_set, err ) )
-                {
-                    print( "Failed to set value '{}' on property '{}'. Message: {}\n", value_to_set, prop_name, err.getMessage() );
-                }
-            }
-            break;
-        }
-        case ic4::PropType::Category:
-        case ic4::PropType::Register:
-        case ic4::PropType::Port:
-        case ic4::PropType::EnumEntry:
-            print( "Cannot set a value on a {} property. Name: '{}'\n", ic4_helper::toString( prop.getType() ), prop_name );
-            break;
-        case ic4::PropType::Invalid:
-            print( "Failed to find property. Name: '{}'\n", prop_name );
-            break;
-        default:
-            print( "Invalid property type. Value: {}\n", static_cast<int>(prop.getType()) );
-            break;
-        };
-    }
-}
-
-
-static void set_props( std::string id, bool id_is_interface, const std::vector<std::string>& prop_assign_list )
-{
-    if( id_is_interface )
-    {
-        auto dev = find_interface( id );
-        if( !dev ) {
-            print( "Failed to find interface for id '{}'", id );
-            return;
-        }
-        auto map = dev->itfPropertyMap();
-        set_property_in_map( map, prop_assign_list );
-    }
-    else
-    {
-        auto dev = find_device( id );
-        if( !dev ) {
-            print( "Failed to find device for id '{}'", id );
-            return;
-        }
-        ic4::Grabber g;
-        g.deviceOpen( *dev );
-
-        auto map = g.devicePropertyMap();
-        set_property_in_map( map, prop_assign_list );
-    }
-}
-
 static void show_prop_page( std::string id, bool id_is_interface )
 {
     if( id_is_interface )
@@ -781,6 +758,13 @@ static void show_prop_page( std::string id, bool id_is_interface )
         auto map = g.devicePropertyMap();
         ic4::showPropertyDialog( 0, map );
     }
+}
+
+static void show_system_info()
+{
+    auto env_var = helper::get_env_var( "GENICAM_GENTL64_PATH" );
+    print( 0, "Environment:\n" );
+    print( 1, "GENICAM_GENTL64_PATH: {}\n", env_var );
 }
 
 int main( int argc, char** argv )
@@ -815,22 +799,16 @@ int main( int argc, char** argv )
     interface_cmd->add_option( "interface-id", arg_device_id,
         "If specified only information for this interface is printed, otherwise all interfaces are listed. You can specify an index e.g. '0'." );
 
-    auto list_props_cmd = app.add_subcommand( "list-prop", 
-        "List properties of the specified device\n."
-        "\tTo list all properties for a device: 'ic4-ctrl list-prop <device-id>'.\n"
-        "\tYou can specify properties to only list those: 'ic4-ctrl list-prop <device-id> <prop-name-0> <prop-name-1>'." );
-    list_props_cmd->allow_extras();
-    list_props_cmd->add_flag( "--interface", force_interface,
+    auto props_cmd = app.add_subcommand( "prop",
+        "List or set property values of the specified device or interface.\n"
+        "\tTo list all device properties 'ic4-ctrl prop <device-id>'.\n"
+        "\tTo list specific device properties 'ic4-ctrl prop <device-id> ExposureAuto ExposureTime'.\n"
+        "\tTo set specific device properties 'ic4-ctrl prop <device-id> ExposureAuto=Off ExposureTime=0.5'."
+    );
+    props_cmd->allow_extras();
+    props_cmd->add_flag( "--interface", force_interface,
         "If set the <device-id> is interpreted as an interface-id." );
-    list_props_cmd->add_option( "device-id", arg_device_id,
-        "Specifies the device to open. You can specify an index e.g. '0'." )->required();
-
-    auto set_props_cmd = app.add_subcommand( "set-prop", 
-        "Set a list of properties 'ic4-ctrl set-prop <device-id> ExposureAuto=false Exposure=0.3'." );
-    set_props_cmd->allow_extras();
-    set_props_cmd->add_flag( "--interface", force_interface,
-        "If set the <device-id> is interpreted as an interface-id." );
-    set_props_cmd->add_option( "device-id", arg_device_id,
+    props_cmd->add_option( "device-id", arg_device_id,
         "Specifies the device to open. You can specify an index e.g. '0'." )->required();
 
     auto save_props_cmd = app.add_subcommand( "save-prop", 
@@ -862,6 +840,10 @@ int main( int argc, char** argv )
         "Specifies the device to open. You can specify an index e.g. '0'." )->required();
     show_prop_page_cmd->add_flag( "--interface", force_interface,
         "If set the <device-id> is interpreted as an interface-id." );
+
+    auto system_cmd = app.add_subcommand( "system",
+        "List some information for about the system."
+    );
 
     try
     {
@@ -902,13 +884,12 @@ int main( int argc, char** argv )
                 print_interface( arg_device_id );
             }
         }
-        else if( list_props_cmd->parsed() ) {
-            print_properties( arg_device_id, force_interface, list_props_cmd->remaining() );
+        else if( props_cmd->parsed() )
+        {
+            exec_prop_cmd( arg_device_id, force_interface, props_cmd->remaining() );
         }
-        else if( set_props_cmd->parsed() ) {
-            set_props( arg_device_id, force_interface, set_props_cmd->remaining() );
-        }
-        else if( save_props_cmd->parsed() ) {
+        else if( save_props_cmd->parsed() )
+        {
             save_properties( arg_device_id, force_interface, arg_filename );
         }
         else if( image_cmd->parsed() ) {
@@ -919,6 +900,9 @@ int main( int argc, char** argv )
         }
         else if( show_prop_page_cmd->parsed() ) {
             show_prop_page( arg_device_id, force_interface );
+        }
+        else if( system_cmd->parsed() ) {
+            show_system_info();
         }
         else
         {
