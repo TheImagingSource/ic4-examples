@@ -688,7 +688,7 @@ static void set_property_in_map( ic4::PropertyMap& property_map, const std::vect
         case ic4::PropType::Enumeration:
         {
             auto enum_prop = prop.asEnumeration();
-            if( enum_prop.findEntry( prop_value ).is_valid() )
+            if( enum_prop.findEntry( prop_value, ic4::ignoreError ).is_valid() )
             {
                 ic4::Error err;
                 if( !enum_prop.selectEntry( prop_value, err ) )
