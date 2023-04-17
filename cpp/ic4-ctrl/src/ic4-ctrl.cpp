@@ -460,7 +460,7 @@ static void set_property_from_assign_entry( ic4::PropertyMap& property_map, cons
 {
     print( "Setting property '{}' to '{}'\n", prop_name, prop_value );
 
-    auto prop = property_map.get( prop_name.c_str(), ic4::ignoreError );
+    auto prop = property_map.find( prop_name.c_str(), ic4::ignoreError );
     switch( prop.getType() )
     {
     case ic4::PropType::Boolean:
@@ -590,7 +590,7 @@ static void print_or_set_PropertyMap_entries( ic4::PropertyMap& map, const std::
             }
             else
             {
-                auto property = map.get( entry );
+                auto property = map.find( entry );
                 if( property.is_valid() ) {
                     print_property( 0, property );
                 } else {
