@@ -274,7 +274,7 @@ static void    print_property( int offset, const ic4::Property& property )
                 }
                 else
                 {
-                    print( offset + 1, "ValidValueSet:" );
+                    print( offset + 1, "ValidValueSet:\n" );
                     for( auto&& val : vvset ) {
                         print( offset + 2, "{}\n", val );
                     }
@@ -311,18 +311,18 @@ static void    print_property( int offset, const ic4::Property& property )
             }
             else if( inc_mode == ic4::PropIncrementMode::ValueSet )
             {
-                //std::vector<double> vvset;
-                //if( !prop.getValidValueSet( vvset, ic4::ignoreError ) ) {
-                //    print( offset + 1, "Failed to fetch ValidValueSet\n" );
-                //}
-                //else
-                //{
-                //    print( offset + 1, "ValidValueSet:" );
-                //    for( auto&& val : vvset ) {
-                //        print( offset + 2, "{}\n", val );
-                //    }
-                //    print( "\n" );
-                //}
+                std::vector<double> vvset;
+                if( !prop.getValidValueSet( vvset, ic4::ignoreError ) ) {
+                    print( offset + 1, "Failed to fetch ValidValueSet\n" );
+                }
+                else
+                {
+                    print( offset + 1, "ValidValueSet:\n" );
+                    for( auto&& val : vvset ) {
+                        print( offset + 2, "{}\n", val );
+                    }
+                    print( "\n" );
+                }
             }
 
             print( offset + 1, "Value: {}\n",
@@ -461,114 +461,11 @@ static void set_property_from_assign_entry( ic4::PropertyMap& property_map, cons
 {
     print( "Setting property '{}' to '{}'\n", prop_name, prop_value );
 
-    auto prop = property_map.find( prop_name.c_str(), ic4::ignoreError );
-    switch( prop.getType() )
+    ic4::Error err;
+    if (!property_map.setValue(prop_name, prop_value, err))
     {
-    case ic4::PropType::Boolean:
-    {
-        bool value_to_set = false;
-        if( prop_value == "true" ) {
-            value_to_set = true;
-        }
-        else if( prop_value == "false" ) {
-            value_to_set = false;
-        } else {
-            print( "Failed to parse value for property '{}'. Value: '{}'\n", prop_name, prop_value );
-            break;
-        }
-        ic4::Error err;
-        if( !prop.asBoolean().setValue( value_to_set, err ) )
-        {
-            print( "Failed to set value '{}' on property '{}'. Message: {}\n", value_to_set, prop_name, err.getMessage() );
-        }
-        break;
+        print("Failed to set value '{}' on property '{}'. Message: {}\n", prop_value, prop_name, err.getMessage());
     }
-    case ic4::PropType::String:
-    {
-        ic4::Error err;
-        if( !prop.asString().setValue( prop_value, err ) )
-        {
-            print( "Failed to set value '{}' on property '{}'. Message: {}\n", prop_value, prop_name, err.getMessage() );
-        }
-        break;
-    }
-    case ic4::PropType::Command:
-    {
-        ic4::Error err;
-        if( !prop.asCommand().execute( err ) )
-        {
-            print( "Failed execute on Command property '{}'. Message: {}\n", prop_name, err.getMessage() );
-        }
-        break;
-    }
-    case ic4::PropType::Integer:
-    {
-        int64_t value_to_set = 0;
-        if( !helper::from_chars_helper( prop_value, value_to_set ) ) {
-            print( "Failed to parse value for property '{}'. Value: '{}'\n", prop_name, prop_value );
-            break;
-        }
-        ic4::Error err;
-        if( !prop.asInteger().setValue( value_to_set, err ) )
-        {
-            print( "Failed to set value '{}' on property '{}'. Message: {}\n", value_to_set, prop_name, err.getMessage() );
-        }
-        break;
-    }
-    case ic4::PropType::Float:
-    {
-        double value_to_set = 0;
-        if( !helper::from_chars_helper( prop_value, value_to_set ) ) {
-            print( "Failed to parse value for property '{}'. Value: '{}'\n", prop_name, prop_value );
-            break;
-        }
-        ic4::Error err;
-        if( !prop.asFloat().setValue( value_to_set, err ) )
-        {
-            print( "Failed to set value '{}' on property '{}'. Message: {}\n", value_to_set, prop_name, err.getMessage() );
-        }
-        break;
-    }
-    case ic4::PropType::Enumeration:
-    {
-        auto enum_prop = prop.asEnumeration();
-        if( enum_prop.findEntry( prop_value, ic4::ignoreError ).is_valid() )
-        {
-            ic4::Error err;
-            if( !enum_prop.selectEntry( prop_value, err ) )
-            {
-                print( "Failed to select entry '{}' on property '{}'. Message: {}\n", prop_value, prop_name, err.getMessage() );
-            }
-        }
-        else
-        {
-            int64_t value_to_set = 0;
-            if( !helper::from_chars_helper( prop_value, value_to_set ) ) {
-                print( "Failed to parse value for property '{}'. Value: '{}'\n", prop_name, prop_value );
-                break;
-            }
-
-            ic4::Error err;
-            if( !enum_prop.setValue( value_to_set, err ) )
-            {
-                print( "Failed to set value '{}' on property '{}'. Message: {}\n", value_to_set, prop_name, err.getMessage() );
-            }
-        }
-        break;
-    }
-    case ic4::PropType::Category:
-    case ic4::PropType::Register:
-    case ic4::PropType::Port:
-    case ic4::PropType::EnumEntry:
-        print( "Cannot set a value on a {} property. Name: '{}'\n", ic4_helper::toString( prop.getType() ), prop_name );
-        break;
-    case ic4::PropType::Invalid:
-        print( "Failed to find property. Name: '{}'\n", prop_name );
-        break;
-    default:
-        print( "Invalid property type. Value: {}\n", static_cast<int>(prop.getType()) );
-        break;
-    };
 }
 
 static void print_or_set_PropertyMap_entries( ic4::PropertyMap& map, const std::vector<std::string>& lst )
