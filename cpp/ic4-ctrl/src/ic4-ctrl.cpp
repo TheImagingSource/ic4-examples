@@ -108,6 +108,7 @@ static auto list_devices() -> void
     int index = 0;
     for( auto&& e : list ) {
         print( "{:>3} {:24} {:8} {}\n", index, e.getModelName(), e.getSerial(), e.getInterface().getTransportLayerName() );
+        index += 1;
     }
     if( list.empty() ) {
         print( "    No devices found\n" );
