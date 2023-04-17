@@ -12,7 +12,7 @@
 #include "ic4_enum_to_string.h"
 #include "ic4-ctrl-helper.h"
 
-void    print_property( int offset, const ic4::Property& property );
+static void    print_property( int offset, const ic4::Property& property );
 
 template<class ... Targs>
 void print( fmt::format_string<Targs...> fmt, Targs&& ... args )
@@ -715,7 +715,7 @@ static void show_live( std::string id )
     ic4::Grabber g;
     g.deviceOpen( *dev );
 
-    auto display = ic4::Display::create( ic4::DisplayType::Default, nullptr );
+    auto display = ic4::Display::create( ic4::DisplayType::Default, IC4_WINDOW_HANDLE_NULL );
     g.streamSetup( display, ic4::StreamSetupOption::AcquisitionStart );
 
     std::mutex mtx;
