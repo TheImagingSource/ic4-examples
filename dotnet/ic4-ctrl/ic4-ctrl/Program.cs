@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -15,7 +17,7 @@ namespace ic4_ctrl
 {
     internal class Program
     {
-        private static void print(int offset, string text)
+        private static void Print(int offset, string text)
         {
             for (int i = 0; i < offset; ++i)
             {
@@ -24,7 +26,90 @@ namespace ic4_ctrl
             System.Console.Write(text);
         }
 
-        private static void list_interfaces()
+        private static void Print(string text)
+        {
+            System.Console.Write(text);
+        }
+
+        private static ic4.DeviceInfo FindDevice(string id)
+        {
+            var list = DeviceEnum.Devices;
+            if(!list.Any())
+            {
+                throw new Exception("No devices are available");
+            }
+
+            var device = list.FirstOrDefault(dev => dev.Serial == id || dev.UniqueName == id || dev.ModelName == id);
+            if(device != null)
+            {
+                return device;
+            }
+
+            try
+            {
+                int index = int.Parse(id);
+                if (index >= 0 && index < list.Count())
+                {
+                    return list.ElementAt(index);
+                }
+            }
+            catch
+            {
+                return null;
+            }
+
+            return null;
+        }
+
+        private static ic4.Interface FindInterface(string id)
+        {
+            var list = DeviceEnum.Interfaces;
+            if (!list.Any())
+            {
+                throw new Exception("No Interfaces are available.");
+            }
+
+            var itf = list.FirstOrDefault(i => i.Name == id || i.TransportLayerName == id);
+            if (itf != null)
+            {
+                return itf;
+            }
+
+
+            try
+            {
+                int index = int.Parse(id);
+                if (index > 0 && index < list.Count())
+                {
+                    return list.ElementAt(index);
+                }
+            }
+            catch
+            {
+            }
+
+            return null;
+        }
+
+        private static void ListDevices()
+        {
+            var list = DeviceEnum.Devices;
+
+            System.Console.WriteLine("Device list:");
+            System.Console.WriteLine("\tIndex\tModelName\tSerial\t\tInterfaceName");
+            int index = 0;
+            foreach (var device in list)
+            {
+                Print(1, string.Format("{0}\t{1}\t{2}\t{3}", index, device.ModelName, device.Serial, device.Interface.TransportLayerName));
+                index++;
+            }
+            if (!list.Any())
+            {
+                System.Console.WriteLine("\tNo devices found");
+            }
+        }
+
+        private static void ListInterfaces()
         {
             var list = DeviceEnum.Interfaces;
 
@@ -32,8 +117,8 @@ namespace ic4_ctrl
 
             foreach (var e in list)
             {
-                System.Console.WriteLine("\t{e.Name}");
-                System.Console.WriteLine("\tTransportLayerName: {e.TransportLayerName}");
+                Print(1, string.Format("{0}\n",e.Name));
+                Print(2, string.Format("TransportLayerName: {0}\n", e.TransportLayerName));
             }
 
             if (!list.Any())
@@ -42,67 +127,44 @@ namespace ic4_ctrl
             }
         }
 
-        private static ic4.Interface find_interface(string id)
+        private static void PrintDevice(string id)
         {
-            var list = DeviceEnum.Interfaces;
-            if (!list.Any())
+            var dev = FindDevice(id);
+            if (dev == null)
             {
-                throw new Exception("No Interfaces are available.");
+                throw new Exception(string.Format("Failed to find device for id '{0}'", id));
             }
 
+            Print(string.Format("ModelName: '{0}'\n", dev.ModelName));
+            Print(string.Format("Serial: '{0}'\n", dev.Serial));
+            Print(string.Format("UniqueName: '{0}'\n", dev.UniqueName));
+            Print(string.Format("DeviceVersion: '{0}'\n", dev.Version));
+            Print(string.Format("InterfaceName: '{0}'\n", dev.Interface.TransportLayerName));
 
-            foreach (var itf in list)
-            {
-                if(itf.Name == id)
-                {
-                    return itf;
-                }
-            }
-
-            foreach (var itf in list)
-            {
-                if (itf.TransportLayerName == id)
-                {
-                    return itf;
-                }
-            }
-
-            try
-            {
-                int index = Int32.Parse(id);
-                if( index < 0 || index >= list.Count())
-                {
-                    return null;
-                }
-                return list.ToArray()[index];
-            }
-            catch
-            {
-            }
-            return null;
         }
-        private static void print_interface(string interface_id)
+
+        private static void PrintInterface(string interface_id)
         {
-            var itf = find_interface(interface_id);
+            var itf = FindInterface(interface_id);
             if (itf == null)
             {
                 throw new Exception("Failed to find device for id '{id}'");
             }
 
-            System.Console.WriteLine("Name: '{itf.Name}'");
-            System.Console.WriteLine("TransportLayerName: '{itf.TransportLayerName}'");
-            System.Console.WriteLine("TransportLayerType: '{itf.TransportLayerType}'");
-            System.Console.WriteLine("TransportVersion: '{itf.TransportVersion}'");
+            Print( string.Format(" Name: '{0}'", itf.Name)); ;
+            Print( string.Format(" TransportLayerName: '{0}'\n", itf.TransportLayerName));
+            Print( string.Format(" TransportLayerType: '{0}'\n", itf.TransportLayerType ));
+            Print( string.Format(" TransportVersion: '{0}'\n", itf.TransportLayerVersion ));
 
-            System.Console.WriteLine("Interface Properties:\n");
+            Print("Interface Properties:\n");
             var map = itf.PropertyMap;
             foreach(var property in map.All)
             {
-                print_property(1, property);
+                PrintProperty(1, property);
             }
         }
 
-        private static string fetch_PropertyMethod_value<T>(ic4.Property prop, Expression<Func<T>> address)
+        private static string FetchPropertyMethodValue<T>(ic4.Property prop, Expression<Func<T>> address)
         {
             var propertyInfo = ((MemberExpression)address.Body).Member as PropertyInfo;
             if (propertyInfo == null)
@@ -131,7 +193,7 @@ namespace ic4_ctrl
 
             return result.ToString();
         }
-        private static string fetch_PropertyMethod_value<T>(ic4.Property prop, Expression<Func<T>> address, ic4.IntRepresentation int_rep)
+        private static string FetchPropertyMethodValue<T>(ic4.Property prop, Expression<Func<T>> address, ic4.IntRepresentation int_rep)
         {
             var propertyInfo = ((MemberExpression)address.Body).Member as PropertyInfo;
             if (propertyInfo == null)
@@ -139,7 +201,7 @@ namespace ic4_ctrl
                 throw new ArgumentException("The lambda expression 'property' should point to a valid Property");
             }
 
-            long v = 0;
+            long v;
 
             try
             {
@@ -160,15 +222,15 @@ namespace ic4_ctrl
 
             switch (int_rep)
             {
-                case ic4.IntRepresentation.Boolean: return string.Format("{}", v != 0 ? 1 : 0);
-                case ic4.IntRepresentation.HexNumber: return string.Format("0x{:X}", v);
+                case ic4.IntRepresentation.Boolean: return string.Format("{0}", v != 0 ? 1 : 0);
+                case ic4.IntRepresentation.HexNumber: return string.Format("0x{0}", v);
                 case ic4.IntRepresentation.IP4Address:
                     {
                         ulong v0 = ((ulong)v >> 0) & 0xFF;
                         ulong v1 = ((ulong)v >> 8) & 0xFF;
                         ulong v2 = ((ulong)v >> 16) & 0xFF;
                         ulong v3 = ((ulong)v >> 24) & 0xFF;
-                        return string.Format("{}.{}.{}.{}", v3, v2, v1, v0);
+                        return string.Format("{0}.{1}.{2}.{3}", v3, v2, v1, v0);
                     }
                 case ic4.IntRepresentation.MacAddress:
                     {
@@ -178,43 +240,43 @@ namespace ic4_ctrl
                         ulong v3 = ((ulong)v >> 24) & 0xFF;
                         ulong v4 = ((ulong)v >> 32) & 0xFF;
                         ulong v5 = ((ulong)v >> 40) & 0xFF;
-                        return string.Format("{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}", v5, v4, v3, v2, v1, v0);
+                        return string.Format("{0}:{1}:{2}:{3}:{4}:{5}", v5, v4, v3, v2, v1, v0);
                     }
                 case ic4.IntRepresentation.Linear:
                 case ic4.IntRepresentation.Logarithmic:
                 case ic4.IntRepresentation.PureNumber:
                 default:
-                    return string.Format("{}", v);
+                    return string.Format("{0}", v);
             }
         }
 
-        private static void print_property(int offset, Property property)
+        private static void PrintProperty(int offset, Property property)
         {
-            var prop_type = property.Type;
-            print(offset + 0, "{property.Name} - Type: {prop_type.ToString()}, DisplayName: {property.DisplayName}\n");
-            print(offset + 1, "Description: {property.Description}\n");
-            print(offset + 1, "Tooltip: {property.Tooltip}\n");
-            print(offset + 3, "\n");
-            print(offset + 1, "Visibility: {property.Visibility.ToString()}, Available: {property.IsAvailable}, Locked: {property.IsLocked}, ReadOnly: {property.IsReadonly}\n");
+            var propType = property.Type;
+            Print(offset + 0, string.Format("{0} - Type: {1}, DisplayName: {2}\n", property.Name, propType.ToString(), property.DisplayName));
+            Print(offset + 1, string.Format("Description: {0}\n", property.Description));
+            Print(offset + 1, string.Format("Tooltip: {0}\n", property.Tooltip ));
+            Print(offset + 3, "\n");
+            Print(offset + 1, string.Format("Visibility: {0}, Available: {1}, Locked: {2}, ReadOnly: {3}\n", property.Visibility.ToString(), property.IsAvailable, property.IsLocked, property.IsReadonly));
 
             if (property.IsSelector)
             {
-                print(offset + 1, "Selected properties:\n");
+                Print(offset + 1, "Selected properties:\n");
                 foreach( var selected in property.SelectedProperties)
                 {
-                    print(offset + 2, "{selected.Name}\n");
+                    Print(offset + 2, "{selected.Name}\n");
                 }
             }
 
-            switch (prop_type)
+            switch (propType)
             {
                 case PropertyType.Integer:
                     {
                         PropInteger prop = property as ic4.PropInteger;
-                        var inc_mode = prop.IncrementMode;
+                        var incMode = prop.IncrementMode;
                         var rep = prop.Representation;
 
-                        print(offset + 1, "Representation: '{rep}', Unit: '{prop.Unit}', IncrementMode: '{inc_mode}'\n");
+                        Print(offset + 1, string.Format("Representation: '{0}', Unit: '{1}', IncrementMode: '{2}'\n", rep, prop.Unit, incMode));
 
                         if (prop.IsAvailable)
                         {
@@ -223,69 +285,69 @@ namespace ic4_ctrl
                                 var min = prop.Minimum;
                                 var max = prop.Maximum;
 
-                                print(offset + 1, string.Format("Min: {}, Max: {}\n",
-                                    fetch_PropertyMethod_value<long>(prop, () => prop.Minimum, rep),
-                                    fetch_PropertyMethod_value<long>(prop, () => prop.Maximum, rep))
+                                Print(offset + 1, string.Format("Min: {0}, Max: {1}\n",
+                                    FetchPropertyMethodValue<long>(prop, () => prop.Minimum, rep),
+                                    FetchPropertyMethodValue<long>(prop, () => prop.Maximum, rep))
                                 );
                             }
-                            if (inc_mode == ic4.PropertyIncrementMode.Increment)
+                            if (incMode == ic4.PropertyIncrementMode.Increment)
                             {
                                 if (!prop.IsReadonly)
                                 {
-                                    print(offset + 1, string.Format("Inc: {}\n",
-                                        fetch_PropertyMethod_value<long>(prop, () => prop.Increment, rep))
+                                    Print(offset + 1, string.Format("Inc: {0}\n",
+                                        FetchPropertyMethodValue<long>(prop, () => prop.Increment, rep))
                                     );
                                 }
                             }
-                            else if (inc_mode == ic4.PropertyIncrementMode.ValueSet)
+                            else if (incMode == ic4.PropertyIncrementMode.ValueSet)
                             {
                                 try
                                 {
                                     var vvset = prop.ValidValueSet;
-                                    print(offset + 1, "ValidValueSet:");
+                                    Print(offset + 1, "ValidValueSet:");
                                     foreach(var val in  vvset )
                                     {
-                                        print(offset + 2, string.Format("{}\n", val));
+                                        Print(offset + 2, string.Format("{0}\n", val));
                                     }
                                     System.Console.Write("\n");
                                 }
                                 catch
                                 {
-                                    print(offset + 1, "Failed to fetch ValidValueSet\n");
+                                    Print(offset + 1, "Failed to fetch ValidValueSet\n");
                                 }
                                
                             }
-                            print(offset + 1, string.Format("Value: {}\n",
-                                fetch_PropertyMethod_value<long>(prop, () => prop.Value, rep))
+                            Print(offset + 1, string.Format("Value: {0}\n",
+                                FetchPropertyMethodValue<long>(prop, () => prop.Value, rep))
                             );
                         }
-                        break;
                     }
+                    break;
                 case PropertyType.Float:
                     {
                         var prop = property as PropFloat;
-                        var inc_mode = prop.IncrementMode;
+                        var incMode = prop.IncrementMode;
 
-                        print(offset + 1, string.Format("Representation: '{}', Unit: '{}', IncrementMode: '{}', DisplayNotation: {}, DisplayPrecision: {}\n",
-                            prop.Representation, prop.Unit, inc_mode, prop.DisplayNotation, prop.DisplayPrecision));
+                        Print(offset + 1, string.Format("Representation: '{0}', Unit: '{1}', IncrementMode: '{2}', DisplayNotation: {3}, DisplayPrecision: {4}\n",
+                            prop.Representation, prop.Unit, incMode, prop.DisplayNotation, prop.DisplayPrecision));
 
                         if (prop.IsAvailable)
                         {
                             if (!prop.IsReadonly)
                             {
-                                print(offset + 1, string.Format("Min: {}, Max: {}\n",
-                                    fetch_PropertyMethod_value<double>(prop, () => prop.Minimum),
-                                    fetch_PropertyMethod_value<double>(prop, () => prop.Maximum))
+                                Print(offset + 1, string.Format("Min: {0}, Max: {1}\n",
+                                    FetchPropertyMethodValue<double>(prop, () => prop.Minimum),
+                                    FetchPropertyMethodValue<double>(prop, () => prop.Maximum))
                                 );
                             }
 
-                            if (inc_mode == PropertyIncrementMode.Increment)
+                            if (incMode == PropertyIncrementMode.Increment)
                             {
-                                print(offset + 1, string.Format("Inc: {}\n",
-                                    fetch_PropertyMethod_value<double>(prop, () => prop.Increment))
+                                Print(offset + 1, string.Format("Inc: {0}\n",
+                                    FetchPropertyMethodValue<double>(prop, () => prop.Increment))
                                 );
                             }
-                            else if (inc_mode == PropertyIncrementMode.ValueSet)
+                            else if (incMode == PropertyIncrementMode.ValueSet)
                             {
                                 //std::vector<double> vvset;
                                 //if( !prop.getValidValueSet( vvset, ic4::ignoreError ) ) {
@@ -301,87 +363,88 @@ namespace ic4_ctrl
                                 //}
                             }
 
-                            print(offset + 1, string.Format("Value: {}\n",
-                                fetch_PropertyMethod_value<double>(prop, () => prop.Value))
+                            Print(offset + 1, string.Format("Value: {0}\n",
+                                FetchPropertyMethodValue<double>(prop, () => prop.Value))
                             );
                         }
-                        break;
                     }
+                    break;
                 case PropertyType.Enumeration:
                     {
                         var prop = property as PropEnumeration;
-                        print(offset + 1, "EnumEntries:\n");
+                        Print(offset + 1, "EnumEntries:\n");
                         foreach (var entry in  prop.Entries)
                         {
-                            var prop_enum_entry = entry as PropEnumEntry;
+                            var PropEnumEntry = entry as PropEnumEntry;
 
-                            print_property(offset + 2, prop_enum_entry);
-                            print(0, "\n");
+                            PrintProperty(offset + 2, PropEnumEntry);
+                            Print(0, "\n");
                         }
 
                         if (prop.IsAvailable)
                         {
                             try
                             {
-                                var selected_entry = prop.SelectedEntry;
-                                print(offset + 1, string.Format("Value: {}, SelectedEntry.Name: '{}'\n",
-                                    fetch_PropertyMethod_value<long>(prop, () => prop.Value),
-                                    selected_entry.Name)
+                                var selectedEntry = prop.SelectedEntry;
+                                Print(offset + 1, string.Format("Value: {0}, SelectedEntry.Name: '{1}'\n",
+                                    FetchPropertyMethodValue<long>(prop, () => prop.Value),
+                                    selectedEntry.Name)
                                 );
                             }
                             catch
                             {
-                                print(offset + 1, string.Format("Value: {}, SelectedEntry.Name: '{}'\n", "err", "err"));
+                                Print(offset + 1, string.Format("Value: {0}, SelectedEntry.Name: '{1}'\n", "err", "err"));
                             }   
                         }
-                        break;
                     }
+                    break;
                 case PropertyType.Boolean:
                     {
                         var prop = property as PropBoolean;
 
                         if (prop.IsAvailable)
                         {
-                            print(offset + 1, string.Format("Value: {}\n",
-                                fetch_PropertyMethod_value<bool>(prop, () => prop.Value))
+                            Print(offset + 1, string.Format("Value: {0}\n",
+                                FetchPropertyMethodValue<bool>(prop, () => prop.Value))
                             );
                         }
-                        break;
                     }
+                    break;
                 case PropertyType.String:
                     {
                         var prop = property as PropString;
 
                         if (prop.IsAvailable)
                         {
-                            print(offset + 1, string.Format("Value: '{}', MaxLength: {}\n",
-                                fetch_PropertyMethod_value<string> (prop, () => prop.Value),
-                                fetch_PropertyMethod_value<ulong>(prop, () => prop.MaxLength))
+                            Print(offset + 1, string.Format("Value: '{0}', MaxLength: {1}\n",
+                                FetchPropertyMethodValue<string> (prop, () => prop.Value),
+                                FetchPropertyMethodValue<ulong>(prop, () => prop.MaxLength))
                             );
                         }
-                        break;
+                       
                     }
+                    break;
                 case PropertyType.Command:
                     {
-                        print(0, "\n");
-                        break;
+                        Print(0, "\n");
                     }
+                    break;
                 case PropertyType.Category:
                     {
                         var prop = property as PropCategory;
-                        print(offset + 1, "Features:\n");
+                        Print(offset + 1, "Features:\n");
                         foreach (var feature in prop.Features )
                         {
-                            print(offset + 2, string.Format("{}\n", feature.Name));
+                            Print(offset + 2, string.Format("{0}\n", feature.Name));
                         }
-                        break;
                     }
+                    break;
                 case PropertyType.Register:
                     {
                         var prop = property as PropRegister;
 
-                        print(offset + 1, string.Format("Size: {}\n",
-                            fetch_PropertyMethod_value<ulong>(prop, () => prop.Size))
+                        Print(offset + 1, string.Format("Size: {0}\n",
+                            FetchPropertyMethodValue<ulong>(prop, () => prop.Size))
                         );
                         if (prop.IsAvailable)
                         {
@@ -389,75 +452,370 @@ namespace ic4_ctrl
                             {
                                 var vec = prop.Value;
                                 string str = string.Empty;
-                                int max_entries_to_print = 16;
-                                for (int i = 0; i < Math.Min(max_entries_to_print, vec.Length); ++i)
+                                int maxEntriesToPrint = 16;
+                                for (int i = 0; i < Math.Min(maxEntriesToPrint, vec.Length); ++i)
                                 {
-                                    str += string.Format("{:x}", vec[i]);
+                                    str += string.Format("{0}", vec[i]);
                                     str += ", ";
                                 }
-                                if (vec.Length > max_entries_to_print)
+                                if (vec.Length > maxEntriesToPrint)
                                 {
                                     str += "...";
                                 }
-                                print(offset + 1, string.Format("Value: [{}], Value-Size: {}\n", str, vec.Length));
+                                Print(offset + 1, string.Format("Value: [{0}], Value-Size: {1}\n", str, vec.Length));
                             }
-                            catch
+                            catch(Exception e)
                             {
-                                print(offset + 1, "Value: 'err'");
+                                Print(offset + 1, string.Format("Value: '{0}'", e.Message ));
                             }
                            
                         }
-                        print(0, "\n");
-                        break;
+                        Print(0, "\n");
                     }
+                    break;
                 case PropertyType.Port:
                     {
-                        print(0, "\n");
-                        break;
+                        Print(0, "\n");
                     }
+                    break;
                 case PropertyType.EnumEntry:
                     {
                         var prop = property as PropEnumEntry;
 
                         if (prop.IsAvailable)
                         {
-                            print(offset + 1, string.Format("Value: {}\n", fetch_PropertyMethod_value<long>(prop, () => prop.Value)));
+                            Print(offset + 1, string.Format("Value: {0}\n", FetchPropertyMethodValue<long>(prop, () => prop.Value)));
                         }
-                        print(0, "\n");
-                        break;
+                        Print(0, "\n");
                     }
+                    break;
             };
-            print(0, "\n");
+            Print(0, "\n");
         }
 
-        private static void list_devices()
+        static Tuple<string, string> SplitPropEntry(string propString)
         {
-            var list = DeviceEnum.Devices;
-            
-            System.Console.WriteLine("Device list:\n");
-            System.Console.WriteLine("ModelName     Serial  InterfaceName");
-            int index = 0;
-            foreach(var device in list)
+            var f = propString.Split('=');
+            if (f.Length == 2)
             {
-                // TODO
-                //  print( "{:>3} {:24} {:8} {}\n", index, e.getModelName(), e.getSerial(), e.getInterface().getTransportLayerName() );
-                System.Console.WriteLine("{index,24} {device.ModelName} { device.Serial} {device.Interface.TransportLayerName}\n");
-                index++;
+                return new Tuple<string, string>(f[0], f[1]);
             }
-            if (!list.Any())
+            else
             {
-                System.Console.WriteLine("    No devices found\n");
+                return new Tuple<string, string>(propString, string.Empty);
             }
         }
 
-        private static void print_device(string device_id)
+        private static void SetPropertyFromAssignEntry(PropertyMap propertyMap, string propName, string propValue)
         {
-            Console.WriteLine("print_device:  " + device_id.ToString());
+            Print(string.Format("Setting property '{0}' to '{1}'\n", propName, propValue));
+
+            var prop = propertyMap[propName];
+            switch (prop.Type)
+            {
+                case PropertyType.Boolean:
+                    {
+                        bool valueToSet;
+                        if (propValue == "true")
+                        {
+                            valueToSet = true;
+                        }
+                        else if (propValue == "false")
+                        {
+                            valueToSet = false;
+                        }
+                        else
+                        {
+                            Print(string.Format("Failed to parse value for property '{0}'. Value: '{1}'\n", propName, propValue));
+                            return;
+                        }
+                        try
+                        {
+                            (prop as PropBoolean).Value = valueToSet;
+                        }
+                        catch (Exception e)
+                        {
+                            Print(string.Format("Failed to set value '{0}' on property '{1}'. Message: {2}\n", valueToSet, propName, e.Message));
+                        }
+                    }
+                    break;
+                case PropertyType.String:
+                    {
+                        try
+                        {
+                            (prop as PropString).Value = propValue;
+                        }
+                        catch (Exception e)
+                        {
+                            Print(string.Format("Failed to set value '{0}' on property '{1}'. Message: {2}\n", propValue, propName, e.Message));
+                        }
+                    }
+                    break;
+                case PropertyType.Command:
+                    {
+                        try
+                        {
+                            (prop as PropCommand).Execute();
+                        }
+                        catch (Exception e)
+                        {
+                            Print(string.Format("Failed execute on Command property '{0}'. Message: {1}\n", propName, e.Message));
+                        }
+
+                    }
+                    break;
+                case PropertyType.Integer:
+                    {
+                        long valueToSet;
+                        try
+                        {
+                            valueToSet = long.Parse(propValue);
+                        }
+                        catch
+                        {
+                            Print(string.Format("Failed to parse value for property '{0}'. Value: '{1}'\n", propName, propValue));
+                            return;
+                        }
+
+                        try
+                        {
+                            (prop as PropInteger).Value = valueToSet;
+                        }
+                        catch (Exception e)
+                        {
+                            Print(string.Format("Failed to set value '{0}' on property '{1}'.Message: {2}\n", valueToSet, propName, e.Message));
+                        }
+                    }
+                    break;
+                case PropertyType.Float:
+                    {
+                        double valueToSet = 0.0;
+                        try
+                        {
+                            valueToSet = double.Parse(propValue);
+                        }
+                        catch
+                        {
+                            Print(string.Format("Failed to parse value for property '{0}'. Value: '{1}'\n", valueToSet ,propName, propValue));
+                            return;
+                        }
+
+                        try
+                        {
+                            (prop as PropFloat).Value = valueToSet;
+                        }
+                        catch (Exception e)
+                        {
+                            Print(string.Format("Failed to set value '{0}' on property '{1}'.Message: {2}\n", valueToSet, propName, e.Message));
+                        }
+
+                    }
+                    break;
+                case PropertyType.Enumeration:
+                    {
+                        var enumProp = prop as PropEnumeration;
+                        if (enumProp.FindEntry(propValue) != null)
+                        {
+                            try
+                            {
+                                enumProp.SelectEntryByName(propValue);
+                            }
+                            catch (Exception e)
+                            {
+                                Print(string.Format("Failed to select entry '{0}' on property '{1}'. Message: {2}\n",  propValue, propName, e.Message));
+                            }
+                        }
+                        else
+                        {
+                            long valueToSet;
+                            try
+                            {
+                                valueToSet = long.Parse(propValue);
+                            }
+                            catch
+                            {
+                                Print(string.Format("Failed to parse value for property '{0}'. Value: '{1}'\n", propName, propValue));
+                                return;
+                            }
+
+                            try
+                            {
+                                enumProp.Value = valueToSet;
+                            }
+                            catch (Exception e)
+                            {
+                                Print(string.Format("Failed to set value '{0}' on property '{1}'.Message: {2}\n", valueToSet, propName, e.Message));
+                            }
+                        }
+                    }
+                    break;
+                case PropertyType.Category:
+                case PropertyType.Register:
+                case PropertyType.Port:
+                case PropertyType.EnumEntry:
+                    Print(string.Format("Cannot set a value on a {0} property. Name: '{1}'\n", prop.Type, propName));
+                    break;
+                case PropertyType.Invalid:
+                    Print(string.Format("Failed to find property. Name: '{0}'\n", propName));
+                    break;
+                default:
+                    Print(string.Format("Invalid property type. Value: {0}\n", (int)prop.Type));
+                    break;
+            };
+
         }
 
-        private static void exec_prop_cmd(string id, bool force_interface, string[] lst)
+        private static void PrintOrSetPropertyMapEntries(PropertyMap map, string[] lst)
         {
-            System.Console.WriteLine("prop --forceinterface=" + force_interface.ToString() + " --device-id=" + id + " " + string.Join(" ", lst));
+            if (lst.Length == 0)
+            {
+                foreach (var property in map.All)
+                {
+                    PrintProperty(0, property);
+                }
+            }
+            else
+            {
+                foreach (var entry in lst)
+                {
+                    var parseEntry = SplitPropEntry(entry);
+                    if (parseEntry.Item2 != string.Empty)
+                    {
+                        SetPropertyFromAssignEntry(map, parseEntry.Item1, parseEntry.Item2);
+                    }
+                    else
+                    {
+                        if (map.TryGet(entry, out Property property))
+                        {
+                            PrintProperty(0, property);
+                        }
+                        else
+                        {
+                            Print(string.Format("Failed to find property for name: '{0}'\n", entry));
+                        }
+                    }
+                }
+            }
+        }
+
+        private static void ExecPropCmd(string id, bool forceInterface, string[] lst)
+        {
+            if(forceInterface)
+            {
+                var dev = FindInterface(id);
+                if( dev== null)
+                {
+                    Print(string.Format("Failed to find interface for id '{0}'", id));
+                    return;
+                }
+                var map = dev.PropertyMap;
+                PrintOrSetPropertyMapEntries(map, lst);
+            }
+            else
+            {
+                var dev = FindDevice(id);
+                if(dev == null)
+                {
+                    Print(string.Format("Failed to find device for id '{0}'", id));
+                    return;
+                }
+                using (var g = new Grabber())
+                {
+                    g.DeviceOpen(dev);
+                    PrintOrSetPropertyMapEntries(g.DevicePropertyMap, lst);
+                }
+            }
+        }
+
+        private static void SaveProperties(string id, bool forceInterface, string filename)
+        {
+            if (forceInterface)
+            {
+                var dev = FindInterface(id);
+                if (dev == null)
+                {
+                    Print(string.Format("Failed to find interface for id '{0}'", id));
+                    return;
+                }
+                dev.PropertyMap.Serialize(filename);
+            }
+            else
+            {
+                var dev = FindDevice(id);
+                if (dev == null)
+                {
+                    Print(string.Format("Failed to find device for id '{0}'", id));
+                    return;
+                }
+                using(var g = new Grabber())
+                {
+                    g.DeviceOpen(dev);
+                    g.DevicePropertyMap.Serialize(filename);
+                }
+            }
+        }
+
+        static void SaveImage(string id, string filename, int count, int timeout_in_ms, string image_type)
+        {
+            var dev = FindDevice(id);
+            if (dev == null)
+            {
+                Print(string.Format("Failed to find device for id '{0}'", id));
+                return;
+            }
+            using (var g = new Grabber())
+            {
+                g.DeviceOpen(dev);
+
+                var snapSink = new SnapSink();
+                g.StreamSetup(snapSink, ic4.StreamSetupOption.AcquisitionStart);
+
+                List<ImageBuffer> images = null;
+                try
+                {
+                    images = snapSink.SnapSequence(count, TimeSpan.FromMilliseconds(timeout_in_ms));
+                }
+                catch (IC4Exception ex)
+                {
+                    // TODO
+                    if (false)//ex.ErrorCode == ic4.Error.Timeout)
+                    {
+                        Print("Timeout elapsed.");
+                        // #TODO maybe dissect what to do here.
+                        return;
+                    }
+                    throw new Exception(ex.Message);
+                }
+
+                g.AcquisitionStop();
+
+                int idx = 0;
+                foreach (var image in images)
+                {
+                    string actualFilename = filename;
+                    if (filename.Contains("{}"))
+                    {
+                        actualFilename = string.Format(filename.Replace("{}", "{0}"), idx);
+                    }
+
+                    if (image_type == "bmp")
+                    {
+                        ic4.ImageBufferExtensions.SaveAsBitmap(image, actualFilename);
+                    }
+                    else if (image_type == "png")
+                    {
+                        ic4.ImageBufferExtensions.SaveAsPng(image, actualFilename);
+                    }
+                    else if (image_type == "tiff")
+                    {
+                        ic4.ImageBufferExtensions.SaveAsTiff(image, actualFilename);
+                    }
+                    else if (image_type == "jpeg")
+                    {
+                        ic4.ImageBufferExtensions.SaveAsJpeg(image, actualFilename);
+                    }
+                }
+            }
         }
 
         private interface ICommand
@@ -469,13 +827,13 @@ namespace ic4_ctrl
         [Verb("list", 
             HelpText = @"List available devices and interfaces.",
             Hidden = false)]
-        public class list_verb : ICommand
+        public class ListVerb : ICommand
         {
             public void Execute()
             {
-                list_interfaces();
+                ListInterfaces();
                 System.Console.WriteLine();
-                list_devices();
+                ListDevices();
             }
         }
 
@@ -485,22 +843,22 @@ namespace ic4_ctrl
                 \tTo list all devices use: `ic4-ctrl device`\n
                 \tTo show only a specific device: `ic4-ctrl device \""<id>\""\n",
            Hidden = false)]
-        public class device_verb : ICommand
+        public class DeviceVerb : ICommand
         {
             [Option("device-id", 
                 Required = false, 
                 HelpText = @"If specified only information for this device is printed, otherwise all device are listed. You can specify an index e.g. '0'.")]
-            public string arg_device_id { get; set; }
+            public string DeviceId { get; set; }
 
             public void Execute()
             {
-                if(string.IsNullOrEmpty(arg_device_id))
+                if(string.IsNullOrEmpty(DeviceId))
                 {
-                    list_devices();
+                    ListDevices();
                 }
                 else
                 {
-                    print_device(arg_device_id);
+                    PrintDevice(DeviceId);
                 }
             }
         }
@@ -512,22 +870,22 @@ namespace ic4_ctrl
             \tTo list all interfaces: `ic4-ctrl interface`\n
             \tTo show only a specific interface: `ic4-ctrl interface \""<id>\""\n",
           Hidden = false)]
-        public class interface_verb : ICommand
+        public class InterfaceVerb : ICommand
         {
             [Option("interface-id",
                 Required = false,
                 HelpText = @"If specified only information for this interface is printed, otherwise all interfaces are listed. You can specify an index e.g. '0'.")]
-            public string interface_id { get; set; }
+            public string InterfaceId { get; set; }
 
             public void Execute()
             {
-                if (string.IsNullOrEmpty(interface_id))
+                if (string.IsNullOrEmpty(InterfaceId))
                 {
-                    list_interfaces();
+                    ListInterfaces();
                 }
                 else
                 {
-                    print_interface(interface_id);
+                    PrintInterface(InterfaceId);
                 }
             }
         }
@@ -539,40 +897,107 @@ namespace ic4_ctrl
                 \tTo list specific device properties 'ic4-ctrl prop <device-id> ExposureAuto ExposureTime'.\n
                 \tTo set specific device properties 'ic4-ctrl prop <device-id> ExposureAuto=Off ExposureTime=0.5'.",
             Hidden = false)]
-        public class prop_verb : ICommand
+        public class PropVerb : ICommand
         {
             [Option("forceinterface", HelpText = "If set the <device-id> is interpreted as an interface-id.")]
-            public bool force_interface { get; set; }
+            public bool ForceInterface { get; set; }
 
-            public string prop_id { get; set; }
+            public string PropertyId { get; set; }
 
             [Option("device-id",
                Required = true,
                HelpText = @"Specifies the device to open. You can specify an index e.g. '0'.")]
-            public string arg_device_id { get; set; }
+            public string DeviceId { get; set; }
 
 
             [Value(0,
               Required = false,
               HelpText = @"list specific device properties")]
-            public IEnumerable<string> remaining { get; set; }
+            public IEnumerable<string> Remaining { get; set; }
 
             public void Execute()
             {
-                exec_prop_cmd( arg_device_id, force_interface, remaining.ToArray());
+                ExecPropCmd( DeviceId, ForceInterface, Remaining.ToArray());
             }
         }
+
+        [Verb("save-prop",
+           HelpText = @"
+                Save properties for the specified device 'ic4-ctrl save-prop -f <filename> <device-id>'.",
+           Hidden = false)]
+        public class SavePropVerb : ICommand
+        {
+            [Option("filename", HelpText = "Filename to save into.", Required = true)]
+            public string Filename { get; set; }
+
+            [Option("device-id",
+             Required = true,
+             HelpText = @"Specifies the device to open. You can specify an index e.g. '0'.")]
+            public string DeviceId { get; set; }
+
+            public void Execute()
+            {
+                SaveProperties(DeviceId, false, Filename);
+            }
+
+        }
+
+        [Verb("image",
+           HelpText = @"Save one or more images from the specified device 'ic4-ctrl image -f <filename> --count 3 --timeout 2000 --type bmp <device-id>'.",
+           Hidden = false)]
+        public class ImageVerb : ICommand
+        {
+            [Option("filename", 
+                HelpText = "Filename to save into.", 
+                Required = true)]
+            public string Filename { get; set; }
+
+            [Option("device-id",
+             Required = true,
+             HelpText = @"Specifies the device to open. You can specify an index e.g. '0'.")]
+            public string DeviceId { get; set; }
+
+            [Option("count",
+                Default = 1,
+            Required = false,
+            HelpText = @"Count of frames to capture.")]
+            public int Count { get; set; }
+
+            [Option("timeout",
+                Default =1000,
+              Required = false,
+              HelpText = @"Timeout in milliseconds.")]
+            public int Timeout { get; set; }
+
+            [Option("type",
+              Default = "bmp",
+            Required = false,
+            HelpText = @"Image file type to save. [bmp,png,jpeg,tiff]")]
+            public string ImageType { get; set; }
+
+            public void Execute()
+            {
+                SaveImage(DeviceId, Filename, Count, Timeout, ImageType);
+            }
+        }
+
 
         static void Main(string[] args)
         {
             try
             {
-                var result = Parser.Default.ParseArguments<list_verb, device_verb, interface_verb, prop_verb>(args)
-                    .WithParsed(v => (v as ICommand)?.Execute());
+                var result = Parser.Default.ParseArguments<
+                    ListVerb, 
+                    DeviceVerb, 
+                    InterfaceVerb, 
+                    PropVerb, 
+                    SavePropVerb,
+                    ImageVerb>(args)
+                        .WithParsed(v => (v as ICommand)?.Execute());
             }
             catch (Exception ex)
             {
-               System.Console.WriteLine(ex.ToString());
+                System.Console.WriteLine(ex.ToString());
             }
         }
     }
