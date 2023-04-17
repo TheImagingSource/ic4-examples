@@ -775,17 +775,11 @@ namespace ic4_ctrl
                 {
                     images = snapSink.SnapSequence(count, TimeSpan.FromMilliseconds(timeout_in_ms));
                 }
-                catch (IC4Exception ex)
+                catch (TimeoutException)
                 {
-                    // TODO
-                    if (false)//ex.ErrorCode == ic4.Error.Timeout)
-                    {
-                        Print("Timeout elapsed.");
-                        // #TODO maybe dissect what to do here.
-                        return;
-                    }
-                    throw new Exception(ex.Message);
+                    Print("Timeout elapsed.");
                 }
+
 
                 g.AcquisitionStop();
 
