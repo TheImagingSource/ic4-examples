@@ -13,6 +13,14 @@ using CommandLine;
 using ic4;
 // prop --device-id=test123 --forceinterface prop1 prop2
 
+
+
+
+
+
+
+
+
 namespace ic4_ctrl
 {
     internal class Program
@@ -304,7 +312,7 @@ namespace ic4_ctrl
                                 try
                                 {
                                     var vvset = prop.ValidValueSet;
-                                    Print(offset + 1, "ValidValueSet:");
+                                    Print(offset + 1, "ValidValueSet:\n");
                                     foreach(var val in  vvset )
                                     {
                                         Print(offset + 2, string.Format("{0}\n", val));
@@ -349,18 +357,20 @@ namespace ic4_ctrl
                             }
                             else if (incMode == PropertyIncrementMode.ValueSet)
                             {
-                                //std::vector<double> vvset;
-                                //if( !prop.getValidValueSet( vvset, ic4::ignoreError ) ) {
-                                //    print( offset + 1, "Failed to fetch ValidValueSet\n" );
-                                //}
-                                //else
-                                //{
-                                //    print( offset + 1, "ValidValueSet:" );
-                                //    for( auto&& val : vvset ) {
-                                //        print( offset + 2, "{}\n", val );
-                                //    }
-                                //    print( "\n" );
-                                //}
+                                try
+                                {
+                                    var vvset = prop.ValidValueSet;
+                                    Print(offset + 1, "ValidValueSet:\n");
+                                    foreach(var val in vvset )
+                                    {
+                                        Print(offset + 2, string.Format("{}\n", val));
+                                    }
+                                    Print("\n");
+                                }
+                                catch (Exception ex)
+                                {
+                                    Print(offset + 1, "Failed to fetch ValidValueSet\n");
+                                }
                             }
 
                             Print(offset + 1, string.Format("Value: {0}\n",
@@ -510,159 +520,14 @@ namespace ic4_ctrl
         {
             Print(string.Format("Setting property '{0}' to '{1}'\n", propName, propValue));
 
-            var prop = propertyMap[propName];
-            switch (prop.Type)
+            try
             {
-                case PropertyType.Boolean:
-                    {
-                        bool valueToSet;
-                        if (propValue == "true")
-                        {
-                            valueToSet = true;
-                        }
-                        else if (propValue == "false")
-                        {
-                            valueToSet = false;
-                        }
-                        else
-                        {
-                            Print(string.Format("Failed to parse value for property '{0}'. Value: '{1}'\n", propName, propValue));
-                            return;
-                        }
-                        try
-                        {
-                            (prop as PropBoolean).Value = valueToSet;
-                        }
-                        catch (Exception e)
-                        {
-                            Print(string.Format("Failed to set value '{0}' on property '{1}'. Message: {2}\n", valueToSet, propName, e.Message));
-                        }
-                    }
-                    break;
-                case PropertyType.String:
-                    {
-                        try
-                        {
-                            (prop as PropString).Value = propValue;
-                        }
-                        catch (Exception e)
-                        {
-                            Print(string.Format("Failed to set value '{0}' on property '{1}'. Message: {2}\n", propValue, propName, e.Message));
-                        }
-                    }
-                    break;
-                case PropertyType.Command:
-                    {
-                        try
-                        {
-                            (prop as PropCommand).Execute();
-                        }
-                        catch (Exception e)
-                        {
-                            Print(string.Format("Failed execute on Command property '{0}'. Message: {1}\n", propName, e.Message));
-                        }
-
-                    }
-                    break;
-                case PropertyType.Integer:
-                    {
-                        long valueToSet;
-                        try
-                        {
-                            valueToSet = long.Parse(propValue);
-                        }
-                        catch
-                        {
-                            Print(string.Format("Failed to parse value for property '{0}'. Value: '{1}'\n", propName, propValue));
-                            return;
-                        }
-
-                        try
-                        {
-                            (prop as PropInteger).Value = valueToSet;
-                        }
-                        catch (Exception e)
-                        {
-                            Print(string.Format("Failed to set value '{0}' on property '{1}'.Message: {2}\n", valueToSet, propName, e.Message));
-                        }
-                    }
-                    break;
-                case PropertyType.Float:
-                    {
-                        double valueToSet = 0.0;
-                        try
-                        {
-                            valueToSet = double.Parse(propValue);
-                        }
-                        catch
-                        {
-                            Print(string.Format("Failed to parse value for property '{0}'. Value: '{1}'\n", valueToSet ,propName, propValue));
-                            return;
-                        }
-
-                        try
-                        {
-                            (prop as PropFloat).Value = valueToSet;
-                        }
-                        catch (Exception e)
-                        {
-                            Print(string.Format("Failed to set value '{0}' on property '{1}'.Message: {2}\n", valueToSet, propName, e.Message));
-                        }
-
-                    }
-                    break;
-                case PropertyType.Enumeration:
-                    {
-                        var enumProp = prop as PropEnumeration;
-                        if (enumProp.FindEntry(propValue) != null)
-                        {
-                            try
-                            {
-                                enumProp.SelectEntryByName(propValue);
-                            }
-                            catch (Exception e)
-                            {
-                                Print(string.Format("Failed to select entry '{0}' on property '{1}'. Message: {2}\n",  propValue, propName, e.Message));
-                            }
-                        }
-                        else
-                        {
-                            long valueToSet;
-                            try
-                            {
-                                valueToSet = long.Parse(propValue);
-                            }
-                            catch
-                            {
-                                Print(string.Format("Failed to parse value for property '{0}'. Value: '{1}'\n", propName, propValue));
-                                return;
-                            }
-
-                            try
-                            {
-                                enumProp.Value = valueToSet;
-                            }
-                            catch (Exception e)
-                            {
-                                Print(string.Format("Failed to set value '{0}' on property '{1}'.Message: {2}\n", valueToSet, propName, e.Message));
-                            }
-                        }
-                    }
-                    break;
-                case PropertyType.Category:
-                case PropertyType.Register:
-                case PropertyType.Port:
-                case PropertyType.EnumEntry:
-                    Print(string.Format("Cannot set a value on a {0} property. Name: '{1}'\n", prop.Type, propName));
-                    break;
-                case PropertyType.Invalid:
-                    Print(string.Format("Failed to find property. Name: '{0}'\n", propName));
-                    break;
-                default:
-                    Print(string.Format("Invalid property type. Value: {0}\n", (int)prop.Type));
-                    break;
-            };
-
+                propertyMap.SetValue(propName, propValue);
+            }
+            catch (Exception ex)
+            {
+                Print(string.Format("Failed to set value '{0}' on property '{1}'. Message: {2}\n", propValue, propName, ex.Message));
+            }
         }
 
         private static void PrintOrSetPropertyMapEntries(PropertyMap map, string[] lst)
@@ -755,7 +620,7 @@ namespace ic4_ctrl
             }
         }
 
-        static void SaveImage(string id, string filename, int count, int timeout_in_ms, string image_type)
+        static void SaveImage(string id, string filename, int count, int timeoutInMillisecs, string imageType)
         {
             var dev = FindDevice(id);
             if (dev == null)
@@ -773,7 +638,7 @@ namespace ic4_ctrl
                 List<ImageBuffer> images = null;
                 try
                 {
-                    images = snapSink.SnapSequence(count, TimeSpan.FromMilliseconds(timeout_in_ms));
+                    images = snapSink.SnapSequence(count, TimeSpan.FromMilliseconds(timeoutInMillisecs));
                 }
                 catch (TimeoutException)
                 {
@@ -792,19 +657,19 @@ namespace ic4_ctrl
                         actualFilename = string.Format(filename.Replace("{}", "{0}"), idx);
                     }
 
-                    if (image_type == "bmp")
+                    if (imageType == "bmp")
                     {
                         ic4.ImageBufferExtensions.SaveAsBitmap(image, actualFilename);
                     }
-                    else if (image_type == "png")
+                    else if (imageType == "png")
                     {
                         ic4.ImageBufferExtensions.SaveAsPng(image, actualFilename);
                     }
-                    else if (image_type == "tiff")
+                    else if (imageType == "tiff")
                     {
                         ic4.ImageBufferExtensions.SaveAsTiff(image, actualFilename);
                     }
-                    else if (image_type == "jpeg")
+                    else if (imageType == "jpeg")
                     {
                         ic4.ImageBufferExtensions.SaveAsJpeg(image, actualFilename);
                     }
