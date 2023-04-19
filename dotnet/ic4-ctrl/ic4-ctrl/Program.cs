@@ -368,7 +368,7 @@ namespace ic4_ctrl
                                     }
                                     Print("\n");
                                 }
-                                catch (Exception ex)
+                                catch
                                 {
                                     Print(offset + 1, "Failed to fetch ValidValueSet\n");
                                 }
