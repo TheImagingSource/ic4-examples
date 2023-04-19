@@ -7,6 +7,7 @@ using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using CommandLine;
@@ -677,6 +678,75 @@ namespace ic4_ctrl
             }
         }
 
+        private static void ShowLive(string id)
+        {
+            var dev = FindDevice(id);
+            if(dev == null)
+            {
+                Print(string.Format("Failed to find device for id '{0}'", id));
+                return;
+            }
+
+            using(var g = new Grabber())
+            {
+                g.DeviceOpen(dev);
+
+                var display = new ic4.Display(IntPtr.Zero);
+                g.StreamSetup(display, ic4.StreamSetupOption.AcquisitionStart);
+
+                var cond = new ManualResetEventSlim();
+                bool ended = false;
+
+                display.WindowClosed += (s,r) =>
+                {
+                    ended = true;
+                    cond.Set();
+                };
+
+
+                while (!ended)
+                {
+                    cond.Wait();
+                }
+
+                g.AcquisitionStop();
+            }
+        }
+
+        private static void ShowPropPage(string id, bool isInterfaceId)
+        {
+            //if (isInterfaceId)
+            //{
+            //    var dev = FindInterface(id);
+            //    if (dev == null)
+            //    {
+            //        Print(string.Format("Failed to find interface  for id '{0}'", id));
+            //        return;
+            //    }
+            //
+            //    ic4.showPropertyDialog(IntPtr.Zero, dev.Interface.PropertyMap);
+            //}
+            //else
+            //{
+            //    var dev = FindDevice(id);
+            //    if (dev == null)
+            //    {
+            //        Print(string.Format("Failed to find device for id '{0}'", id));
+            //        return;
+            //    }
+            //    using(var g = new Grabber())
+            //    {
+            //        g.DeviceOpen(dev);
+            //        ic4.showPropertyDialog(IntPtr.Zero, g.DevicePropertyMap);
+            //    }
+            //}
+        }
+
+        private static void Display_WindowClosed(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
         private interface ICommand
         { 
             void Execute();
@@ -840,6 +910,41 @@ namespace ic4_ctrl
             }
         }
 
+        [Verb("live",
+         HelpText = @"Display a live stream. 'ic4-ctrl live <device-id>'.",
+         Hidden = false)]
+        public class LiveVerb : ICommand
+        {
+            [Option("device-id",
+            Required = true,
+            HelpText = @"Specifies the device to open. You can specify an index e.g. '0'.")]
+            public string DeviceId { get; set; }
+
+            public void Execute()
+            {
+                ShowLive(DeviceId);
+            }
+        }
+
+
+        [Verb("show-prop",
+         HelpText = @"Display the property page for the device or interface id. 'ic4-ctrl show-prop <id>'.",
+         Hidden = false)]
+        public class ShowPropVerb : ICommand
+        {
+            [Option("device-id",
+            Required = true,
+            HelpText = @"Specifies the device to open. You can specify an index e.g. '0'.")]
+            public string DeviceId { get; set; }
+
+            [Option("forceinterface", HelpText = "If set the <device-id> is interpreted as an interface-id.")]
+            public bool ForceInterface { get; set; }
+
+            public void Execute()
+            {
+                ShowPropPage(DeviceId, ForceInterface);
+            }
+        }
 
         static void Main(string[] args)
         {
@@ -851,7 +956,9 @@ namespace ic4_ctrl
                     InterfaceVerb, 
                     PropVerb, 
                     SavePropVerb,
-                    ImageVerb>(args)
+                    ImageVerb,
+                    LiveVerb,
+                    ShowPropVerb>(args)
                         .WithParsed(v => (v as ICommand)?.Execute());
             }
             catch (Exception ex)
