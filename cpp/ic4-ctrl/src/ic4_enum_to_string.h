@@ -81,7 +81,7 @@ namespace ic4_helper
         switch( val )
         {
         case ic4::PropIncrementMode::Increment:     return "Increment";
-        case ic4::PropIncrementMode::ValueSet:      return "valueSet";
+        case ic4::PropIncrementMode::ValueSet:      return "ValueSet";
         case ic4::PropIncrementMode::None:          return "None";
         default:
             return "";
@@ -93,8 +93,8 @@ namespace ic4_helper
         switch( val )
         {
         case ic4::TransportLayerType::Unknown:      return "Unknown";
-        case ic4::TransportLayerType::GigEVision:   return "Unknown";
-        case ic4::TransportLayerType::USB3Vision:   return "Unknown";
+        case ic4::TransportLayerType::GigEVision:   return "GigEVision";
+        case ic4::TransportLayerType::USB3Vision:   return "USB3Vision";
         default:
             return "";
         }
