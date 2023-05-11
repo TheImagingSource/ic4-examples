@@ -11,6 +11,10 @@ add_executable( device-lost
 	"src/device-lost.cpp"
 )
 
+include_directories( device-lost
+	"../../common"
+)
+
 target_link_libraries( device-lost
 PRIVATE
 	ic4::core
