@@ -78,9 +78,12 @@ namespace ic4.Examples
             {
                 comboBox1.SelectedIndex = -1;
             }
-            
 
-            comboBox1.Enabled = !propEnumeration.IsReadonly;
+
+            bool isLocked = base.IsLocked;
+            bool isReadonly = base.IsReadonly;
+
+            comboBox1.Enabled = !isReadonly;
 
             BlockSignals = false;
         }

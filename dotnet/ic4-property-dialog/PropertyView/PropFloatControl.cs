@@ -38,8 +38,8 @@ namespace ic4.Examples
         internal override void UpdateAll()
         {
             var prop = Property as ic4.PropFloat;
-            bool isLocked = prop.IsLocked;
-            bool isReadonly = prop.IsReadonly;
+            bool isLocked = base.IsLocked;
+            bool isReadonly = base.IsReadonly;
             bool hasIncrement = prop.IncrementMode != ic4.PropertyIncrementMode.None;
             float increment = hasIncrement ? (float)prop.Increment : (float)1;
         

@@ -25,7 +25,7 @@ namespace ic4.Examples
         {
             BlockSignals = true;
             var propBool = Property as ic4.PropBoolean;
-            CheckBox_.Enabled = !propBool.IsLocked && !propBool.IsReadonly;
+            CheckBox_.Enabled = !base.IsLocked && !base.IsReadonly;
             CheckBox_.Checked = propBool.Value;
             BlockSignals = false;
         }

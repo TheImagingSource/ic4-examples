@@ -26,8 +26,8 @@ namespace ic4.Examples
             var prop = Property as ic4.PropString;
 
             string val = prop.Value;
-            bool isReadonly = prop.IsReadonly;
-            bool isLocked = prop.IsLocked;
+            bool isLocked = base.IsLocked;
+            bool isReadonly = base.IsReadonly;
 
             BlockSignals = true;
             textBox_.Text = val;
