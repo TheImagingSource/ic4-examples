@@ -12,7 +12,7 @@ void device_lost_handler(ic4::Grabber& grabber)
 	std::cout << "Device lost!" << std::endl;
 }
 
-auto select_from_list(const std::vector<ic4::DeviceInfo>& device_list)
+std::vector<ic4::DeviceInfo>::const_iterator select_from_list(const std::vector<ic4::DeviceInfo>& device_list)
 {
 	if (device_list.empty())
 	{
