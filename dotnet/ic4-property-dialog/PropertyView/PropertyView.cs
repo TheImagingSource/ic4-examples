@@ -84,7 +84,11 @@ namespace ic4.Examples
                 throw new ArgumentNullException("Grabber is null!");
             }
 
-            grabber_ = grabber;
+            if(grabber != grabber_)
+            {
+                grabber_ = grabber;
+                propertyTreeNodeCache_.Clear();
+            }
 
             SuspendLayout();
             SuspendDrawing();
