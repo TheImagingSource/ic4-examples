@@ -20,6 +20,6 @@ PRIVATE
 	ic4::core
 )
 
-set_property(TARGET device-lost PROPERTY CXX_STANDARD 11)
+set_property(TARGET device-lost PROPERTY CXX_STANDARD 14)
 
 ic4_copy_runtime_to_target(device-lost)
