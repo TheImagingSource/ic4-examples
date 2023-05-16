@@ -73,10 +73,6 @@ namespace ic4.Examples
             bool isLocked = base.IsLocked;
             bool isReadonly = base.IsReadonly;
 
-            long winformsMin = Math.Max(long.MinValue, Math.Min(long.MaxValue, min_));
-            long winformsMax = Math.Max(long.MinValue, Math.Min(long.MaxValue, max_));
-            long value = Math.Min(winformsMax, Math.Max(winformsMin, val_));
-
             BlockSignals = true;
 
             if (slider_ != null)
@@ -85,7 +81,7 @@ namespace ic4.Examples
                 slider_.Maximum = SLIDER_MAX;
                 slider_.SmallChange = 1;
 
-                lastTrackBarValue = ValueToSliderPosition(value);
+                lastTrackBarValue = ValueToSliderPosition(val_);
                 slider_.Value = lastTrackBarValue;
                 slider_.Enabled = !isLocked;
             }
@@ -95,15 +91,15 @@ namespace ic4.Examples
                 spin_.Minimum = min_;
                 spin_.Maximum = max_;
                 spin_.StepSize = inc_;
-                spin_.Value = value;
-                spin_.DisplayText = ValueToString(value, representation_);
+                spin_.Value = val_;
+                spin_.DisplayText = ValueToString(val_, representation_);
                 spin_.ReadOnly = isLocked || isReadonly;
                 spin_.ShowButtons = !isReadonly;
             }
 
             if(edit_ != null)
             {
-                edit_.Text = ValueToString(value, representation_);
+                edit_.Text = ValueToString(val_, representation_);
                 edit_.ReadOnly = isLocked || isReadonly;
             }
 
