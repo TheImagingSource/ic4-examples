@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Drawing;
 using System.ComponentModel;
+using System.Runtime.InteropServices.WindowsRuntime;
 
 namespace ic4.Examples
 {
@@ -210,13 +211,13 @@ namespace ic4.Examples
 
         private void CmdDown_Click(object sender, EventArgs e)
         {
-            Value-= StepSize;
+            _value = Math.Min(Maximum, Math.Max(Minimum, _value - StepSize));
             ValueChanged?.Invoke(sender, e);
         }
 
         private void CmdUp_Click(object sender, EventArgs e)
         {
-            Value+= StepSize;
+            _value = Math.Min(Maximum, Math.Max(Minimum, _value + StepSize));
             ValueChanged?.Invoke(sender, e);
         }
 
@@ -231,6 +232,7 @@ namespace ic4.Examples
                 _value = Math.Min(Maximum, Math.Max(Minimum, value));
             }
         }
+
 
         public string DisplayText
         {

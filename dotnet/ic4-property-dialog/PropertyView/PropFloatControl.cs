@@ -62,11 +62,6 @@ namespace ic4.Examples
                 spin_.Minimum = SLIDER_MIN;
                 spin_.Maximum = SLIDER_MAX;
 
-                //if(hasIncrement)
-                //{
-                //    spin_.StepSize = increment;
-                //}
-
                 spin_.Value = GetSliderPosition(prop.Value);
                 spin_.ReadOnly = isLocked || isReadonly;
                 spin_.ShowButtons = !isReadonly;

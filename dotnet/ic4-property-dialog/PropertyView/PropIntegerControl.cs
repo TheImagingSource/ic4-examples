@@ -22,6 +22,7 @@ namespace ic4.Examples
         private long max_ = 100;
         private long inc_ = 1;
         private long val_ = 0;
+        private int lastSliderValue_ = 0;
         private ic4.IntRepresentation representation_ = ic4.IntRepresentation.Linear;
 
         private System.Windows.Forms.TrackBar slider_;
@@ -39,7 +40,8 @@ namespace ic4.Examples
         private const int SLIDER_MAX = 100000000;
         private const int SLIDER_TICKS = SLIDER_MAX - SLIDER_MIN;
 
-        int lastTrackBarValue = 0;
+        private Func<long, long> SpinnerIndexToValue { get; set; } = (val) => val;
+        private Func<long, long> ValueToSpinnerIndex { get; set; } = (val) => val;
 
         private long SliderPosToValue(int pos)
         {
@@ -77,25 +79,56 @@ namespace ic4.Examples
 
             if (slider_ != null)
             {
+
                 slider_.Minimum = SLIDER_MIN;
                 slider_.Maximum = SLIDER_MAX;
                 slider_.SmallChange = 1;
                 slider_.LargeChange = SLIDER_TICKS / 100;
+                
 
-                lastTrackBarValue = ValueToSliderPosition(val_);
-                slider_.Value = lastTrackBarValue;
+                lastSliderValue_ = ValueToSliderPosition(val_);
+                slider_.Value = lastSliderValue_;
                 slider_.Enabled = !isLocked;
             }
 
             if (spin_ != null)
             {
-                spin_.Minimum = min_;
-                spin_.Maximum = max_;
+                try
+                {
+                    if (propInt.ValidValueSet.Count() > 0)
+                    {
+                        spin_.Minimum = 0;
+                        spin_.Maximum = propInt.ValidValueSet.Count() - 1;
+
+                        SpinnerIndexToValue = (index) =>
+                        {
+                            return propInt.ValidValueSet.ElementAt((int)index);
+                        };
+                        ValueToSpinnerIndex = (value) =>
+                        {
+                            for(int i = 0; i < propInt.ValidValueSet.Count(); ++i)
+                            {
+                                if(propInt.ValidValueSet.ElementAt(i) == value)
+                                {
+                                    return i;
+                                }
+                            }
+                            return 0;
+                        };
+                    }
+                }
+                catch
+                { 
+                    spin_.Minimum = min_;
+                    spin_.Maximum = max_;
+                }
+
                 spin_.StepSize = inc_;
-                spin_.Value = val_;
+                spin_.Value = ValueToSpinnerIndex(val_);
                 spin_.DisplayText = ValueToString(val_, representation_);
                 spin_.ReadOnly = isLocked || isReadonly;
                 spin_.ShowButtons = !isReadonly;
+
             }
 
             if(edit_ != null)
@@ -187,12 +220,12 @@ namespace ic4.Examples
             BlockSignals = true;
             if (slider_ != null)
             {
-                lastTrackBarValue = ValueToSliderPosition(newValue);
-                slider_.Value = lastTrackBarValue;
+                lastSliderValue_ = ValueToSliderPosition(newValue);
+                slider_.Value = lastSliderValue_;
             }
             if (spin_ != null)
             { 
-                spin_.Value = newValue;
+                spin_.Value = ValueToSpinnerIndex(newValue);
                 spin_.DisplayText = ValueToString(newValue, representation_);
             }
             if(edit_ != null)
@@ -217,7 +250,7 @@ namespace ic4.Examples
             }
             catch(Exception ex)
             {
-                SetValue(spin_.Value);
+                SetValue(SpinnerIndexToValue(spin_.Value));
                 System.Console.WriteLine(ex.Message);
             }
             BlockSignals = false;
@@ -230,7 +263,7 @@ namespace ic4.Examples
                 return;
             }
 
-            SetValueUnchecked(spin_.Value);
+            SetValueUnchecked(SpinnerIndexToValue(spin_.Value));
         }
 
        
@@ -242,14 +275,16 @@ namespace ic4.Examples
             }
 
             var newValue = slider_.Value;
-            if (Math.Abs(newValue - lastTrackBarValue) == 1)
+            if (Math.Abs(newValue - lastSliderValue_) == 1)
             {
-                if(newValue > lastTrackBarValue)
-                    spin_.Value+= inc_;
+                var property = Property as ic4.PropInteger;
+
+                if (newValue > lastSliderValue_)
+                    spin_.Value += inc_;
                 else
                     spin_.Value -= inc_;
 
-                SetValueUnchecked(spin_.Value);
+                SetValueUnchecked(SpinnerIndexToValue(spin_.Value));
             }
             else
             {
@@ -263,6 +298,12 @@ namespace ic4.Examples
 
             var property = Property as ic4.PropInteger;
             bool isReadOnly = property.IsReadonly;
+
+            int spinBoxWidth = 90;
+            if(property.Maximum < int.MinValue || property.Maximum > int.MaxValue)
+            {
+                spinBoxWidth = 142;
+            }
 
             this.Size = new System.Drawing.Size(WinformsUtil.Scale(240), Appearance.ControlHeight);
 
@@ -288,15 +329,15 @@ namespace ic4.Examples
                         Parent = this,
                         Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
                         Location = new Point(-7, 1),
-                        Size = new Size((int)(150 * WinformsUtil.Scaling), 45),
+                        Size = new Size(WinformsUtil.Scale(240 - spinBoxWidth), 45),
                         TabIndex = 0,
                         TickStyle = System.Windows.Forms.TickStyle.None
                     };
                     spin_ = new CustomNumericUpDown()
                     {
                         Anchor = AnchorStyles.Top | AnchorStyles.Right,
-                        Location = new Point((int)(150 * WinformsUtil.Scaling), 0),
-                        Width = WinformsUtil.Scale(90),
+                        Location = new Point(WinformsUtil.Scale(240 - spinBoxWidth), 0),
+                        Width = WinformsUtil.Scale(spinBoxWidth),
                         TabIndex = 1,
                         Value = 0,
                         Parent = this
