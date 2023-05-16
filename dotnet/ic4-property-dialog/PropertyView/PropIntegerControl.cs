@@ -80,6 +80,7 @@ namespace ic4.Examples
                 slider_.Minimum = SLIDER_MIN;
                 slider_.Maximum = SLIDER_MAX;
                 slider_.SmallChange = 1;
+                slider_.LargeChange = SLIDER_TICKS / 100;
 
                 lastTrackBarValue = ValueToSliderPosition(val_);
                 slider_.Value = lastTrackBarValue;
