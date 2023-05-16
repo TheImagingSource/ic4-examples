@@ -11,6 +11,8 @@ using System.Net.NetworkInformation;
 using ic4;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Xml.Schema;
+using System.Diagnostics.Eventing.Reader;
 
 namespace ic4.Examples
 {
@@ -33,38 +35,66 @@ namespace ic4.Examples
             UpdateAll();
         }
 
+        private const int SLIDER_MIN = 0;
+        private const int SLIDER_MAX = 100000000;
+        private const int SLIDER_TICKS = SLIDER_MAX - SLIDER_MIN;
+
+        int lastTrackBarValue = 0;
+
+        private long SliderPosToValue(int pos)
+        {
+            ulong rangelen = (ulong)(max_ - min_);
+            System.Decimal frac = (System.Decimal)rangelen / SLIDER_TICKS;
+            var offset = new System.Numerics.BigInteger(frac * (System.Decimal)pos);
+            long val0 = (long)(min_ + offset);
+
+            if (val0 > max_) val0 = max_;
+            if (val0 < min_) val0 = min_;
+
+            return val0;
+        }
+
+        private int ValueToSliderPosition(long value)
+        {
+            ulong rangelen = (ulong)(max_ - min_);
+            int p = (int)((System.Decimal)(SLIDER_TICKS) / rangelen * (ulong)(value - min_));
+            return p;
+        }
+
         internal override void UpdateAll()
         {
             var propInt = Property as ic4.PropInteger;
 
             min_ = propInt.Minimum;
             max_ = propInt.Maximum;
-            inc_= propInt.Increment;
+            inc_ = propInt.Increment;
             val_ = propInt.Value;
 
             bool isLocked = base.IsLocked;
             bool isReadonly = base.IsReadonly;
 
-            int winformsMin = (int)Math.Max((long)int.MinValue, Math.Min( (long)int.MaxValue, min_));
-            int winformsMax = (int)Math.Max((long)int.MinValue, Math.Min((long)int.MaxValue, max_));
-            int value = (int)Math.Min(winformsMax, Math.Max(winformsMin, val_));
+            long winformsMin = Math.Max(long.MinValue, Math.Min(long.MaxValue, min_));
+            long winformsMax = Math.Max(long.MinValue, Math.Min(long.MaxValue, max_));
+            long value = Math.Min(winformsMax, Math.Max(winformsMin, val_));
 
             BlockSignals = true;
 
             if (slider_ != null)
             {
-                slider_.Minimum = winformsMin;
-                slider_.Maximum = winformsMax;
-                slider_.TickFrequency = (int)inc_;
-                slider_.Value = value;
+                slider_.Minimum = SLIDER_MIN;
+                slider_.Maximum = SLIDER_MAX;
+                slider_.SmallChange = 1;
+
+                lastTrackBarValue = ValueToSliderPosition(value);
+                slider_.Value = lastTrackBarValue;
                 slider_.Enabled = !isLocked;
             }
 
             if (spin_ != null)
             {
-                spin_.Minimum = winformsMin;
-                spin_.Maximum = winformsMax;
-                spin_.StepSize = (int)inc_;
+                spin_.Minimum = min_;
+                spin_.Maximum = max_;
+                spin_.StepSize = inc_;
                 spin_.Value = value;
                 spin_.DisplayText = ValueToString(value, representation_);
                 spin_.ReadOnly = isLocked || isReadonly;
@@ -81,7 +111,7 @@ namespace ic4.Examples
 
         }
 
-        private static string ValueToString(int value, IntRepresentation representation)
+        private static string ValueToString(long value, IntRepresentation representation)
         {
             if (representation == IntRepresentation.HexNumber)
             {
@@ -110,35 +140,49 @@ namespace ic4.Examples
                 return value.ToString();
             }
         }
-    
+
         private void SetValueUnchecked(long newVal)
         {
             base.Value = newVal;
-            UpdateValue(base.Value);
+            val_ = base.Value;
+            UpdateValue(val_);
         }
 
-        private void SetValue(int newPos)
+        // handle increment when slider was moved by mouse
+        private void SetValue(long newValue)
         {
-            long newVal = Math.Min( max_, Math.Max( min_, (long)newPos));
-            
-            if(((newVal - min_) % inc_) != 0)
+            if (newValue == max_ || newValue == min_)
             {
-                var fixedVal = min_ + (newVal - min_) / inc_ * inc_;
-
-                if (fixedVal == val_)
-                {
-                    if (newVal > val_)
-                        newVal = val_ + inc_;
-                    if (newVal < val_)
-                        newVal = val_ - inc_;
-                }
-                else
-                {
-                    newVal = fixedVal;
-                }
+                SetValueUnchecked(newValue);
             }
+            else
+            {
+                long newVal = Math.Min(max_, Math.Max(min_, newValue));
 
-            SetValueUnchecked(newVal);
+                if (((newVal - min_) % inc_) != 0)
+                {
+                    var bigNewVal = new System.Numerics.BigInteger(newVal);
+                    var bigMin = new System.Numerics.BigInteger(min_);
+                    var offset = bigNewVal - bigMin;
+                    offset = offset / inc_ * inc_;
+
+                    var fixedVal = (long)(bigMin + offset);
+
+                    if (fixedVal == val_)
+                    {
+                        if (newVal > val_)
+                            newVal = val_ + inc_;
+                        if (newVal < val_)
+                            newVal = val_ - inc_;
+                    }
+                    else
+                    {
+                        newVal = (long)fixedVal;
+                    }
+                }
+
+                SetValueUnchecked(newVal);
+            }
         }
 
         private void UpdateValue(long newValue)
@@ -146,16 +190,17 @@ namespace ic4.Examples
             BlockSignals = true;
             if (slider_ != null)
             {
-                slider_.Value = (int)newValue;
+                lastTrackBarValue = ValueToSliderPosition(newValue);
+                slider_.Value = lastTrackBarValue;
             }
             if (spin_ != null)
             { 
-                spin_.Value = (int)newValue;
-                spin_.DisplayText = ValueToString((int)newValue, representation_);
+                spin_.Value = newValue;
+                spin_.DisplayText = ValueToString(newValue, representation_);
             }
             if(edit_ != null)
             {
-                edit_.Text = ValueToString((int)newValue, representation_);
+                edit_.Text = ValueToString(newValue, representation_);
             }
             BlockSignals = false;
         }
@@ -191,6 +236,7 @@ namespace ic4.Examples
             SetValueUnchecked(spin_.Value);
         }
 
+       
         private void TrackBar1_ValueChanged(object sender, EventArgs e)
         {
             if (BlockSignals)
@@ -198,7 +244,20 @@ namespace ic4.Examples
                 return;
             }
 
-            SetValue(slider_.Value);
+            var newValue = slider_.Value;
+            if (Math.Abs(newValue - lastTrackBarValue) == 1)
+            {
+                if(newValue > lastTrackBarValue)
+                    spin_.Value+= inc_;
+                else
+                    spin_.Value -= inc_;
+
+                SetValueUnchecked(spin_.Value);
+            }
+            else
+            {
+                SetValue(SliderPosToValue(slider_.Value));
+            }
         }
 
         private void InitializeComponent()

@@ -52,7 +52,7 @@ namespace ic4.Examples
         private System.Windows.Forms.Panel panel1;
 
         private Color bgColor_ = Color.White;
-        private int _value = 0;
+        private long _value = 0;
         private string _displayText = string.Empty;
         private bool showButtons_ = true;
         private bool readOnly_ = true;
@@ -60,10 +60,10 @@ namespace ic4.Examples
         public event EventHandler TextInput;
         public event EventHandler ValueChanged;
 
-        public int Minimum { get; set; }
-        public int Maximum { get; set; }
+        public long Minimum { get; set; }
+        public long Maximum { get; set; }
 
-        public int StepSize { get; set; } = 1;
+        public long StepSize { get; set; } = 1;
 
         public CustomNumericUpDown()
         {
@@ -220,7 +220,7 @@ namespace ic4.Examples
             ValueChanged?.Invoke(sender, e);
         }
 
-        public int Value
+        public long Value
         {
             get
             {
