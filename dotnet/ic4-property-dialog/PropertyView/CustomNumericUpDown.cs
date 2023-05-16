@@ -63,7 +63,7 @@ namespace ic4.Examples
         public int Minimum { get; set; }
         public int Maximum { get; set; }
 
-        public int StepSize { get; set; }
+        public int StepSize { get; set; } = 1;
 
         public CustomNumericUpDown()
         {
@@ -81,11 +81,7 @@ namespace ic4.Examples
             this.SuspendLayout();
 
             int width = (int)(50.0f * WinformsUtil.Scaling);
-            int height = (int)(21.0f * WinformsUtil.Scaling);
-            if (height % 2 == 0)
-            {
-                height--;
-            }
+            int height = Appearance.ControlHeight;
             this.Size = new Size(width, height);
            
 
@@ -97,12 +93,12 @@ namespace ic4.Examples
             this.panel1.Controls.Add(this.cmdUp);
             this.panel1.Controls.Add(this.cmdDown);
             this.panel1.ForeColor = System.Drawing.SystemColors.ControlLight;
-            this.panel1.Size = new System.Drawing.Size((int)(16.0f * WinformsUtil.Scaling + 0.5f), height-1);
-            this.panel1.Location = new Point(width - panel1.Width - 1, 0);
+            this.panel1.Size = new System.Drawing.Size((int)(16.0f * WinformsUtil.Scaling + 0.5f), height - 2);
+            this.panel1.Location = new Point(width - panel1.Width, 0);
             this.panel1.Name = "panel1";
             this.panel1.TabIndex = 4;
 
-            int buttonHeight = (panel1.Height - 3 ) / 2 + 1 ;
+            int buttonHeight = (panel1.Height) / 2 + 1;
 
             // 
             // cmdUp
@@ -120,7 +116,7 @@ namespace ic4.Examples
             this.cmdDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.cmdDown.ForeColor = System.Drawing.SystemColors.Control;
             this.cmdDown.Size = new Size(panel1.Width, buttonHeight);
-            this.cmdDown.Location = new Point(0, cmdUp.Location.Y + cmdUp.Height );
+            this.cmdDown.Location = new Point(0, cmdUp.Location.Y - 1 + cmdUp.Height );
             this.cmdDown.TabIndex = 2;
             this.cmdDown.UseVisualStyleBackColor = true;
             this.cmdDown.Click += CmdDown_Click;
@@ -134,9 +130,9 @@ namespace ic4.Examples
             this.textBox1.Font = new System.Drawing.Font("Microsoft Sans Serif",
                 Appearance.ControlFontSize,
                 System.Drawing.FontStyle.Regular,
-                System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBox1.Location = new Point(1, height/2 - textBox1.Height/2);
-            this.textBox1.Size = new System.Drawing.Size(width - cmdDown.Width - 4, height );
+                System.Drawing.GraphicsUnit.Point, ((byte)(0)));            
+            this.textBox1.Size = new System.Drawing.Size(width - cmdDown.Width - WinformsUtil.Scale(6), height );
+            this.textBox1.Location = new Point(WinformsUtil.Scale(3), height / 2 - 1 - textBox1.Height / 2);
             this.textBox1.TabIndex = 1;
             textBox1.LostFocus += TextBox1_LostFocus;
             textBox1.KeyDown += TextBox1_KeyDown;
@@ -157,7 +153,9 @@ namespace ic4.Examples
             this.panel1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
-            
+
+            this.MaximumSize = new System.Drawing.Size(int.MaxValue, Height);
+            this.MinimumSize = new System.Drawing.Size(0, Height);
         }
 
         private void TextBox1_KeyDown(object sender, KeyEventArgs e)

@@ -32,6 +32,11 @@ namespace ic4.Examples
         public static float DPI { get; private set; }
         public static float Scaling { get; set; }
 
+        public static int Scale(int px)
+        {
+            return (int)(px * Scaling);
+        }
+
         public static class NativeMethods
         {
             public const int WM_SETREDRAW = 11;

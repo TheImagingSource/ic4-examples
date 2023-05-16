@@ -82,9 +82,9 @@ namespace ic4_property_dialog
             display_.Parent= this;
             display_.Dock = DockStyle.Fill;
 
+            ic4.WinForms.Dialogs.ShowDeviceDialog(g, this);
 
-            OpenDevice("DMK 33GR0134");
-
+            InitializeDevice();
 
             dlg_ = new ic4PropertyDialog_(g);
             dlg_.Show();
@@ -101,22 +101,8 @@ namespace ic4_property_dialog
             g.Dispose();
         }
 
-        void OpenDevice(string id)
+        void InitializeDevice()
         {
-            var dev = FindDevice(id);
-            if (dev == null)
-            {
-                MessageBox.Show(string.Format("Failed to find device for id '{0}'", id));
-                return;
-            }
-
-            if(g.IsDeviceValid)
-            {
-                g.AcquisitionStop();
-            }
-
-            g.DeviceOpen(dev);
-
             Pixelformat = PixelFormats.Last();
             Resolution = Resolutions.Last();
             Framerate = Framerates.Last();
@@ -131,12 +117,10 @@ namespace ic4_property_dialog
         {
             if(e.Sink.TryPopOutputBuffer( out var output ))
             {
+                g.DevicePropertyMap.ConnectChunkData(output);
+
                 output.Dispose();
             }
-
-            int test = 0;
-            test++;
-
         }
 
         bool IsRunning
@@ -247,36 +231,6 @@ namespace ic4_property_dialog
                 }
                 return 0.0;
             }
-        }
-
-        private static ic4.DeviceInfo FindDevice(string id)
-        {
-            var list = ic4.DeviceEnum.Devices;
-            if (!list.Any())
-            {
-                throw new Exception("No devices are available");
-            }
-
-            var device = list.FirstOrDefault(dev => dev.Serial == id || dev.UniqueName == id || dev.ModelName == id);
-            if (device != null)
-            {
-                return device;
-            }
-
-            try
-            {
-                int index = int.Parse(id);
-                if (index >= 0 && index < list.Count())
-                {
-                    return list.ElementAt(index);
-                }
-            }
-            catch
-            {
-                return null;
-            }
-
-            return null;
         }
 
         IEnumerable<string> PixelFormats

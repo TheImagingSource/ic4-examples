@@ -281,13 +281,7 @@ namespace ic4.Examples
             notation_ = prop.DisplayNotation;
             representation_ = prop.Representation;
 
-            int height = (int)(21.0f * WinformsUtil.Scaling);
-            if (height % 2 == 0)
-            {
-                height--;
-            }
-
-            this.Size = new System.Drawing.Size((int)(240 * WinformsUtil.Scaling), height);
+            this.Size = new System.Drawing.Size(WinformsUtil.Scale(240), Appearance.ControlHeight);
 
             switch (representation_)
             {
@@ -296,7 +290,7 @@ namespace ic4.Examples
                     {
                         Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
                         Location = new Point(1, 0),
-                        Size = new Size((int)(239 * WinformsUtil.Scaling), height),
+                        Width = WinformsUtil.Scale(239),
                         TabIndex = 0,
                         Parent = this
                     };
@@ -316,7 +310,7 @@ namespace ic4.Examples
                     {
                         Anchor = AnchorStyles.Top | AnchorStyles.Right,
                         Location = new Point((int)(150 * WinformsUtil.Scaling), 0),
-                        Size = new Size((int)(90 * WinformsUtil.Scaling), height),
+                        Width = WinformsUtil.Scale(90),
                         TabIndex = 1,
                         Value = 0,
                         Parent = this

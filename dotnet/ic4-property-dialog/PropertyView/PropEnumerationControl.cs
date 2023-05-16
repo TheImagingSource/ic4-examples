@@ -91,11 +91,7 @@ namespace ic4.Examples
 
         private void InitializeComponent()
         {
-            int height = (int)(21.0f * WinformsUtil.Scaling);
-            if (height % 2 == 0)
-            {
-                height--;
-            }
+            int height =  Appearance.ControlHeight;
 
             this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.SuspendLayout();

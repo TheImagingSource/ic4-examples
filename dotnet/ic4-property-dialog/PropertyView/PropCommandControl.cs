@@ -43,7 +43,7 @@ namespace ic4.Examples
             };
             button1.Click += Button1_Click;
            
-            this.Size = new System.Drawing.Size(105, (int)(23.0f * WinformsUtil.Scaling));
+            this.Size = new System.Drawing.Size(105, Appearance.ControlHeight + 2);
             this.ResumeLayout(false);
         }
 

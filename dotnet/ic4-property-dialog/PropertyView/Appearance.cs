@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace ic4.Examples
 {
@@ -17,6 +18,19 @@ namespace ic4.Examples
         public static int ControlRowHeight = (int)(40.0f * WinformsUtil.Scaling);
         public static int TextSpacing = (int)(8.0f * WinformsUtil.Scaling);
         public static int MaximumControlWidth = (int)(320.0f * WinformsUtil.Scaling);
+
+        public static int ControlHeight
+        {
+            get
+            {
+                int height = WinformsUtil.Scale(21);
+                if (height % 2 == 0)
+                {
+                    height--;
+                }
+                return height;
+            }
+        }
 
         // all fonts in GraphicsUnit.Point, so they scale automatically
         public static float NodeFontSize = 8.5f;

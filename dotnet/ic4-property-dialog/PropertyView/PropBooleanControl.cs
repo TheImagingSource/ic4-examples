@@ -33,14 +33,14 @@ namespace ic4.Examples
         private void InitializeComponent()
         {
             this.SuspendLayout();
+            this.Height = Appearance.ControlHeight;
             CheckBox_ = new CheckBox()
             {
-                Dock = DockStyle.Fill,  
+                Dock = DockStyle.Fill,
                 Text = string.Empty,
                 Parent= this,
             };
             CheckBox_.CheckedChanged += CheckBox__CheckedChanged;
-            this.Dock= DockStyle.Fill;
             this.ResumeLayout(false);
         }
 
