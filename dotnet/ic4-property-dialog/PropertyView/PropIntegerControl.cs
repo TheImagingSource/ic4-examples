@@ -13,19 +13,24 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Xml.Schema;
 using System.Diagnostics.Eventing.Reader;
+using System.IO;
 
 namespace ic4.Examples
 {
     class PropIntegerControl : PropControl<long>
     {
+        private const int SLIDER_MIN = 0;
+        private const int SLIDER_MAX = 100000000;
+        private const int SLIDER_TICKS = SLIDER_MAX - SLIDER_MIN;
+
         private long min_ = 0;
         private long max_ = 100;
         private long inc_ = 1;
         private long val_ = 0;
-        private int lastSliderValue_ = 0;
+        private int lastSliderIndex = 0;
         private ic4.IntRepresentation representation_ = ic4.IntRepresentation.Linear;
 
-        private System.Windows.Forms.TrackBar slider_;
+        private NoFocusTrackBar slider_;
         private CustomNumericUpDown spin_;
         private System.Windows.Forms.TextBox edit_;
 
@@ -36,31 +41,29 @@ namespace ic4.Examples
             UpdateAll();
         }
 
-        private const int SLIDER_MIN = 0;
-        private const int SLIDER_MAX = 100000000;
-        private const int SLIDER_TICKS = SLIDER_MAX - SLIDER_MIN;
-
-        private Func<long, long> SpinnerIndexToValue { get; set; } = (val) => val;
-        private Func<long, long> ValueToSpinnerIndex { get; set; } = (val) => val;
-
         private long SliderPosToValue(int pos)
         {
-            ulong rangelen = (ulong)(max_ - min_);
-            System.Decimal frac = (System.Decimal)rangelen / SLIDER_TICKS;
-            var offset = new System.Numerics.BigInteger(frac * (System.Decimal)pos);
-            long val0 = (long)(min_ + offset);
+            var position = new decimal(Math.Max(SLIDER_MIN, Math.Min(SLIDER_MAX, pos)));
+            var decMin = new decimal(min_);
+            var decMax = new decimal(max_);
+            var frac = (decMax - decMin) / SLIDER_TICKS;
+            var val0 = decMin + (frac * position);
 
-            if (val0 > max_) val0 = max_;
-            if (val0 < min_) val0 = min_;
+            if (val0 > decMax) val0 = decMax;
+            if (val0 < decMin) val0 = decMin;
 
-            return val0;
+            return (long)val0;
         }
 
         private int ValueToSliderPosition(long value)
         {
-            ulong rangelen = (ulong)(max_ - min_);
-            int p = (int)((System.Decimal)(SLIDER_TICKS) / rangelen * (ulong)(value - min_));
-            return p;
+            var decVal = new decimal(value);
+            var decMin = new decimal(min_);
+            var decMax = new decimal(max_);
+            var range = new decimal(SLIDER_TICKS);
+            var p = (range / (decMax - decMin) * (decVal - decMin));
+
+            return (int)p;
         }
 
         internal override void UpdateAll()
@@ -79,52 +82,31 @@ namespace ic4.Examples
 
             if (slider_ != null)
             {
-
-                slider_.Minimum = SLIDER_MIN;
-                slider_.Maximum = SLIDER_MAX;
+                slider_.Minimum = SLIDER_MIN-1;
+                slider_.Maximum = SLIDER_MAX+1;
                 slider_.SmallChange = 1;
                 slider_.LargeChange = SLIDER_TICKS / 100;
-                
 
-                lastSliderValue_ = ValueToSliderPosition(val_);
-                slider_.Value = lastSliderValue_;
+                lastSliderIndex = ValueToSliderPosition(val_);
+                slider_.Value = lastSliderIndex;
                 slider_.Enabled = !isLocked;
             }
 
             if (spin_ != null)
             {
-                try
+                if(propInt.IncrementMode == PropertyIncrementMode.ValueSet)
                 {
-                    if (propInt.ValidValueSet.Count() > 0)
-                    {
-                        spin_.Minimum = 0;
-                        spin_.Maximum = propInt.ValidValueSet.Count() - 1;
-
-                        SpinnerIndexToValue = (index) =>
-                        {
-                            return propInt.ValidValueSet.ElementAt((int)index);
-                        };
-                        ValueToSpinnerIndex = (value) =>
-                        {
-                            for(int i = 0; i < propInt.ValidValueSet.Count(); ++i)
-                            {
-                                if(propInt.ValidValueSet.ElementAt(i) == value)
-                                {
-                                    return i;
-                                }
-                            }
-                            return 0;
-                        };
-                    }
+                    spin_.Minimum = 0;
+                    spin_.Maximum = propInt.ValidValueSet.Count() - 1;
                 }
-                catch
+                else
                 { 
                     spin_.Minimum = min_;
                     spin_.Maximum = max_;
                 }
 
                 spin_.StepSize = inc_;
-                spin_.Value = ValueToSpinnerIndex(val_);
+                spin_.Value = ValueToSpinboxIndex(val_);
                 spin_.DisplayText = ValueToString(val_, representation_);
                 spin_.ReadOnly = isLocked || isReadonly;
                 spin_.ShowButtons = !isReadonly;
@@ -139,6 +121,39 @@ namespace ic4.Examples
 
             BlockSignals = false;
 
+        }
+
+        private long ValueToSpinboxIndex(long value)
+        {
+            var propInt = Property as ic4.PropInteger;
+            if (propInt.IncrementMode == PropertyIncrementMode.ValueSet)
+            {
+                for (int i = 0; i < propInt.ValidValueSet.Count(); ++i)
+                {
+                    if (propInt.ValidValueSet.ElementAt(i) == value)
+                    {
+                        return i;
+                    }
+                }
+                return 0;
+            }
+            else
+            {
+                return value;
+            }
+        }
+
+        private long SpinboxIndexToValue(long index)
+        {
+            var propInt = Property as ic4.PropInteger;
+            if (propInt.IncrementMode == PropertyIncrementMode.ValueSet)
+            {
+                return propInt.ValidValueSet.ElementAt((int)index);
+            }
+            else
+            {
+                return Math.Max(min_, Math.Min( max_, index));
+            }
         }
 
         private static string ValueToString(long value, IntRepresentation representation)
@@ -178,7 +193,6 @@ namespace ic4.Examples
             UpdateValue(val_);
         }
 
-        // handle increment when slider was moved by mouse
         private void SetValue(long newValue)
         {
             if (newValue == max_ || newValue == min_)
@@ -220,12 +234,12 @@ namespace ic4.Examples
             BlockSignals = true;
             if (slider_ != null)
             {
-                lastSliderValue_ = ValueToSliderPosition(newValue);
-                slider_.Value = lastSliderValue_;
+                lastSliderIndex = ValueToSliderPosition(newValue);
+                slider_.Value = lastSliderIndex;
             }
             if (spin_ != null)
             { 
-                spin_.Value = ValueToSpinnerIndex(newValue);
+                spin_.Value = ValueToSpinboxIndex(newValue);
                 spin_.DisplayText = ValueToString(newValue, representation_);
             }
             if(edit_ != null)
@@ -233,11 +247,6 @@ namespace ic4.Examples
                 edit_.Text = ValueToString(newValue, representation_);
             }
             BlockSignals = false;
-        }
-
-        private void Edit__TextChanged(object sender, EventArgs e)
-        {
-            throw new NotImplementedException();
         }
 
         private void CustomNumericUpDown1_TextInput(object sender, EventArgs e)
@@ -250,7 +259,7 @@ namespace ic4.Examples
             }
             catch(Exception ex)
             {
-                SetValue(SpinnerIndexToValue(spin_.Value));
+                SetValue(SpinboxIndexToValue(spin_.Value));
                 System.Console.WriteLine(ex.Message);
             }
             BlockSignals = false;
@@ -263,7 +272,7 @@ namespace ic4.Examples
                 return;
             }
 
-            SetValueUnchecked(SpinnerIndexToValue(spin_.Value));
+            SetValueUnchecked(SpinboxIndexToValue(spin_.Value));
         }
 
        
@@ -274,17 +283,34 @@ namespace ic4.Examples
                 return;
             }
 
-            var newValue = slider_.Value;
-            if (Math.Abs(newValue - lastSliderValue_) == 1)
+            var newIndex = slider_.Value;
+
+            if (Math.Abs(newIndex - lastSliderIndex) == 1)
             {
-                var property = Property as ic4.PropInteger;
+                var bigVal = new System.Numerics.BigInteger(spin_.Value);
 
-                if (newValue > lastSliderValue_)
-                    spin_.Value += inc_;
+                if (newIndex > lastSliderIndex)
+                {
+                    bigVal += inc_;
+                    var bigMax = new System.Numerics.BigInteger(max_);
+
+                    if (bigVal > bigMax)
+                        spin_.Value = max_;
+                    else 
+                        spin_.Value = (long)bigVal;
+                }
                 else
-                    spin_.Value -= inc_;
+                {
+                    bigVal -= inc_;
+                    var bigMin = new System.Numerics.BigInteger(min_);
 
-                SetValueUnchecked(SpinnerIndexToValue(spin_.Value));
+                    if (bigVal < bigMin)
+                        spin_.Value = min_;
+                    else
+                        spin_.Value = (long)bigVal;
+                }
+
+                SetValueUnchecked(SpinboxIndexToValue(spin_.Value));
             }
             else
             {
@@ -324,7 +350,7 @@ namespace ic4.Examples
                     break;
                 case ic4.IntRepresentation.Linear:
                 case ic4.IntRepresentation.Logarithmic:
-                    slider_ = new System.Windows.Forms.TrackBar()
+                    slider_ = new NoFocusTrackBar()
                     {
                         Parent = this,
                         Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
@@ -369,12 +395,54 @@ namespace ic4.Examples
 
             if (edit_ != null)
             {
-                edit_.TextChanged += Edit__TextChanged;
+                edit_.KeyDown += Edit__KeyDown;
+                edit_.LostFocus += Edit__LostFocus;
                 this.Controls.Add(edit_);
             }
 
             this.ResumeLayout(false);
             this.PerformLayout();
+        }
+
+
+        private string editText_ = string.Empty;
+
+        private void Edit__LostFocus(object sender, EventArgs e)
+        {
+            if (editText_ != edit_.Text)
+            {
+                editText_ = edit_.Text;
+                Edit__TextChanged();
+            }
+
+        }
+
+        private void Edit__KeyDown(object sender, KeyEventArgs e)
+        {
+           
+            if (e.KeyCode == Keys.Enter)
+            {
+                if (editText_ != edit_.Text)
+                {
+                    editText_ = edit_.Text;
+                    Edit__TextChanged();
+                }
+            }
+        }
+
+        private void Edit__TextChanged()
+        {
+            BlockSignals = true;
+            try
+            {
+                SetValue(long.Parse(editText_));
+            }
+            catch (Exception ex)
+            {
+                SetValue(SpinboxIndexToValue(spin_.Value));
+                System.Console.WriteLine(ex.Message);
+            }
+            BlockSignals = false;
         }
     }
 }

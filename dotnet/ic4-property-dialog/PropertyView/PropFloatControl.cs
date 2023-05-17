@@ -5,6 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Net.NetworkInformation;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -59,8 +60,16 @@ namespace ic4.Examples
 
             if (spin_ != null)
             {
-                spin_.Minimum = SLIDER_MIN;
-                spin_.Maximum = SLIDER_MAX;
+                if(prop.IncrementMode == PropertyIncrementMode.ValueSet)
+                {
+                    spin_.Minimum = 0;
+                    spin_.Maximum = prop.ValidValueSet.Count() - 1;
+                }
+                else
+                {
+                    spin_.Minimum = SLIDER_MIN;
+                    spin_.Maximum = SLIDER_MAX;
+                }
 
                 spin_.Value = GetSliderPosition(prop.Value);
                 spin_.ReadOnly = isLocked || isReadonly;
@@ -125,27 +134,42 @@ namespace ic4.Examples
         {
             try
             {
-                Func<double, double> f;
-                if (representation_ == ic4.FloatRepresentation.Logarithmic)
+                var prop = Property as ic4.PropFloat;
+                if (prop.IncrementMode == PropertyIncrementMode.ValueSet)
                 {
-                    f = new Func<double, double>((val) => { return Math.Log(val); });
+                    for (int i = 0; i < prop.ValidValueSet.Count(); ++i)
+                    {
+                        if (prop.ValidValueSet.ElementAt(i) == value)
+                        {
+                            return i;
+                        }
+                    }
+                    return 0;
                 }
                 else
                 {
-                    f = new Func<double, double>((val) => { return val; });
+                    Func<double, double> f;
+                    if (representation_ == ic4.FloatRepresentation.Logarithmic)
+                    {
+                        f = new Func<double, double>((val) => { return Math.Log(val); });
+                    }
+                    else
+                    {
+                        f = new Func<double, double>((val) => { return val; });
+                    }
+
+
+                    double rangelen = f(max_) - f(min_);
+                    double p = (double)(SLIDER_TICKS) / rangelen * (f(value) - f(min_));
+
+                    p = (int)(p + 0.5);
+                    if (p == -2147483648)
+                    {
+                        p = SLIDER_MAX;
+                    }
+
+                    return Math.Min(SLIDER_MAX, Math.Max(SLIDER_MIN, (int)(p + 0.5)));
                 }
-
-
-                double rangelen = f(max_) - f(min_);
-                double p = (double)(SLIDER_TICKS) / rangelen * (f(value) - f(min_));
-
-                p = (int)(p + 0.5);
-                if (p == -2147483648)
-                {
-                    p = SLIDER_MAX;
-                }
-
-                return Math.Min(SLIDER_MAX, Math.Max(SLIDER_MIN, (int)(p + 0.5)));
             }
             catch
             {
@@ -157,26 +181,36 @@ namespace ic4.Examples
         {
             try
             {
-                Func<double, double> f;
-                Func<double, double> f_inv;
-                if (representation_ == ic4.FloatRepresentation.Logarithmic)
+                var prop = Property as ic4.PropFloat;
+                if (prop.IncrementMode == PropertyIncrementMode.ValueSet)
                 {
-                    f = new Func<double, double>((val) => { return Math.Log(val); });
-                    f_inv = new Func<double, double>((val) => { return Math.Exp(val); });
+                    return prop.ValidValueSet.ElementAt(pos);
                 }
                 else
                 {
-                    f = new Func<double, double>((val) => { return val; });
-                    f_inv = new Func<double, double>((val) => { return val; });
+
+
+                    Func<double, double> f;
+                    Func<double, double> f_inv;
+                    if (representation_ == ic4.FloatRepresentation.Logarithmic)
+                    {
+                        f = new Func<double, double>((val) => { return Math.Log(val); });
+                        f_inv = new Func<double, double>((val) => { return Math.Exp(val); });
+                    }
+                    else
+                    {
+                        f = new Func<double, double>((val) => { return val; });
+                        f_inv = new Func<double, double>((val) => { return val; });
+                    }
+
+                    double rangelen = f(max_) - f(min_);
+                    double val0 = f_inv(f(min_) + rangelen / SLIDER_TICKS * pos);
+
+                    if (val0 > max_) val0 = max_;
+                    if (val0 < min_) val0 = min_;
+
+                    return val0;
                 }
-
-                double rangelen = f(max_) - f(min_);
-                double val0 = f_inv(f(min_) + rangelen / SLIDER_TICKS * pos);
-
-                if (val0 > max_) val0 = max_;
-                if (val0 < min_) val0 = min_;
-
-                return val0;
             }
             catch
             {

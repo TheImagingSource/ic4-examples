@@ -55,6 +55,9 @@
     <Compile Include="CustomNumericUpDown.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="NoFocusTrackBar.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="PropBooleanControl.cs">
       <SubType>Component</SubType>
     </Compile>
