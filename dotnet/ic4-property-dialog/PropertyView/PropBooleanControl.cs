@@ -13,7 +13,7 @@ namespace ic4.Examples
     [ToolboxItem(false)]
     internal class PropBooleanControl : PropControl<bool>
     {
-        private CheckBox CheckBox_;
+        private CheckBox checkBox_;
 
         public PropBooleanControl(ic4.Grabber grabber, ic4.PropBoolean property) : base(grabber, property)
         {
@@ -25,8 +25,8 @@ namespace ic4.Examples
         {
             BlockSignals = true;
             var propBool = Property as ic4.PropBoolean;
-            CheckBox_.Enabled = !base.IsLocked && !base.IsReadonly;
-            CheckBox_.Checked = propBool.Value;
+            checkBox_.Enabled = !base.IsLocked && !base.IsReadonly;
+            checkBox_.Checked = propBool.Value;
             BlockSignals = false;
         }
 
@@ -34,7 +34,7 @@ namespace ic4.Examples
         {
             this.SuspendLayout();
             this.Height = Appearance.ControlHeight;
-            CheckBox_ = new CheckBox()
+            checkBox_ = new CheckBox()
             {
                 Dock = DockStyle.Fill,
                 Text = string.Empty,
@@ -42,7 +42,7 @@ namespace ic4.Examples
                 TabStop= true,
                 Parent= this,
             };
-            CheckBox_.CheckedChanged += CheckBox__CheckedChanged;
+            checkBox_.CheckedChanged += CheckBox__CheckedChanged;
             this.TabStop= false;
             this.ResumeLayout(false);
         }
@@ -52,7 +52,7 @@ namespace ic4.Examples
             if (BlockSignals)
                 return;
 
-            base.Value = CheckBox_.Checked;
+            base.Value = checkBox_.Checked;
         }
     }
 }

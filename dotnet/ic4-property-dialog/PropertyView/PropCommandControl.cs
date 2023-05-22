@@ -13,7 +13,7 @@ namespace ic4.Examples
     [ToolboxItem(false)]
     internal class PropCommandControl : PropControl<string>
     {
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button button_;
 
         public PropCommandControl(ic4.Grabber grabber, ic4.PropCommand property) : base(grabber, property)
         {
@@ -23,14 +23,14 @@ namespace ic4.Examples
 
         internal override void UpdateAll()
         {
-            button1.Enabled = !base.IsLocked && !base.IsReadonly;
+            button_.Enabled = !base.IsLocked && !base.IsReadonly;
         }
 
         private void InitializeComponent()
         {
             this.SuspendLayout();
 
-            button1 = new System.Windows.Forms.Button()
+            button_ = new System.Windows.Forms.Button()
             {
                 Parent = this,
                 Dock = DockStyle.Fill,
@@ -43,7 +43,7 @@ namespace ic4.Examples
                    System.Drawing.FontStyle.Regular,
                    System.Drawing.GraphicsUnit.Point, ((byte)(0)))
             };
-            button1.Click += Button1_Click;
+            button_.Click += Button1_Click;
            
             this.Size = new System.Drawing.Size(105, Appearance.ControlHeight + 2);
             this.TabStop= false;
@@ -52,7 +52,7 @@ namespace ic4.Examples
 
         private void Button1_Click(object sender, EventArgs e)
         {
-            base.Value = string.Empty;// calling prop.Execute();
+            base.Value = string.Empty;// --> calling prop.Execute() in base.Value;
         }
     }
 }

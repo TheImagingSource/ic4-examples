@@ -47,14 +47,14 @@ namespace ic4.Examples
     [ToolboxItem(false)]
     internal class CustomNumericUpDown : UserControl
     {
-        private System.Windows.Forms.TextBox textBox1;
-        private DownButton cmdDown;
-        private UpButton cmdUp;
-        private System.Windows.Forms.Panel panel1;
+        private TextBox textBox_;
+        private DownButton cmdDown_;
+        private UpButton cmdUp_;
+        private Panel panel_;
 
         private Color bgColor_ = Color.White;
-        private long _value = 0;
-        private string _displayText = string.Empty;
+        private long value_ = 0;
+        private string displayText_ = string.Empty;
         private bool showButtons_ = true;
         private bool readOnly_ = true;
 
@@ -63,7 +63,6 @@ namespace ic4.Examples
 
         public long Minimum { get; set; }
         public long Maximum { get; set; }
-
         public long StepSize { get; set; } = 1;
 
         public CustomNumericUpDown()
@@ -74,11 +73,11 @@ namespace ic4.Examples
 
         private void InitializeComponent()
         {
-            this.textBox1 = new System.Windows.Forms.TextBox();
-            this.panel1 = new System.Windows.Forms.Panel();
-            this.cmdUp = new UpButton();
-            this.cmdDown = new DownButton();
-            this.panel1.SuspendLayout();
+            this.textBox_ = new System.Windows.Forms.TextBox();
+            this.panel_ = new System.Windows.Forms.Panel();
+            this.cmdUp_ = new UpButton();
+            this.cmdDown_ = new DownButton();
+            this.panel_.SuspendLayout();
             this.SuspendLayout();
 
             int width = (int)(50.0f * WinformsUtil.Scaling);
@@ -89,72 +88,71 @@ namespace ic4.Examples
             // 
             // panel1
             // 
-            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.panel1.BackColor = System.Drawing.SystemColors.ButtonFace;
-            this.panel1.Controls.Add(this.cmdUp);
-            this.panel1.Controls.Add(this.cmdDown);
-            this.panel1.ForeColor = System.Drawing.SystemColors.ControlLight;
-            this.panel1.Size = new System.Drawing.Size((int)(16.0f * WinformsUtil.Scaling + 0.5f), height - 2);
-            this.panel1.Location = new Point(width - panel1.Width, 0);
-            this.panel1.Name = "panel1";
-            this.panel1.TabStop = false;
+            this.panel_.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            this.panel_.BackColor = System.Drawing.SystemColors.ButtonFace;
+            this.panel_.Controls.Add(this.cmdUp_);
+            this.panel_.Controls.Add(this.cmdDown_);
+            this.panel_.ForeColor = System.Drawing.SystemColors.ControlLight;
+            this.panel_.Size = new System.Drawing.Size((int)(16.0f * WinformsUtil.Scaling + 0.5f), height - 2);
+            this.panel_.Location = new Point(width - panel_.Width, 0);
+            this.panel_.Name = "panel1";
+            this.panel_.TabStop = false;
 
-            int buttonHeight = (panel1.Height) / 2 + 1;
+            int buttonHeight = (panel_.Height) / 2 + 1;
 
             // 
             // cmdUp
             // 
-            this.cmdUp.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.cmdUp.ForeColor = System.Drawing.SystemColors.Control;
-            this.cmdUp.Location = new Point(0, 0);
-            this.cmdUp.Size = new Size(panel1.Width, buttonHeight);
-            this.cmdUp.TabIndex = 3;
-            this.cmdUp.UseVisualStyleBackColor = true;
-            this.cmdUp.Click += CmdUp_Click;
-            this.cmdUp.TabStop= false;
+            this.cmdUp_.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            this.cmdUp_.ForeColor = System.Drawing.SystemColors.Control;
+            this.cmdUp_.Location = new Point(0, 0);
+            this.cmdUp_.Size = new Size(panel_.Width, buttonHeight);
+            this.cmdUp_.TabIndex = 3;
+            this.cmdUp_.UseVisualStyleBackColor = true;
+            this.cmdUp_.Click += CmdUp_Click;
+            this.cmdUp_.TabStop= false;
 
             // 
             // cmdDown
             // 
-            this.cmdDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.cmdDown.ForeColor = System.Drawing.SystemColors.Control;
-            this.cmdDown.Size = new Size(panel1.Width, buttonHeight);
-            this.cmdDown.Location = new Point(0, cmdUp.Location.Y - 1 + cmdUp.Height );
-            this.cmdDown.TabIndex = 2;
-            this.cmdDown.UseVisualStyleBackColor = true;
-            this.cmdDown.Click += CmdDown_Click;
-            this.cmdDown.TabStop = false;
+            this.cmdDown_.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            this.cmdDown_.ForeColor = System.Drawing.SystemColors.Control;
+            this.cmdDown_.Size = new Size(panel_.Width, buttonHeight);
+            this.cmdDown_.Location = new Point(0, cmdUp_.Location.Y - 1 + cmdUp_.Height );
+            this.cmdDown_.TabIndex = 2;
+            this.cmdDown_.UseVisualStyleBackColor = true;
+            this.cmdDown_.Click += CmdDown_Click;
+            this.cmdDown_.TabStop = false;
+
             // 
             // textBox1
             // 
-            this.textBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top)
-            | System.Windows.Forms.AnchorStyles.Left)
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBox1.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.textBox1.Font = new System.Drawing.Font("Microsoft Sans Serif",
+            this.textBox_.Anchor =AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            this.textBox_.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.textBox_.Font = new System.Drawing.Font("Microsoft Sans Serif",
                 Appearance.ControlFontSize,
                 System.Drawing.FontStyle.Regular,
                 System.Drawing.GraphicsUnit.Point, ((byte)(0)));            
-            this.textBox1.Size = new System.Drawing.Size(width - cmdDown.Width - WinformsUtil.Scale(6), height );
-            this.textBox1.Location = new Point(WinformsUtil.Scale(3), height / 2 - 1 - textBox1.Height / 2);
-            this.textBox1.TabIndex = 0;
-            textBox1.LostFocus += TextBox1_LostFocus;
-            textBox1.KeyDown += TextBox1_KeyDown;
+            this.textBox_.Size = new System.Drawing.Size(width - cmdDown_.Width - WinformsUtil.Scale(6), height );
+            this.textBox_.Location = new Point(WinformsUtil.Scale(3), height / 2 - 1 - textBox_.Height / 2);
+            this.textBox_.TabIndex = 0;
+            textBox_.LostFocus += TextBox1_LostFocus;
+            textBox_.KeyDown += TextBox1_KeyDown;
 
             // 
             // CustomNumericUpDown
             // 
-            this.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            this.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.ForeColor = System.Drawing.SystemColors.ControlDark;
-            this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.Controls.Add(this.panel1);
-            this.Controls.Add(this.textBox1);
-            this.ForeColor = System.Drawing.SystemColors.ControlDark;
+            this.BackColor = SystemColors.ControlLightLight;
+            this.BorderStyle = BorderStyle.FixedSingle;
+            this.ForeColor = SystemColors.ControlDark;
+            this.Margin = new Padding(4, 5, 4, 5);
+            this.Controls.Add(this.panel_);
+            this.Controls.Add(this.textBox_);
+            this.ForeColor = SystemColors.ControlDark;
             this.Maximum = 100;
             this.Minimum = 0;
             this.Value = 0;
-            this.panel1.ResumeLayout(false);
+            this.panel_.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -166,9 +164,9 @@ namespace ic4.Examples
         {
             if(e.KeyCode == Keys.Enter)
             {
-                if (_displayText != textBox1.Text)
+                if (displayText_ != textBox_.Text)
                 {
-                    _displayText = textBox1.Text;
+                    displayText_ = textBox_.Text;
                     TextInput?.Invoke(sender, EventArgs.Empty);   
                 }
             }
@@ -176,9 +174,9 @@ namespace ic4.Examples
 
         private void TextBox1_LostFocus(object sender, EventArgs e)
         {
-            if (_displayText != textBox1.Text)
+            if (displayText_ != textBox_.Text)
             {
-                _displayText = textBox1.Text;
+                displayText_ = textBox_.Text;
                 TextInput?.Invoke(sender, EventArgs.Empty);
             }
         }
@@ -188,7 +186,7 @@ namespace ic4.Examples
             set
             {
                 showButtons_ = value;
-                panel1.Visible = value;
+                panel_.Visible = value;
             }
             get
             {
@@ -201,10 +199,10 @@ namespace ic4.Examples
             set
             {
                 readOnly_ = value;
-                textBox1.ReadOnly = value;
-                this.cmdDown.Enabled = !value;
-                this.cmdUp.Enabled = !value;
-                this.BackColor = textBox1.BackColor;
+                textBox_.ReadOnly = value;
+                this.cmdDown_.Enabled = !value;
+                this.cmdUp_.Enabled = !value;
+                this.BackColor = textBox_.BackColor;
             }
             get
             {
@@ -214,13 +212,13 @@ namespace ic4.Examples
 
         private void CmdDown_Click(object sender, EventArgs e)
         {
-            _value = Math.Min(Maximum, Math.Max(Minimum, _value - StepSize));
+            value_ = Math.Min(Maximum, Math.Max(Minimum, value_ - StepSize));
             ValueChanged?.Invoke(sender, e);
         }
 
         private void CmdUp_Click(object sender, EventArgs e)
         {
-            _value = Math.Min(Maximum, Math.Max(Minimum, _value + StepSize));
+            value_ = Math.Min(Maximum, Math.Max(Minimum, value_ + StepSize));
             ValueChanged?.Invoke(sender, e);
         }
 
@@ -228,11 +226,11 @@ namespace ic4.Examples
         {
             get
             {
-                return _value;
+                return value_;
             }
             set
             {
-                _value = Math.Min(Maximum, Math.Max(Minimum, value));
+                value_ = Math.Min(Maximum, Math.Max(Minimum, value));
             }
         }
 
@@ -241,12 +239,12 @@ namespace ic4.Examples
         {
             get
             {
-                return _displayText;
+                return displayText_;
             }
             set
             {
-                _displayText = value;
-                textBox1.Text = value;
+                displayText_ = value;
+                textBox_.Text = value;
             }
         }
 
