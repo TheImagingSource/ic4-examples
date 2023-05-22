@@ -311,6 +311,7 @@ namespace ic4.Examples
             representation_ = prop.Representation;
 
             this.Size = new System.Drawing.Size(WinformsUtil.Scale(240), Appearance.ControlHeight);
+            this.TabStop = false;
 
             switch (representation_)
             {

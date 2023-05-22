@@ -97,7 +97,7 @@ namespace ic4.Examples
             this.panel1.Size = new System.Drawing.Size((int)(16.0f * WinformsUtil.Scaling + 0.5f), height - 2);
             this.panel1.Location = new Point(width - panel1.Width, 0);
             this.panel1.Name = "panel1";
-            this.panel1.TabIndex = 4;
+            this.panel1.TabStop = false;
 
             int buttonHeight = (panel1.Height) / 2 + 1;
 
@@ -111,6 +111,8 @@ namespace ic4.Examples
             this.cmdUp.TabIndex = 3;
             this.cmdUp.UseVisualStyleBackColor = true;
             this.cmdUp.Click += CmdUp_Click;
+            this.cmdUp.TabStop= false;
+
             // 
             // cmdDown
             // 
@@ -121,6 +123,7 @@ namespace ic4.Examples
             this.cmdDown.TabIndex = 2;
             this.cmdDown.UseVisualStyleBackColor = true;
             this.cmdDown.Click += CmdDown_Click;
+            this.cmdDown.TabStop = false;
             // 
             // textBox1
             // 
@@ -134,9 +137,10 @@ namespace ic4.Examples
                 System.Drawing.GraphicsUnit.Point, ((byte)(0)));            
             this.textBox1.Size = new System.Drawing.Size(width - cmdDown.Width - WinformsUtil.Scale(6), height );
             this.textBox1.Location = new Point(WinformsUtil.Scale(3), height / 2 - 1 - textBox1.Height / 2);
-            this.textBox1.TabIndex = 1;
+            this.textBox1.TabIndex = 0;
             textBox1.LostFocus += TextBox1_LostFocus;
             textBox1.KeyDown += TextBox1_KeyDown;
+
             // 
             // CustomNumericUpDown
             // 
@@ -150,7 +154,6 @@ namespace ic4.Examples
             this.Maximum = 100;
             this.Minimum = 0;
             this.Value = 0;
-
             this.panel1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();

@@ -332,6 +332,7 @@ namespace ic4.Examples
             }
 
             this.Size = new System.Drawing.Size(WinformsUtil.Scale(240), Appearance.ControlHeight);
+            this.TabStop = false;
 
             switch (representation_)
             {
@@ -345,7 +346,8 @@ namespace ic4.Examples
                         Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
                         Location = new Point(1, 0),
                         Width = WinformsUtil.Scale(239),
-                        TabIndex = 0
+                        TabIndex = AutoTabIndex,
+                        TabStop= true
                     };
                     break;
                 case ic4.IntRepresentation.Linear:
@@ -356,7 +358,8 @@ namespace ic4.Examples
                         Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
                         Location = new Point(-7, 1),
                         Size = new Size(WinformsUtil.Scale(240 - spinBoxWidth), 45),
-                        TabIndex = 0,
+                        TabIndex = AutoTabIndex,
+                        TabStop = true,
                         TickStyle = System.Windows.Forms.TickStyle.None
                     };
                     spin_ = new CustomNumericUpDown()
@@ -364,8 +367,9 @@ namespace ic4.Examples
                         Anchor = AnchorStyles.Top | AnchorStyles.Right,
                         Location = new Point(WinformsUtil.Scale(240 - spinBoxWidth), 0),
                         Width = WinformsUtil.Scale(spinBoxWidth),
-                        TabIndex = 1,
+                        TabIndex = AutoTabIndex,
                         Value = 0,
+                        TabStop = true,
                         Parent = this
                     };
                     break;
@@ -375,7 +379,9 @@ namespace ic4.Examples
                     {
                         Dock = DockStyle.Fill,
                         Font = new System.Drawing.Font("Microsoft Sans Serif", Appearance.ControlFontSize, FontStyle.Regular, GraphicsUnit.Point, 0),
-                        Parent = this
+                        Parent = this,
+                        TabStop = true,
+                        TabIndex = AutoTabIndex
                     };
                     break;
             }

@@ -38,9 +38,12 @@ namespace ic4.Examples
             {
                 Dock = DockStyle.Fill,
                 Text = string.Empty,
+                TabIndex = AutoTabIndex,
+                TabStop= true,
                 Parent= this,
             };
             CheckBox_.CheckedChanged += CheckBox__CheckedChanged;
+            this.TabStop= false;
             this.ResumeLayout(false);
         }
 

@@ -180,6 +180,7 @@ namespace ic4.Examples
         {
             this.Size = new Size(300, 0);
             this.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            this.TabStop = false;
 
             pictureBox_ = new PictureBox()
             {
@@ -188,7 +189,8 @@ namespace ic4.Examples
                 BackgroundImage = CollapseImage,
                 BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center,
                 Location = new System.Drawing.Point(0, 0),
-                Size = new System.Drawing.Size(Appearance.Indentation, rowHeight_)
+                Size = new System.Drawing.Size(Appearance.Indentation, rowHeight_),
+                
             };
 
             text_ = new Label()
@@ -200,7 +202,7 @@ namespace ic4.Examples
                 Text = Name,
                 TextAlign = ContentAlignment.MiddleLeft,
                 Font = new System.Drawing.Font("Microsoft Sans Serif", Appearance.NodeFontSize, FontStyle.Regular, GraphicsUnit.Point, 0),
-                BackColor = SystemColors.ControlLight
+                BackColor = SystemColors.ControlLight,
             };
 
             text_.MouseDown += PropertyCategory_MouseClick;

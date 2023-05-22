@@ -36,6 +36,8 @@ namespace ic4.Examples
                 Dock = DockStyle.Fill,
                 UseVisualStyleBackColor = true,
                 Text = "Excecute",
+                TabIndex = AutoTabIndex,
+                TabStop = true,
                 Font = new System.Drawing.Font("Microsoft Sans Serif",
                    Appearance.ControlFontSize,
                    System.Drawing.FontStyle.Regular,
@@ -44,6 +46,7 @@ namespace ic4.Examples
             button1.Click += Button1_Click;
            
             this.Size = new System.Drawing.Size(105, Appearance.ControlHeight + 2);
+            this.TabStop= false;
             this.ResumeLayout(false);
         }
 

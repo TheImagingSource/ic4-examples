@@ -40,6 +40,15 @@ namespace ic4.Examples
     [ToolboxItem(false)]
     class PropControl<T> : PropControlBase
     {
+        private static int AutoTabIndex_ = 0;
+        protected static int AutoTabIndex
+        {
+            get
+            {
+                AutoTabIndex_++;
+                return AutoTabIndex_;
+            }
+        }
         private ic4.Grabber Grabber { get; set; }
 
         protected bool BlockSignals { get; set; } = false;

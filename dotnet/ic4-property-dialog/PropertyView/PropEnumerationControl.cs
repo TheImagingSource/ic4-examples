@@ -106,13 +106,15 @@ namespace ic4.Examples
                 System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.comboBox1.FormattingEnabled = true;
             this.comboBox1.Location = new System.Drawing.Point(0, 0);
-            this.comboBox1.TabIndex = 5;
+            this.comboBox1.TabIndex = AutoTabIndex;
+            this.comboBox1.TabStop = true;
             this.comboBox1.SelectedIndexChanged += ComboBox1_SelectedIndexChanged;
             // 
             // PropEnumerationControl
             // 
             this.Controls.Add(this.comboBox1);
             this.Size = new System.Drawing.Size(105, height);
+            this.TabStop = false;
             this.ResumeLayout(false);
         }
 

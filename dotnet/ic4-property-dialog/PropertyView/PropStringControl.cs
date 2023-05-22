@@ -48,6 +48,8 @@ namespace ic4.Examples
             panel_.BackColor = System.Drawing.SystemColors.ControlLightLight;
             panel_.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             panel_.ForeColor = System.Drawing.SystemColors.ControlDark;
+            panel_.TabStop = false;
+
             //panel.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Controls.Add(panel_);
 
@@ -64,7 +66,8 @@ namespace ic4.Examples
             textBox_.Width = 200 - WinformsUtil.Scale(6);
             textBox_.Anchor = AnchorStyles.Left | AnchorStyles.Right | System.Windows.Forms.AnchorStyles.Top;
             textBox_.Location = new System.Drawing.Point(WinformsUtil.Scale(3), Appearance.ControlHeight / 2 - 1 - textBox_.Height / 2);
-
+            textBox_.TabStop = true;
+            textBox_.TabIndex = AutoTabIndex;
             // 
             // PropStringControl
             // 
@@ -72,6 +75,7 @@ namespace ic4.Examples
             this.Size = new System.Drawing.Size(200, Appearance.ControlHeight);
             this.MaximumSize = new System.Drawing.Size(2048, Appearance.ControlHeight);
             this.MinimumSize = new System.Drawing.Size(0, Appearance.ControlHeight);
+            this.TabStop = false;
             this.ResumeLayout(false);
         }
     }
