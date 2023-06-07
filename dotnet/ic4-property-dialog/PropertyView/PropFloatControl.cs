@@ -26,7 +26,7 @@ namespace ic4.Examples
         private double min_ = 0.0;
         private double max_ = 100.0;
         private string unit_ = string.Empty;
-        private ic4.FloatRepresentation representation_ = ic4.FloatRepresentation.Liniear;
+        private ic4.FloatRepresentation representation_ = ic4.FloatRepresentation.Linear;
         public ic4.DisplayNotation notation_ = ic4.DisplayNotation.Fixed;
         private long precision_ = 0;
 
@@ -325,7 +325,7 @@ namespace ic4.Examples
                         Parent = this
                     };
                     break;
-                case ic4.FloatRepresentation.Liniear:
+                case ic4.FloatRepresentation.Linear:
                 case ic4.FloatRepresentation.Logarithmic:
                     slider_ = new System.Windows.Forms.TrackBar()
                     {

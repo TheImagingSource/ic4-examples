@@ -36,11 +36,11 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ic4dotnet, Version=0.1.0.1726, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\ic4dotnet.0.1.0.1726\lib\net45\ic4dotnet.dll</HintPath>
+    <Reference Include="ic4dotnet, Version=0.1.0.1875, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\ic4dotnet.0.1.0.1875\lib\net45\ic4dotnet.dll</HintPath>
     </Reference>
-    <Reference Include="ic4winforms, Version=0.1.0.1726, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\ic4winforms.0.1.0.1726\lib\net45\ic4winforms.dll</HintPath>
+    <Reference Include="ic4dotnet.System.Windows.Forms, Version=0.1.0.1875, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\ic4dotnet.System.Windows.Forms.0.1.0.1875\lib\net45\ic4dotnet.System.Windows.Forms.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -96,13 +96,11 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="..\packages\ic4dotnet.0.1.0.1726\build\ic4dotnet.targets" Condition="Exists('..\packages\ic4dotnet.0.1.0.1726\build\ic4dotnet.targets')" />
+  <Import Project="..\packages\ic4dotnet.0.1.0.1875\build\ic4dotnet.targets" Condition="Exists('..\packages\ic4dotnet.0.1.0.1875\build\ic4dotnet.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\ic4dotnet.0.1.0.1726\build\ic4dotnet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ic4dotnet.0.1.0.1726\build\ic4dotnet.targets'))" />
-    <Error Condition="!Exists('..\packages\ic4winforms.0.1.0.1726\build\ic4winforms.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ic4winforms.0.1.0.1726\build\ic4winforms.targets'))" />
+    <Error Condition="!Exists('..\packages\ic4dotnet.0.1.0.1875\build\ic4dotnet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ic4dotnet.0.1.0.1875\build\ic4dotnet.targets'))" />
   </Target>
-  <Import Project="..\packages\ic4winforms.0.1.0.1726\build\ic4winforms.targets" Condition="Exists('..\packages\ic4winforms.0.1.0.1726\build\ic4winforms.targets')" />
 </Project>

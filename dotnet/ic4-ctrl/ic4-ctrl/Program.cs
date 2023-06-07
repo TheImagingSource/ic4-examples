@@ -189,7 +189,7 @@ namespace ic4_ctrl
             }
             catch(ic4.IC4Exception ex)
             {
-                if( ex.ErrorCode == ic4.Error.GenICamNotImplemented)
+                if( ex.ErrorCode == ic4.ErrorCode.GenICamNotImplemented)
                 {
                     return "n/a";
                 }
@@ -218,7 +218,7 @@ namespace ic4_ctrl
             }
             catch (ic4.IC4Exception ex)
             {
-                if (ex.ErrorCode == ic4.Error.GenICamNotImplemented)
+                if (ex.ErrorCode == ic4.ErrorCode.GenICamNotImplemented)
                 {
                     return "n/a";
                 }
@@ -464,16 +464,16 @@ namespace ic4_ctrl
                                 var vec = prop.Value;
                                 string str = string.Empty;
                                 int maxEntriesToPrint = 16;
-                                for (int i = 0; i < Math.Min(maxEntriesToPrint, vec.Length); ++i)
+                                for (int i = 0; i < Math.Min(maxEntriesToPrint, vec.Count); ++i)
                                 {
                                     str += string.Format("{0}", vec[i]);
                                     str += ", ";
                                 }
-                                if (vec.Length > maxEntriesToPrint)
+                                if (vec.Count > maxEntriesToPrint)
                                 {
                                     str += "...";
                                 }
-                                Print(offset + 1, string.Format("Value: [{0}], Value-Size: {1}\n", str, vec.Length));
+                                Print(offset + 1, string.Format("Value: [{0}], Value-Size: {1}\n", str, vec.Count));
                             }
                             catch(Exception e)
                             {
@@ -551,7 +551,7 @@ namespace ic4_ctrl
                     }
                     else
                     {
-                        if (map.TryGet(entry, out Property property))
+                        if (map.TryFind(entry, out Property property))
                         {
                             PrintProperty(0, property);
                         }
@@ -636,7 +636,7 @@ namespace ic4_ctrl
                 var snapSink = new SnapSink();
                 g.StreamSetup(snapSink, ic4.StreamSetupOption.AcquisitionStart);
 
-                List<ImageBuffer> images = null;
+                IReadOnlyList<ImageBuffer> images = null;
                 try
                 {
                     images = snapSink.SnapSequence(count, TimeSpan.FromMilliseconds(timeoutInMillisecs));
@@ -691,7 +691,7 @@ namespace ic4_ctrl
             {
                 g.DeviceOpen(dev);
 
-                var display = new ic4.Display(IntPtr.Zero);
+                var display = new ic4.FloatingDisplay();
                 g.StreamSetup(display, ic4.StreamSetupOption.AcquisitionStart);
 
                 var cond = new ManualResetEventSlim();
