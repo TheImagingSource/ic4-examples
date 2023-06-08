@@ -5,6 +5,7 @@ import time
 import threading
 import os
 from enum import Enum
+from typing import Optional
 import sys
 
 import textwrap
@@ -46,22 +47,19 @@ def list_devices():
     """
     List available devices
     """
-    devs = ic4.DevEnum()
+    devs = ic4.DeviceEnum()
 
-    dev_list = devs.device_list()
+    dev_list = devs.devices()
 
-    # l = sorted(l, key=DevInfo.serial())
-
-    if dev_list.count:
-        print("Model\t\tSerial\t\tIdentifier")
+    if any(dev_list):
+        print(f"{'Model':20}\t{'Serial':8}\tIdentifier")
 
     for d in dev_list:
 
-        print(f"{d.model_name}\t\t{d.serial}\t\t{d.unique_name}")
-        print(f"{d.unique_name}")
+        print(f"{d.model_name:20}\t{d.serial:8}\t{d.unique_name}")
 
 
-def list_properties(dev: ic4.DevInfo):
+def list_properties(dev: ic4.DeviceInfo):
     """
     List properties of device
     """
@@ -85,19 +83,27 @@ def list_properties(dev: ic4.DevInfo):
                 print(f"\t\t{v.name}")
             print()
 
-        if p.type == ic4.PropertyType.COMMAND:
-            print("")
-            continue
-        elif p.type == ic4.PropertyType.BOOLEAN:
+        if p.type == ic4.PropertyType.BOOLEAN:
             if p.has_default:
                 print(f"\tDefault: {p.default}")
         elif p.type == ic4.PropertyType.INTEGER:
             print(f"\tRepresentation: {p.representation}")
-            print(f"\t{p.minimum} - {p.maximum} - {p.increment}")
+            print(f"\tRange: {p.minimum} - {p.maximum}")
+            print(f"\tIncrment mode: {p.increment_mode}")
+            if p.increment_mode == ic4.PropertyIncrementMode.INCREMENT:
+                print(f"\tIncrement: {p.increment}")
+            elif p.increment_mode == ic4.PropertyIncrementMode.VALUE_SET:
+                print(f"\tValidValueSet: {p.valid_value_set}")
+
         elif p.type == ic4.PropertyType.FLOAT:
 
             print(f"\tRepresentation: {p.representation}")
-            print(f"\t{p.minimum} - {p.maximum} - {p.increment}")
+            print(f"\tRange: {p.minimum} - {p.maximum}")
+            print(f"\tIncrment mode: {p.increment_mode}")
+            if p.increment_mode == ic4.PropertyIncrementMode.INCREMENT:
+                print(f"\tIncrement: {p.increment}")
+            elif p.increment_mode == ic4.PropertyIncrementMode.VALUE_SET:
+                print(f"\tValidValueSet: {p.valid_value_set}")
 
         elif p.type == ic4.PropertyType.ENUMERATION:
 
@@ -105,24 +111,24 @@ def list_properties(dev: ic4.DevInfo):
             print("\tAvailable entries:")
             for entry in e:
                 print(f"\t{entry.value} - {entry.name}")
-        elif p.type == ic4.PropertyType.STRING:
-            pass
-        try:
-            value = p.value
-        except ic4.IC4Exception as e:
-            value = "==Unknown=="
-            if e.code == ic4.Error.GenICamChunkdataNotConnected:
-                print("Requires ChunkData to be connected")
-        except AttributeError as e:
-            print(f"{p.name} {e}")
-            continue
-        print("")
-        print(f"\tValue: {value}")
+
+        if p.type != ic4.PropertyType.COMMAND:
+            try:
+                value = p.value
+            except ic4.IC4Exception as e:
+                value = "==Unknown=="
+                if e.code == ic4.Error.GenICamChunkdataNotConnected:
+                    print("Requires ChunkData to be connected")
+            except AttributeError as e:
+                print(f"{p.name} {e}")
+                continue
+            print("")
+            print(f"\tValue: {value}")
 
         print("")  # empty line just for readability
 
 
-def set_properties(dev: ic4.DevInfo, new_props: list):
+def set_properties(dev: ic4.DeviceInfo, new_props: list[str]):
     """"""
 
     grabber = ic4.Grabber()
@@ -134,25 +140,12 @@ def set_properties(dev: ic4.DevInfo, new_props: list):
 
         name, value = p.split("=")
 
-        prop = props.get(name)
-        if prop:
-            if prop.type == ic4.PropertyType.BOOLEAN:
-                props.set_boolean_value(name, value)
-            if prop.type == ic4.PropertyType.COMMAND:
-                props.execute_command(name)
-            if prop.type == ic4.PropertyType.INTEGER:
-                props.set_integer_value(name, value)
-            if prop.type == ic4.PropertyType.FLOAT:
-                props.set_float_value(name, value)
-            if prop.type == ic4.PropertyType.ENUMERATION:
-                pass
-            if prop.type == ic4.PropertyType.STRING:
-                props.set_string_value(name, value)
+        props.set_value(name, value)
         print(name, value)
 
 
-def save_video(dev: ic4.DevInfo,
-               store_dir=os.getcwd(),
+def save_video(dev: ic4.DeviceInfo,
+               duration_s: int = 10,
                file_name: str = "video",
                video_type: VideoType = VideoType.H264):
     """
@@ -160,14 +153,14 @@ def save_video(dev: ic4.DevInfo,
 
     Args:
         dev: Device that shall be opened
-        store_dir: Default: current working dir
+        duration_s: Default: 10
         file_name: Default: "video"
         video_type: Default: h264
     """
     grabber = ic4.Grabber()
     grabber.device_open(dev)
 
-    fps = grabber.device_property_map.get_float("AcquisitionFrameRate")
+    fps = grabber.device_property_map.find_float("AcquisitionFrameRate")
 
     writer = ic4.VideoWriter(ic4.VideoWriterType.MP4_H264)
 
@@ -176,9 +169,9 @@ def save_video(dev: ic4.DevInfo,
         def __init__(self):
             pass
 
-        def sink_connected(self, sink: ic4.QueueSink, frame_type: ic4.FrameType) -> bool:
+        def sink_connected(self, sink: ic4.QueueSink, image_type: ic4.ImageType, min_buffers_required: int) -> bool:
             sink.alloc_and_queue_buffers(5)
-            writer.begin_file("/tmp/test.mp4", frame_type, fps)
+            writer.begin_file("/tmp/test.mp4", image_type, fps.value)
             return True
 
         def sink_disconnected(self, sink: ic4.QueueSink):
@@ -197,12 +190,12 @@ def save_video(dev: ic4.DevInfo,
 
     grabber.stream_setup(sink)
 
-    time.sleep(10)
+    time.sleep(duration_s)
 
 
-def save_image(dev: ic4.DevInfo,
-               n_images,
-               store_dir=os.getcwd(),
+def save_image(dev: ic4.DeviceInfo,
+               n_images: int,
+               store_dir: str = os.getcwd(),
                file_name: str = "image-{C}",
                file_type: ImageType = ImageType.BMP):
     """
@@ -221,7 +214,7 @@ def save_image(dev: ic4.DevInfo,
 
     grabber.stream_setup(sink)
 
-    def save(f: ic4.Frame, f_name: str):
+    def save(f: ic4.ImageBuffer, f_name: str):
 
         # error via exception
         if file_type == ImageType.BMP:
@@ -239,22 +232,21 @@ def save_image(dev: ic4.DevInfo,
         save(images[n], f_name)
 
 
-def get_device(serial: str) -> ic4.DevInfo:
+def get_device(serial: str) -> Optional[ic4.DeviceInfo]:
     """
     Retrieve DevInfo for serial.
 
     Return None if not found.
     """
-    dev_list = ic4.DevEnum.device_list()
+    dev_list = ic4.DeviceEnum.devices()
 
     for d in dev_list:
-        print(d.serial)
         if d.serial == serial:
             return d
     return None
 
 
-def live_stream(dev: ic4.DevInfo):
+def live_stream(dev: ic4.DeviceInfo):
     """
     Start a live stream.
 
@@ -263,9 +255,7 @@ def live_stream(dev: ic4.DevInfo):
     grabber = ic4.Grabber()
     grabber.device_open(dev)
 
-    # required to have format compatible with display
-    # autoconversion ot yet available
-    grabber.device_property_map.set_enumeration_entry("PixelFormat", "BGRa8")
+    grabber.device_property_map.set_value(ic4.PropId.TRIGGER_MODE, "Off")
 
     display = ic4.FloatingDisplay()
 
@@ -278,9 +268,8 @@ def live_stream(dev: ic4.DevInfo):
         e.set()
 
     cb_token = display.event_register_window_closed(window_closed)
-    t = None
     try:
-        e.wait(timeout=t)
+        e.wait(timeout=None)
     except KeyboardInterrupt:
         pass
 
@@ -332,8 +321,6 @@ def main() -> int:
     video = subs.add_parser("video", help="Save video from device")
     video.add_argument("--time", "-t", help="Time period that shall be saved in seconds. Default=10s",
                        default=10, action="store")
-    video.add_argument("--path", help="Directory in which to save videos. Default=<current dir>",
-                       default=os.getcwd())
     video.add_argument("--name", help="Filename of saved videos",
                        default="video")
     video.add_argument("--type", help="Video types",
@@ -351,6 +338,10 @@ def main() -> int:
 
     args = arguments.parse_args()
 
+    if len(sys.argv) < 2:
+        arguments.print_help()
+        return 1
+
     ic4.Library.init()
 
     if args.command == "list":
@@ -363,14 +354,13 @@ def main() -> int:
         return 1
 
     if args.command == "properties":
-        if args.serialize:
+        if args.json:
             g = ic4.Grabber()
             g.device_open(d)
             # p = filepath.Path('state.json')
             # g.save_device_state_to_file(p)
-            g.save_device_state_to_file('state.json')
-            props = g.device_property_map
-            print(props.serialize().decode("utf-8"))
+            # g.device_save_state_to_file('state.json')
+            print(g.device_property_map.serialize().decode("utf-8"))
         else:
             list_properties(d)
     elif args.command == "set":
@@ -382,7 +372,7 @@ def main() -> int:
     elif args.command == "video":
         save_video(d,
                    args.time,
-                   args.path, args.name,
+                   args.name,
                    args.type)
     elif args.command == "live":
         live_stream(d)
