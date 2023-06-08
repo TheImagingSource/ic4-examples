@@ -83,10 +83,11 @@ def list_properties(dev: ic4.DeviceInfo):
                 print(f"\t\t{v.name}")
             print()
 
-        if p.type == ic4.PropertyType.BOOLEAN:
+        if isinstance(p, ic4.PropBoolean):
             if p.has_default:
                 print(f"\tDefault: {p.default}")
-        elif p.type == ic4.PropertyType.INTEGER:
+
+        elif isinstance(p, ic4.PropInteger):
             print(f"\tRepresentation: {p.representation}")
             print(f"\tRange: {p.minimum} - {p.maximum}")
             print(f"\tIncrment mode: {p.increment_mode}")
@@ -95,8 +96,7 @@ def list_properties(dev: ic4.DeviceInfo):
             elif p.increment_mode == ic4.PropertyIncrementMode.VALUE_SET:
                 print(f"\tValidValueSet: {p.valid_value_set}")
 
-        elif p.type == ic4.PropertyType.FLOAT:
-
+        elif isinstance(p, ic4.PropFloat):
             print(f"\tRepresentation: {p.representation}")
             print(f"\tRange: {p.minimum} - {p.maximum}")
             print(f"\tIncrment mode: {p.increment_mode}")
@@ -105,14 +105,13 @@ def list_properties(dev: ic4.DeviceInfo):
             elif p.increment_mode == ic4.PropertyIncrementMode.VALUE_SET:
                 print(f"\tValidValueSet: {p.valid_value_set}")
 
-        elif p.type == ic4.PropertyType.ENUMERATION:
-
+        elif isinstance(p, ic4.PropEnumeration):
             e = p.entries
             print("\tAvailable entries:")
             for entry in e:
                 print(f"\t{entry.value} - {entry.name}")
 
-        if p.type != ic4.PropertyType.COMMAND:
+        if isinstance(p, ic4.PropInteger) or isinstance(p, ic4.PropBoolean) or isinstance(p, ic4.PropFloat) or isinstance(p, ic4.PropEnumeration) or isinstance(p, ic4.PropString) or isinstance(p, ic4.PropRegister):
             try:
                 value = p.value
             except ic4.IC4Exception as e:
