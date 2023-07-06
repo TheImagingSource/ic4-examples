@@ -756,7 +756,12 @@ int main( int argc, char** argv )
         helper::set_env_var( "GENICAM_GENTL64_PATH", gentl_path );
     }
 
-    ic4::InitLibrary( ic4::ErrorHandlerBehavior::Throw );
+    ic4::InitLibraryConfig config =
+    {
+        ic4::ErrorHandlerBehavior::Throw,
+        ic4::LogLevel::Off
+    };
+    ic4::InitLibrary(config);
 
     try
     {
