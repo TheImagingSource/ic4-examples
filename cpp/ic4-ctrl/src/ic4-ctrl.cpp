@@ -168,9 +168,9 @@ static void print_interface( std::string id )
 template<typename TPropType, class Tprop, class TMethod>
 auto fetch_PropertyMethod_value( Tprop& prop, TMethod method_address ) -> std::string
 {
-    TPropType v;
     ic4::Error err;
-    if( !(prop.*method_address)(v, err) ) {
+    TPropType v = (prop.*method_address)(err);
+    if( err.isError() ) {
         if( err.getValue() == ic4::ErrorCode::GenICamNotImplemented ) {
             return "n/a";
         }
@@ -182,9 +182,9 @@ auto fetch_PropertyMethod_value( Tprop& prop, TMethod method_address ) -> std::s
 template<class TMethod>
 auto fetch_PropertyMethod_value( ic4::PropInteger& prop, TMethod method_address, ic4::PropIntRepresentation int_rep ) -> std::string
 {
-    int64_t v;
     ic4::Error err;
-    if( !(prop.*method_address)(v, err) ) {
+    int64_t v = !(prop.*method_address)(err);
+    if( err.isError() ) {
         if( err.getValue() == ic4::ErrorCode::GenICamNotImplemented ) {
             return "n/a";
         }
@@ -268,8 +268,9 @@ static void    print_property( int offset, const ic4::Property& property )
             }
             else if( inc_mode == ic4::PropIncrementMode::ValueSet )
             {
-                std::vector<int64_t> vvset;
-                if( !prop.getValidValueSet( vvset, ic4::ignoreError ) ) {
+                ic4::Error err;
+                std::vector<int64_t> vvset = prop.getValidValueSet(err);
+                if( err.isError() ) {
                     print( offset + 1, "Failed to fetch ValidValueSet\n" );
                 }
                 else
@@ -311,8 +312,9 @@ static void    print_property( int offset, const ic4::Property& property )
             }
             else if( inc_mode == ic4::PropIncrementMode::ValueSet )
             {
-                std::vector<double> vvset;
-                if( !prop.getValidValueSet( vvset, ic4::ignoreError ) ) {
+                ic4::Error err;
+                std::vector<double> vvset = prop.getValidValueSet(err);
+                if( err.isError() ) {
                     print( offset + 1, "Failed to fetch ValidValueSet\n" );
                 }
                 else
@@ -406,8 +408,9 @@ static void    print_property( int offset, const ic4::Property& property )
             fetch_PropertyMethod_value<uint64_t>( prop, &ic4::PropRegister::getSize )
         );
         if( prop.isAvailable() ) {
-            std::vector<uint8_t> vec;
-            if( !prop.getValue( vec, ic4::ignoreError ) ) {
+            ic4::Error err;
+            std::vector<uint8_t> vec = prop.getValue( err );
+            if( err.isError() ) {
                 print( offset + 1, "Value: 'err'" );
             }
             else {
