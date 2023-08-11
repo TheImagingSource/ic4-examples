@@ -68,12 +68,14 @@ namespace ic4_property_dialog
         };
 
         private ic4.WinForms.Display display_;
-        private ic4.Grabber g = new ic4.Grabber();
+        private ic4.Grabber g;
         private ic4PropertyDialog_ dlg_;
 
         public Form1()
         {
             InitializeComponent();
+            ic4.Library.Init();
+            g = new ic4.Grabber();
         }
 
         private void Form1_Load(object sender, EventArgs e)
