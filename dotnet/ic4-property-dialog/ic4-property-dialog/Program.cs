@@ -38,7 +38,7 @@ namespace ic4_property_dialog
         {
             // Sets the current process as dots per inch (dpi) aware.
             if (Environment.OSVersion.Version.Major >= 6) NativeMethods.SetProcessDPIAware();
-
+            ic4.Library.Init();
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new Form1());
