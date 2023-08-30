@@ -355,7 +355,7 @@ static void    print_property( int offset, const ic4::Property& property )
             else
             {
                 print( offset + 1, "Value: {}, SelectedEntry.Name: '{}'\n",
-                    fetch_PropertyMethod_value<int64_t>( prop, &ic4::PropEnumeration::getValue ),
+                    fetch_PropertyMethod_value<int64_t>( prop, &ic4::PropEnumeration::getIntValue ),
                     selected_entry.getName()
                 );
             }
