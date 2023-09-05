@@ -155,7 +155,7 @@ static void print_interface( std::string id )
     print( "Name: '{}'\n", dev->getName() );
     print( "TransportLayerName: '{}'\n", dev->getTransportLayerName() );
     print( "TransportLayerType: '{}'\n", ic4_helper::toString( dev->getTransportLayerType() ) );
-    print( "TransportVersion: '{}'\n", dev->getTransportVersion() );
+    print( "TransportLayerVersion: '{}'\n", dev->getTransportLayerVersion() );
     
     print( "Interface Properties:\n" );
     auto map = dev->itfPropertyMap();
