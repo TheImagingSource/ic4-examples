@@ -22,7 +22,7 @@ int main()
 	ic4::Grabber grabber;
 	if (!grabber.deviceOpen(*it, err))
 	{
-		std::cerr << "Failed to open device: " << err.getMessage() << std::endl;
+		std::cerr << "Failed to open device: " << err.message() << std::endl;
 		return -2;
 	}
 
@@ -31,13 +31,13 @@ int main()
 	auto sink = ic4::SnapSink::create(err);
 	if (!sink)
 	{
-		std::cerr << "Failed to create sink: " << err.getMessage() << std::endl;
+		std::cerr << "Failed to create sink: " << err.message() << std::endl;
 		return -3;
 	}
 
 	if (!grabber.streamSetup(sink, ic4::StreamSetupOption::AcquisitionStart, err))
 	{
-		std::cerr << "Failed to setup stream: " << err.getMessage() << std::endl;
+		std::cerr << "Failed to setup stream: " << err.message() << std::endl;
 		return -4;
 	}
 
@@ -49,7 +49,7 @@ int main()
 		auto image_buffer = sink->snapSingle(1000, err);
 		if (!image_buffer)
 		{
-			std::cerr << "Failed to snap image: " << err.getMessage() << std::endl;
+			std::cerr << "Failed to snap image: " << err.message() << std::endl;
 			continue;
 		}
 
@@ -61,7 +61,7 @@ int main()
 		};
 		if (!ic4::imageBufferSaveAsJpeg(*image_buffer, file_name, options, err))
 		{
-			std::cerr << "Failed to save image file: " << err.getMessage() << std::endl;
+			std::cerr << "Failed to save image file: " << err.message() << std::endl;
 			continue;
 		}
 

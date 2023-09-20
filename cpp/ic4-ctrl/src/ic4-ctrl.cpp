@@ -171,7 +171,7 @@ auto fetch_PropertyMethod_value( Tprop& prop, TMethod method_address ) -> std::s
     ic4::Error err;
     TPropType v = (prop.*method_address)(err);
     if( err.isError() ) {
-        if( err.getValue() == ic4::ErrorCode::GenICamNotImplemented ) {
+        if( err.code() == ic4::ErrorCode::GenICamNotImplemented ) {
             return "n/a";
         }
         return "err";
@@ -185,7 +185,7 @@ auto fetch_PropertyMethod_value( ic4::PropInteger& prop, TMethod method_address,
     ic4::Error err;
     int64_t v = !(prop.*method_address)(err);
     if( err.isError() ) {
-        if( err.getValue() == ic4::ErrorCode::GenICamNotImplemented ) {
+        if( err.code() == ic4::ErrorCode::GenICamNotImplemented ) {
             return "n/a";
         }
         return "err";
@@ -467,7 +467,7 @@ static void set_property_from_assign_entry( ic4::PropertyMap& property_map, cons
     ic4::Error err;
     if (!property_map.setValue(prop_name, prop_value, err))
     {
-        print("Failed to set value '{}' on property '{}'. Message: {}\n", prop_value, prop_name, err.getMessage());
+        print("Failed to set value '{}' on property '{}'. Message: {}\n", prop_value, prop_name, err.message());
     }
 }
 
@@ -572,7 +572,7 @@ static void save_image( std::string id, std::string filename, int count, int tim
     ic4::Error err;
     auto images = snap_sink->snapSequence( count, timeout_in_ms, err );
     if( err ) {
-        if( err.getValue() == ic4::ErrorCode::Timeout ) {
+        if( err.code() == ic4::ErrorCode::Timeout ) {
             print( "Timeout elapsed." );
             // #TODO maybe dissect what to do here.
             return;
