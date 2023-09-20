@@ -764,7 +764,7 @@ int main( int argc, char** argv )
         ic4::ErrorHandlerBehavior::Throw,
         ic4::LogLevel::Off
     };
-    ic4::InitLibrary(config);
+    ic4::initLibrary(config);
 
     try
     {
@@ -821,7 +821,7 @@ int main( int argc, char** argv )
         fmt::print( stderr, "Error: {}\n", ex.what() );
     }
 
-	ic4::ExitLibrary();
+	ic4::exitLibrary();
 
 	return 0;
 }

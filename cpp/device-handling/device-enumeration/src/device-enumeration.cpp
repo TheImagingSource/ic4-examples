@@ -76,8 +76,8 @@ void print_interface_device_tree()
 
 int main()
 {
-	ic4::InitLibrary();
-	std::atexit(ic4::ExitLibrary);
+	ic4::initLibrary();
+	std::atexit(ic4::exitLibrary);
 
 	print_device_list();
 	print_interface_device_tree();

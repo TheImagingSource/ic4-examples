@@ -19,8 +19,8 @@ void device_list_changed_handler(ic4::DeviceEnum& enumerator)
 
 int main()
 {
-	ic4::InitLibrary();
-	std::atexit(ic4::ExitLibrary);
+	ic4::initLibrary();
+	std::atexit(ic4::exitLibrary);
 
 	ic4::DeviceEnum enumerator;
 	auto token = enumerator.eventAddDeviceListChanged(device_list_changed_handler);

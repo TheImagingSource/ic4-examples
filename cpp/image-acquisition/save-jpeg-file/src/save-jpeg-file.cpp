@@ -8,8 +8,8 @@
 
 int main()
 {
-	ic4::InitLibrary();
-	std::atexit(ic4::ExitLibrary);
+	ic4::initLibrary();
+	std::atexit(ic4::exitLibrary);
 
 	auto device_list = ic4::DeviceEnum::getDevices();
 	auto it = ic4_examples::console::select_from_list(device_list);
