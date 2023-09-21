@@ -1,10 +1,11 @@
 
-#include <iostream>
-#include <cstdio>
-
 #include <ic4/ic4.h>
 
 #include <console-helper.h>
+
+#include <iostream>
+#include <cstdio>
+#include <atomic>
 
 // Define QueueSinkListener-derived class that can add the received frames into a video writer
 class AddFrameListener : public ic4::QueueSinkListener
