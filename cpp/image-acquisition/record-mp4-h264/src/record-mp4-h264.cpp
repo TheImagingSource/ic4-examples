@@ -12,12 +12,14 @@ class AddFrameListener : public ic4::QueueSinkListener
 {
 private:
 	ic4::VideoWriter& writer_;
-	std::atomic<bool> do_write_frames_ = false;
-	std::atomic<int> num_frames_written_ = 0;
+	std::atomic<bool> do_write_frames_;
+	std::atomic<int> num_frames_written_;
 
 public:
 	AddFrameListener(ic4::VideoWriter& writer)
 		: writer_(writer)
+		, do_write_frames_(false)
+		, num_frames_written_(0)
 	{
 	}
 
