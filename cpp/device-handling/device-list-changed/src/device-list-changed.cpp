@@ -8,7 +8,7 @@
 
 void device_list_changed_handler(ic4::DeviceEnum& enumerator)
 {
-	auto device_list = ic4::DeviceEnum::getDevices();
+	auto device_list = ic4::DeviceEnum::enumDevices();
 
 	auto new_device_count = device_list.size();
 
@@ -25,7 +25,7 @@ int main()
 	ic4::DeviceEnum enumerator;
 	auto token = enumerator.eventAddDeviceListChanged(device_list_changed_handler);
 
-	auto initial_device_count = ic4::DeviceEnum::getDevices().size();
+	auto initial_device_count = ic4::DeviceEnum::enumDevices().size();
 
 	std::cout << "Press ENTER to exit program" << std::endl;
 	std::cout << initial_device_count << " devices connected initially." << std::endl;

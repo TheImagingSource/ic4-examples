@@ -7,14 +7,14 @@
 
 std::string format_device_info(const ic4::DeviceInfo& device_info)
 {
-	return "Model: " + device_info.getModelName() + " Serial: " + device_info.getSerial() + " Version: " + device_info.getDeviceVersion();
+	return "Model: " + device_info.modelName() + " Serial: " + device_info.serial() + " Version: " + device_info.version();
 }
 
 void print_device_list()
 {
 	std::cout << "Enumerating all attached video capture devices in a single list..." << std::endl;
 
-	auto device_list = ic4::DeviceEnum::getDevices();
+	auto device_list = ic4::DeviceEnum::enumDevices();
 
 	if (device_list.empty())
 	{
@@ -48,14 +48,14 @@ void print_interface_device_tree()
 {
 	std::cout << "Enumerating video capture devices by interface..." << std::endl;
 
-	auto interface_list = ic4::DeviceEnum::getInterfaces();
+	auto interface_list = ic4::DeviceEnum::enumInterfaces();
 
 	for (auto&& itf : interface_list)
 	{
-		std::cout << "Interface: " << itf.getName() << std::endl;
-		std::cout << "\tProvided by " << itf.getTransportLayerName() << " [TLType: " << toString(itf.getTransportLayerType()) << "]" << std::endl;
+		std::cout << "Interface: " << itf.interfaceDisplayName() << std::endl;
+		std::cout << "\tProvided by " << itf.transportLayerName() << " [TLType: " << toString(itf.transportLayerType()) << "]" << std::endl;
 
-		auto device_list = itf.getDevices();
+		auto device_list = itf.enumDevices();
 
 		if (device_list.empty())
 		{

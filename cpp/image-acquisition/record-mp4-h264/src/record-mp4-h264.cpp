@@ -71,7 +71,7 @@ int main()
 	std::atexit(ic4::exitLibrary);
 
 	// Let the user select a device
-	auto device_list = ic4::DeviceEnum::getDevices();
+	auto device_list = ic4::DeviceEnum::enumDevices();
 	auto it = ic4_examples::console::select_from_list(device_list);
 	if (it == device_list.end())
 	{

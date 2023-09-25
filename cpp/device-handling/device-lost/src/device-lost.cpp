@@ -19,7 +19,7 @@ int main()
 	ic4::initLibrary();
 	std::atexit(ic4::exitLibrary);
 
-	auto device_list = ic4::DeviceEnum::getDevices();
+	auto device_list = ic4::DeviceEnum::enumDevices();
 	auto it = ic4_examples::console::select_from_list(device_list);
 	if (it == device_list.end())
 	{
@@ -31,7 +31,7 @@ int main()
 
 	auto token = grabber.eventAddDeviceLost(device_lost_handler);
 
-	std::cout << "Opened device " << grabber.deviceInfo().getModelName() << " (" << grabber.deviceInfo().getSerial() << ")" << std::endl;
+	std::cout << "Opened device " << grabber.deviceInfo().modelName() << " (" << grabber.deviceInfo().serial() << ")" << std::endl;
 	std::cout << "Disconnect device to produce device-lost event" << std::endl;
 
 	std::cout << "Press ENTER to exit program" << std::endl;

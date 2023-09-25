@@ -32,26 +32,26 @@ void print( int offset, fmt::format_string<Targs...> fmt, Targs&& ... args )
 static auto find_device( std::string id ) -> std::unique_ptr<ic4::DeviceInfo>
 {
     ic4::DeviceEnum devEnum;
-    auto list = devEnum.getDevices();
+    auto list = devEnum.enumDevices();
     if( list.size() == 0 ) {
         throw std::runtime_error( "No devices are available" );
     }
 
     for( auto&& dev : list )
     {
-        if( dev.getSerial() == id ) {
+        if( dev.serial() == id ) {
             return std::make_unique<ic4::DeviceInfo>( dev );
         }
     }
     for( auto&& dev : list )
     {
-        if( dev.getUniqueName() == id ) {
+        if( dev.uniqueName() == id ) {
             return std::make_unique<ic4::DeviceInfo>( dev );
         }
     }
     for( auto&& dev : list )
     {
-        if( dev.getModelName() == id ) {
+        if( dev.modelName() == id ) {
             return std::make_unique<ic4::DeviceInfo>( dev );
         }
     }
@@ -69,20 +69,20 @@ static auto find_device( std::string id ) -> std::unique_ptr<ic4::DeviceInfo>
 static auto find_interface( std::string id ) -> std::unique_ptr<ic4::Interface>
 {
     ic4::DeviceEnum devEnum;
-    auto list = devEnum.getInterfaces();
+    auto list = devEnum.enumInterfaces();
     if( list.size() == 0 ) {
         throw std::runtime_error( "No devices are available" );
     }
 
     for( auto&& dev : list )
     {
-        if( dev.getName() == id ) {
+        if( dev.interfaceDisplayName() == id ) {
             return std::make_unique<ic4::Interface>( dev );
         }
     }
     for( auto&& dev : list )
     {
-        if( dev.getTransportLayerName() == id ) {
+        if( dev.transportLayerName() == id ) {
             return std::make_unique<ic4::Interface>( dev );
         }
     }
@@ -101,13 +101,13 @@ static auto find_interface( std::string id ) -> std::unique_ptr<ic4::Interface>
 static auto list_devices() -> void
 {
     ic4::DeviceEnum devEnum;
-    auto list = devEnum.getDevices();
+    auto list = devEnum.enumDevices();
 
     print( "Device list:\n" );
     print( "    {:24} {:8} {}\n", "ModelName", "Serial", "InterfaceName" );
     int index = 0;
     for( auto&& e : list ) {
-        print( "{:>3} {:24} {:8} {}\n", index, e.getModelName(), e.getSerial(), e.getInterface().getTransportLayerName() );
+        print( "{:>3} {:24} {:8} {}\n", index, e.modelName(), e.serial(), e.getInterface().transportLayerName() );
         index += 1;
     }
     if( list.empty() ) {
@@ -118,13 +118,13 @@ static auto list_devices() -> void
 static auto list_interfaces() -> void
 {
     ic4::DeviceEnum devEnum;
-    auto list = devEnum.getInterfaces();
+    auto list = devEnum.enumInterfaces();
 
     print( "Interface list:\n" );
 
     for( auto&& e : list ) {
-        print( 1, "{}\n", e.getName() );
-        print( 2, "TransportLayerName: {}\n", e.getTransportLayerName() );
+        print( 1, "{}\n", e.interfaceDisplayName() );
+        print( 2, "TransportLayerName: {}\n", e.transportLayerName() );
     }
     if( list.empty() ) {
         print( 1, "No Interfaces found\n" );
@@ -138,11 +138,11 @@ static void print_device( std::string id )
         throw std::runtime_error( fmt::format( "Failed to find device for id '{}'\n", id ) );
     }
 
-    print( "ModelName: '{}'\n", dev->getModelName() );
-    print( "Serial: '{}'\n", dev->getSerial() );
-    print( "UniqueName: '{}'\n", dev->getUniqueName() );
-    print( "DeviceVersion: '{}'\n", dev->getDeviceVersion() );
-    print( "InterfaceName: '{}'\n", dev->getInterface().getTransportLayerName() );
+    print( "ModelName: '{}'\n", dev->modelName() );
+    print( "Serial: '{}'\n", dev->serial() );
+    print( "UniqueName: '{}'\n", dev->uniqueName() );
+    print( "DeviceVersion: '{}'\n", dev->version() );
+    print( "InterfaceName: '{}'\n", dev->getInterface().transportLayerName() );
 }
 
 static void print_interface( std::string id )
@@ -152,13 +152,13 @@ static void print_interface( std::string id )
         throw std::runtime_error( fmt::format( "Failed to find device for id '{}'\n", id ) );
     }
 
-    print( "Name: '{}'\n", dev->getName() );
-    print( "TransportLayerName: '{}'\n", dev->getTransportLayerName() );
-    print( "TransportLayerType: '{}'\n", ic4_helper::toString( dev->getTransportLayerType() ) );
-    print( "TransportLayerVersion: '{}'\n", dev->getTransportLayerVersion() );
+    print( "Name: '{}'\n", dev->interfaceDisplayName() );
+    print( "TransportLayerName: '{}'\n", dev->transportLayerName() );
+    print( "TransportLayerType: '{}'\n", ic4_helper::toString( dev->transportLayerType() ) );
+    print( "TransportLayerVersion: '{}'\n", dev->transportLayerVersion() );
     
     print( "Interface Properties:\n" );
-    auto map = dev->itfPropertyMap();
+    auto map = dev->interfacePropertyMap();
     for( auto&& property : map.getAll() )
     {
         print_property( 1, property );
@@ -511,7 +511,7 @@ static void exec_prop_cmd( std::string id, bool force_interface, const std::vect
             print( "Failed to find interface for id '{}'", id );
             return;
         }
-        auto map = dev->itfPropertyMap();
+        auto map = dev->interfacePropertyMap();
         print_or_set_PropertyMap_entries( map, lst );
     }
     else
@@ -538,7 +538,7 @@ static void save_properties( std::string id, bool force_interface, std::string f
             print( "Failed to find interface for id '{}'", id );
             return;
         }
-        auto map = dev->itfPropertyMap();
+        auto map = dev->interfacePropertyMap();
         map.serialize( filename );
     }
     else
@@ -643,7 +643,7 @@ static void show_prop_page( std::string id, bool id_is_interface )
             print( "Failed to find interface for id '{}'", id );
             return;
         }
-        auto map = dev->itfPropertyMap();
+        auto map = dev->interfacePropertyMap();
         ic4::showPropertyDialog( 0, map );
     }
     else

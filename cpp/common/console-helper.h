@@ -22,10 +22,10 @@ namespace ic4_examples
 
 			for (size_t i = 0; i < device_list.size(); ++i)
 			{
-				auto model_name = device_list[i].getModelName();
-				auto serial = device_list[i].getSerial();
+				auto model_name = device_list[i].modelName();
+				auto serial = device_list[i].serial();
 				auto itf = device_list[i].getInterface();
-				auto transport_layer_name = itf.getTransportLayerName();
+				auto transport_layer_name = itf.transportLayerName();
 
 				std::cout << "[" << i << "] ";
 				std::cout << model_name << " (" << serial << ", " << transport_layer_name << ")";
