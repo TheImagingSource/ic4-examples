@@ -644,7 +644,7 @@ static void show_prop_page( std::string id, bool id_is_interface )
             return;
         }
         auto map = dev->interfacePropertyMap();
-        ic4::showPropertyDialog( 0, map );
+        ic4gui::showPropertyDialog( 0, map );
     }
     else
     {
@@ -657,7 +657,7 @@ static void show_prop_page( std::string id, bool id_is_interface )
         g.deviceOpen( *dev );
 
         auto map = g.devicePropertyMap();
-        ic4::showPropertyDialog( 0, map );
+        ic4gui::showPropertyDialog( 0, map );
     }
 }
 
