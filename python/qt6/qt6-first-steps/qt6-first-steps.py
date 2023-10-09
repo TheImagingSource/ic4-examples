@@ -2,9 +2,11 @@ from PySide6.QtWidgets import QApplication, QWidget, QMainWindow, QLabel
 
 import ic4
 
+
 def _window_handle(wnd: QWidget) -> int:
     # Helper function to get window handle from a QWidget
     return wnd.winId().__int__()
+
 
 class MainWindow(QMainWindow):
     # The main window for the simple test application
@@ -25,7 +27,7 @@ class MainWindow(QMainWindow):
         # If the user selects a device, the function opens it in the grabber object
         if not ic4.Dialogs.grabber_select_device(self.grabber, _window_handle(self)):
             return
-        
+
         # Create an IC4 EmbeddedDisplay that is using video_widget from above as presentation area
         display = ic4.EmbeddedDisplay(_window_handle(video_widget))
         # Configure the display to neatly stretch and center the live image
@@ -34,7 +36,7 @@ class MainWindow(QMainWindow):
         try:
             self.grabber.device_property_map.set_value(ic4.PropId.USER_SET_SELECTOR, "Default")
             self.grabber.device_property_map.execute_command(ic4.PropId.USER_SET_LOAD)
-        except:
+        except ic4.IC4Exception:
             # The driver/device might not support this, ignore and move on
             pass
 
@@ -45,6 +47,7 @@ class MainWindow(QMainWindow):
 if __name__ == "__main__":
     # This is just the default Qt main function template, with added calls to Library.init() and Library.exit()
     from sys import argv
+
     app = QApplication(argv)
 
     ic4.Library.init()
