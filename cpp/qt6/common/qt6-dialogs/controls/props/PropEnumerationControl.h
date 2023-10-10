@@ -34,7 +34,7 @@ namespace ic4::ui
 				{
 					try
 					{
-						auto val = entry.getValue();
+						auto val = entry.getIntValue();
 
 						if (!entry.isAvailable())
 							continue;
@@ -76,13 +76,11 @@ namespace ic4::ui
 		void comboIndexChanged(int index)
 		{
 			auto value = combo_->currentData().toLongLong();
-			try
+
+			ic4::Error err;
+			if (!prop_.setIntValue(value, err))
 			{
-				prop_.setValue(combo_->itemText(index).toStdString());
-			}
-			catch (const ic4::IC4Exception& iex)
-			{
-				QMessageBox::warning(NULL, "Set property", iex.what());
+				QMessageBox::warning(NULL, "Set property", err.message().c_str());
 			}
 		}
 
