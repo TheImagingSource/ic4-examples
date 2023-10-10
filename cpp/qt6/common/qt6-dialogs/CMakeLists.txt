@@ -1,11 +1,15 @@
 cmake_minimum_required(VERSION 3.16)
 project(qt6-dialogs)
 
+set( CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL" )
+
 find_package(ic4)
 
 # This path probably will not be valid on your system.
-# If cmake complains about not able to find Qt6, point it at your installation directory.
-find_package(Qt6 COMPONENTS Widgets Core PATHS "P:/lib/Qt6/6.6.0/msvc2019_64/lib/cmake")
+# If cmake complains about not able to find Qt6, point it into your Qt6 installation directory.
+list(APPEND CMAKE_PREFIX_PATH "P:/lib/Qt6/6.6.0/msvc2019_64/lib/cmake")
+
+find_package(Qt6 COMPONENTS Widgets Core)
 if (Qt6Widgets_FOUND)
     if (Qt6Widgets_VERSION VERSION_LESS 6.0)
         message(FATAL_ERROR "Minimum supported Qt6 version is 6.0" ${Qt6_DIR})
@@ -16,7 +20,7 @@ endif( Qt6Widgets_FOUND)
 
 qt_standard_project_setup()
 
-qt_add_library(qt6-dialogs
+qt_add_library(qt6-dialogs STATIC
     controls/Event.h
 	controls/PropertyInfoBox.h
 	controls/PropertyControls.h
@@ -37,6 +41,6 @@ target_include_directories(qt6-dialogs
 	PUBLIC controls/
 )
 
-target_link_libraries(qt6-dialogs PRIVATE Qt6::Widgets Qt6::Core ic4::core)
+target_link_libraries(qt6-dialogs PUBLIC Qt6::Widgets Qt6::Core ic4::core)
 
 set_property(TARGET qt6-dialogs PROPERTY CXX_STANDARD 17)
