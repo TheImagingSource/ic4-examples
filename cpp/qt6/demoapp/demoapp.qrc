@@ -1,0 +1,17 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+	<qresource>
+		<file>images/camera.png</file>
+		<file>images/imgset.png</file>
+		<file>images/livestream.png</file>
+		<file>images/focus.png</file>
+		<file>images/photo.png</file>
+		<file>images/video.png</file>
+		<file>images/overlay.png</file>
+		<file>images/recordstart.png</file>
+		<file>images/recordpause.png</file>
+		<file>images/recordstop.png</file>
+		<file>images/gear.png</file>
+		<file>images/triggermode.png</file>
+	</qresource>
+</RCC>	
