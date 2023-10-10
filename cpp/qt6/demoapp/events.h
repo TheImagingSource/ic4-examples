@@ -21,9 +21,9 @@ public:
 	{
 	}
 
-	std::shared_ptr<ic4::ImageBuffer> getImageBuffer() const
+	const ic4::ImageBuffer& getImageBuffer() const
 	{
-		return _imagebuffer;
+		return *_imagebuffer;
 	}
 
 private:

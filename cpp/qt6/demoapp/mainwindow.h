@@ -38,7 +38,7 @@ private:
 
 private:
 	void customEvent(QEvent* event);
-	void savePhoto(std::shared_ptr<ic4::ImageBuffer> imagebuffer);
+	void savePhoto(const ic4::ImageBuffer& imagebuffer);
 
 	std::string _name;          // Name of the application
 	std::string _devicefile;    // File name of device state xml

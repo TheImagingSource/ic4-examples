@@ -264,7 +264,8 @@ void MainWindow::customEvent(QEvent* event)
 	// executing in the MainWindow's thread. We could ask more events here.
 	if (event->type() == GOT_PHOTO_EVENT)
 	{
-		savePhoto(((GotPhotoEvent*)event)->getImageBuffer());
+		const auto& gotPhotoEvent = *static_cast<GotPhotoEvent*>(event);
+		savePhoto(gotPhotoEvent.getImageBuffer());
 	}
 	else if (event->type() == DEVICE_LOST_EVENT)
 	{
@@ -288,26 +289,24 @@ void MainWindow::updateControls()
 	if (!_grabber.isDeviceValid())
 		_sbCameralabel->setText("No Device");
 
-	try
-	{
-		auto propmap = _grabber.devicePropertyMap();
-		bool enabled = false;
-		try
-		{
-			enabled = propmap.findBoolean("Trigger").getValue();
-		}
-		catch (...)
-		{
-			enabled = (propmap[ic4::PropId::TriggerMode].getSelectedEntry().getName() == "On");
+	auto propmap = _grabber.devicePropertyMap();
 
-		}
-		_TriggerModeAct->setEnabled(true);
-		_TriggerModeAct->setChecked(enabled);
+	ic4::Error err;
+	bool enabled = propmap.find(ic4::PropId::TriggerMode, err).getValue(err) == "On";
+	if (err.isError())
+	{
+		enabled = propmap.findBoolean("Trigger", err).getValue(err);
 	}
-	catch (...)
+		
+	if (err.isError())
 	{
 		_TriggerModeAct->setEnabled(false);
 		_TriggerModeAct->setChecked(false);
+	}
+	else
+	{
+		_TriggerModeAct->setEnabled(true);
+		_TriggerModeAct->setChecked(enabled);
 	}
 }
 
@@ -424,41 +423,41 @@ void MainWindow::onShootPhoto()
 	_shootPhoto = true;
 }
 
-void MainWindow::savePhoto(std::shared_ptr<ic4::ImageBuffer> imagebuffer)
+void MainWindow::savePhoto(const ic4::ImageBuffer& imagebuffer)
 {
-	try
+	static const QStringList filters(
 	{
-		const QStringList filters({ "Bitmap(*.bmp)",
-							"JPEG (*.jpg)",
-							"Portable Network Graphics (*.png)",
-							"TIFF (*.tif)"
-			});
+		"Bitmap(*.bmp)",
+		"JPEG (*.jpg)",
+		"Portable Network Graphics (*.png)",
+		"TIFF (*.tif)"
+	});
 
-		QFileDialog dialog(this, tr("Save photo"));
-		dialog.setNameFilters(filters);
-		dialog.setFileMode(QFileDialog::AnyFile);
-		dialog.setAcceptMode(QFileDialog::AcceptSave);
-		dialog.setDirectory(getPictureDir(_name).c_str());
+	QFileDialog dialog(this, tr("Save photo"));
+	dialog.setNameFilters(filters);
+	dialog.setFileMode(QFileDialog::AnyFile);
+	dialog.setAcceptMode(QFileDialog::AcceptSave);
+	dialog.setDirectory(getPictureDir(_name).c_str());
 
-		if (dialog.exec())
+	if (dialog.exec())
+	{
+		auto fileName = dialog.selectedFiles()[0].toStdString();
+		auto selectedFilter = dialog.selectedNameFilter().toStdString();
+
+		ic4::Error err;
+		if (selectedFilter == "Bitmap(*.bmp)")
+			ic4::imageBufferSaveAsBitmap(imagebuffer, fileName, {}, err);
+		else if (selectedFilter == "JPEG (*.jpg)")
+			ic4::imageBufferSaveAsJpeg(imagebuffer, fileName, {}, err);
+		else if (selectedFilter == "Portable Network Graphics (*.png)")
+			ic4::imageBufferSaveAsPng(imagebuffer, fileName, {}, err);
+		else
+			ic4::imageBufferSaveAsTiff(imagebuffer, fileName, {}, err);
+
+		if (err.isError())
 		{
-			auto fileName = dialog.selectedFiles()[0].toStdString();
-			auto selectedFilter = dialog.selectedNameFilter().toStdString();
-			if (selectedFilter == "Bitmap(*.bmp)")
-				ic4::imageBufferSaveAsBitmap(*imagebuffer, fileName);
-			else if (selectedFilter == "JPEG (*.jpg)")
-				ic4::imageBufferSaveAsJpeg(*imagebuffer, fileName);
-			else if (selectedFilter == "Portable Network Graphics (*.png)")
-				ic4::imageBufferSaveAsPng(*imagebuffer, fileName);
-			else
-				ic4::imageBufferSaveAsTiff(*imagebuffer, fileName);
-
+			QMessageBox::warning(NULL, _name.c_str(), err.message().c_str());
 		}
-		imagebuffer = nullptr;
-	}
-	catch (ic4::IC4Exception ex)
-	{
-		QMessageBox::warning(NULL, _name.c_str(), ex.what());
 	}
 }
 
