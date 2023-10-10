@@ -439,7 +439,7 @@ static void    print_property( int offset, const ic4::Property& property )
         ic4::PropEnumEntry prop = property.asEnumEntry();
 
         if( prop.isAvailable() ) {
-            print( offset + 1, "Value: {}\n", fetch_PropertyMethod_value<int64_t>( prop, &ic4::PropEnumEntry::getValue ) );
+            print( offset + 1, "IntValue: {}\n", fetch_PropertyMethod_value<int64_t>( prop, &ic4::PropEnumEntry::getIntValue ) );
         }
         print( "\n" );
         break;
