@@ -358,22 +358,3 @@ CMakeUserPresets.json
 # vcpkg
 vcpkg_installed/
 
-doxygen/output/
-
-# Generated export header
-/src/display_win32_opengl/tisgx/glgraphics/shader-data.generated.cpp
-/src/display_win32_opengl/tisgx/glgraphics/shader-data.generated.h
-/src/tisudshl/data/generated
-/src/display_win32_opengl/display_export.h
-/doc/_api
-/doc/_build
-/doc/_doxygen-output
-/test/coverage/CoverageReport*
-/test/coverage/temp
-/doxygen/@*@/
-
-*.mp4
-*.jpeg
-*.bmp
-*.png
-*.tiff
