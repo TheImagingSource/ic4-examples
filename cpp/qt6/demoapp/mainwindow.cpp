@@ -37,8 +37,6 @@
 
 MainWindow::MainWindow(QWidget* parent) :
 	QMainWindow(parent),
-	_display(nullptr),
-	_queuesink(nullptr),
 	_name("IC4 Demo App"),
 	_shootPhoto(false),
 	_videowriter(ic4::VideoWriterType::MP4_H264),
@@ -46,18 +44,20 @@ MainWindow::MainWindow(QWidget* parent) :
 	_videocapturepause(false)
 {
 	this->setWindowTitle(_name.c_str());
-	createUI();	
+	createUI();
 
-	_devicefile = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation).toStdString() + "/device.json";
-	_codecconfigfile = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation).toStdString() + "/codecconfig.json";
+	auto appDataDirectory = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+	QDir(appDataDirectory).mkdir(".");
+
+	_devicefile = appDataDirectory.toStdString() + "/device.json";
+	_codecconfigfile = appDataDirectory.toStdString() + "/codecconfig.json";
 
 	_queuesink = ic4::QueueSink::create(*this);
 
 	// Add a device lost handler. 
-	_grabber.eventAddDeviceLost([this](ic4::Grabber& g) -> void {
+	_grabber.eventAddDeviceLost([this](ic4::Grabber& g) {
 		QApplication::postEvent(this, new QEvent(DEVICE_LOST_EVENT));
-		});
-
+	});
 
 	// Create the display for the live video and the sink for accessing images. 
 	WId wid = _VideoWidget->winId();
@@ -66,38 +66,38 @@ MainWindow::MainWindow(QWidget* parent) :
 		_display = ic4::Display::create(ic4::DisplayType::Default, (ic4::WindowHandle)wid);
 		_display->setRenderPosition(ic4::DisplayRenderPosition::StretchCenter);
 	}
-	catch (ic4::IC4Exception ex)
+	catch (const ic4::IC4Exception& ex)
 	{
 		QMessageBox::information(NULL, _name.c_str(), ex.what());
 	}
 
 	if (QFileInfo::exists(_devicefile.c_str()))
 	{
-		try
-		{
+		ic4::Error err;
 
-			// Try to load the last used device.
-			_grabber.deviceOpenFromState(_devicefile);
-
-			_sbCameralabel->setText(std::string(_grabber.deviceInfo().modelName() + " " +
-				_grabber.deviceInfo().serial()).c_str());
-		}
-		catch (...)
+		// Try to load the last used device.
+		if (!_grabber.deviceOpenFromState(_devicefile, err))
 		{
-			QMessageBox::information(NULL, _name.c_str(), "Loading last used device failed.");
+			auto message = "Loading last used device failed: " + err.message();
+			QMessageBox::information(NULL, _name.c_str(), message.c_str());
 		}
+
+		updateCameraLabel();
 	}
 
 
 	if (QFileInfo::exists(_codecconfigfile.c_str()))
 	{
+		ic4::Error err;
+
 		try
 		{
-			_videowriter.getPropertyMap().deSerialize(_codecconfigfile);
+			_videowriter.getPropertyMap().deSerialize(_codecconfigfile, err);
 		}
-		catch (...)
+		catch (const ic4::IC4Exception& ex)
 		{
-			QMessageBox::information(NULL, _name.c_str(), "Loading last codec configuration failed.");
+			auto message = "Loading last codec configuration failed: " + std::string(ex.what());
+			QMessageBox::information(NULL, _name.c_str(), message.c_str());
 		}
 	}
 
@@ -116,144 +116,120 @@ MainWindow::~MainWindow()
 /// </summary>
 void MainWindow::createUI()
 {
-	_window = new QWidget(this);
-	setCentralWidget(_window);
-	mainLayout = new QGridLayout;
-	_window->setLayout(mainLayout);
-
-	QToolBar* toolbar = new QToolBar(this);
-	addToolBar(Qt::ToolBarArea::TopToolBarArea, toolbar);
-
-	auto fileMenu = menuBar()->addMenu(tr("&File"));
-
-	auto exitAct = new QAction(tr("&Exit"), this);
-	exitAct->setShortcuts(QKeySequence::Close);
-	exitAct->setStatusTip(tr("Exit program"));
-	connect(exitAct, &QAction::triggered, this, &QWidget::close);
-	fileMenu->addAction(exitAct);
-
 	////////////////////////////////////////////////////////////////////////////
-	// Create the Device menu
-	auto deviceMenu = menuBar()->addMenu(tr("&Device"));
+	// Define program actions
 
 	// Device Selection
 	_DeviceSelectAct = new QAction(QIcon(":/images/camera.png"), tr("&Select"), this);
 	_DeviceSelectAct->setStatusTip(tr("Select a video capture device"));
 	connect(_DeviceSelectAct, &QAction::triggered, this, &MainWindow::onSelectDevice);
-	QToolButton* btnDeviceSelection = new QToolButton();
-	toolbar->addWidget(btnDeviceSelection);
-	btnDeviceSelection->setDefaultAction(_DeviceSelectAct);
-	deviceMenu->addAction(_DeviceSelectAct);
 
-	////////////////////////////////////////////////////////////////////////////
-	// Device Properites menu
+	// Device Properties
 	_DevicePropertiesAct = new QAction(QIcon(":/images/imgset.png"), tr("&Properties"), this);
 	_DevicePropertiesAct->setStatusTip(tr("Show device property dialog"));
-	connect(_DevicePropertiesAct, &QAction::triggered, this, &MainWindow::onDeviceProperties);
-	QToolButton* btnDeviceProperties = new QToolButton();
-	toolbar->addWidget(btnDeviceProperties);
-	btnDeviceProperties->setDefaultAction(_DevicePropertiesAct);
-	deviceMenu->addAction(_DevicePropertiesAct);
 	_DevicePropertiesAct->setEnabled(false);
+	connect(_DevicePropertiesAct, &QAction::triggered, this, &MainWindow::onDeviceProperties);
 
-	toolbar->addSeparator();
-
+	// Trigger Mode
 	_TriggerModeAct = new QAction(QIcon(":/images/triggermode.png"), tr("&Trigger mode"), this);
 	_TriggerModeAct->setStatusTip(tr("Enable and disable trigger mode"));
 	_TriggerModeAct->setCheckable(true);
-	connect(_TriggerModeAct, &QAction::triggered, this, &MainWindow::onToggleTriggerMode);
-	auto btnTriggermode = new QToolButton();
-	toolbar->addWidget(btnTriggermode);
-	btnTriggermode->setDefaultAction(_TriggerModeAct);
-	deviceMenu->addAction(_TriggerModeAct);
 	_TriggerModeAct->setEnabled(false);
 	_TriggerModeAct->setChecked(false);
+	connect(_TriggerModeAct, &QAction::triggered, this, &MainWindow::onToggleTriggerMode);
 
-	toolbar->addSeparator();
-
+	// Start/Stop Live Stream
 	_StartLiveAct = new QAction(QIcon(":/images/livestream.png"), tr("&Live stream"), this);
 	_StartLiveAct->setStatusTip(tr("Start and stop the live stream"));
 	_StartLiveAct->setCheckable(true);
-	connect(_StartLiveAct, &QAction::triggered, this, &MainWindow::startstopstream);
-	QToolButton* btnStartLive = new QToolButton();
-	toolbar->addWidget(btnStartLive);
-	btnStartLive->setDefaultAction(_StartLiveAct);
-	deviceMenu->addAction(_StartLiveAct);
 	_StartLiveAct->setEnabled(false);
 	_StartLiveAct->setChecked(false);
+	connect(_StartLiveAct, &QAction::triggered, this, &MainWindow::startstopstream);
 
-	toolbar->addSeparator();
-
-	////////////////////////////////////////////////////////////////////////////
-	// capture menu
-	auto captureMenu = menuBar()->addMenu(tr("&Capture"));
-
+	// Capture Photo
 	_ShootPhotoAct = new QAction(QIcon(":/images/photo.png"), tr("&Shoot photo"), this);
 	_ShootPhotoAct->setStatusTip(tr("Shoot and save a photo"));
-	connect(_ShootPhotoAct, &QAction::triggered, this, &MainWindow::onShootPhoto);
-	QToolButton* btnShootPhoto = new QToolButton();
-	toolbar->addWidget(btnShootPhoto);
-	btnShootPhoto->setDefaultAction(_ShootPhotoAct);
-	captureMenu->addAction(_ShootPhotoAct);
 	_ShootPhotoAct->setEnabled(false);
+	connect(_ShootPhotoAct, &QAction::triggered, this, &MainWindow::onShootPhoto);
 
-	toolbar->addSeparator();
-
+	// Capture Video
 	_recordstartact = new QAction(QIcon(":/images/recordstart.png"), tr("&Capture video"), this);
 	_recordstartact->setStatusTip(tr("Capture video into MP4 file"));
 	_recordstartact->setCheckable(true);
 	connect(_recordstartact, &QAction::triggered, this, &MainWindow::onStartCaptureVideo);
-	QToolButton* btnCaptureVideo = new QToolButton();
-	toolbar->addWidget(btnCaptureVideo);
-	btnCaptureVideo->setDefaultAction(_recordstartact);
-	_recordstartact->setEnabled(false);
-	_recordstartact->setChecked(false);
-	captureMenu->addAction(_recordstartact);
 
-
+	// Pause Video Recording
 	_recordpauseact = new QAction(QIcon(":/images/recordpause.png"), tr("&Pause capture video"), this);
 	_recordpauseact->setStatusTip(tr("Pause video capture"));
 	_recordpauseact->setCheckable(true);
-	connect(_recordpauseact, &QAction::triggered, this, &MainWindow::onPauseCaptureVideo);
-	btnCaptureVideo = new QToolButton();
-	toolbar->addWidget(btnCaptureVideo);
-	btnCaptureVideo->setDefaultAction(_recordpauseact);
 	_recordpauseact->setEnabled(true);
 	_recordpauseact->setChecked(false);
-	captureMenu->addAction(_recordpauseact);
+	connect(_recordpauseact, &QAction::triggered, this, &MainWindow::onPauseCaptureVideo);
 
+	// Stop Video Recording
 	_recordstopact = new QAction(QIcon(":/images/recordstop.png"), tr("&Stop capture video"), this);
 	_recordstopact->setStatusTip(tr("End capture video into MP4 file"));
-	_recordstopact->setCheckable(false);
-	connect(_recordstopact, &QAction::triggered, this, &MainWindow::onStopCaptureVideo);
-	btnCaptureVideo = new QToolButton();
-	toolbar->addWidget(btnCaptureVideo);
-	btnCaptureVideo->setDefaultAction(_recordstopact);
 	_recordstopact->setEnabled(false);
-	captureMenu->addAction(_recordstopact);
+	connect(_recordstopact, &QAction::triggered, this, &MainWindow::onStopCaptureVideo);
 
-
+	// Codec Properties
 	_codecpropertyact = new QAction(QIcon(":/images/gear.png"), tr("&Codec properties"), this);
 	_codecpropertyact->setStatusTip(tr("Configure the video codec"));
-	_codecpropertyact->setCheckable(false);
 	connect(_codecpropertyact, &QAction::triggered, this, &MainWindow::onCodecProperties);
-	btnCaptureVideo = new QToolButton();
-	toolbar->addWidget(btnCaptureVideo);
-	btnCaptureVideo->setDefaultAction(_codecpropertyact);
-	_codecpropertyact->setEnabled(true);
 
+	// Exit Program
+	auto exitAct = new QAction(tr("&Exit"), this);
+	exitAct->setShortcuts(QKeySequence::Close);
+	exitAct->setStatusTip(tr("Exit program"));
+	connect(exitAct, &QAction::triggered, this, &QWidget::close);
+
+	////////////////////////////////////////////////////////////////////////////
+	// Create the File Menu
+	auto fileMenu = menuBar()->addMenu(tr("&File"));
+	fileMenu->addAction(exitAct);
+	////////////////////////////////////////////////////////////////////////////
+	// Create the Device Menu
+	auto deviceMenu = menuBar()->addMenu(tr("&Device"));
+	deviceMenu->addAction(_DeviceSelectAct);
+	deviceMenu->addAction(_DevicePropertiesAct);
+	deviceMenu->addAction(_TriggerModeAct);
+	deviceMenu->addAction(_StartLiveAct);
+	////////////////////////////////////////////////////////////////////////////
+	// Create the Capture Menu
+	auto captureMenu = menuBar()->addMenu(tr("&Capture"));
+	captureMenu->addAction(_ShootPhotoAct);
+	captureMenu->addAction(_recordstartact);
+	captureMenu->addAction(_recordpauseact);
+	captureMenu->addAction(_recordstopact);
 	captureMenu->addAction(_codecpropertyact);
+
+	////////////////////////////////////////////////////////////////////////////
+	// Create the Toolbar
+	QToolBar* toolbar = new QToolBar(this);
+	addToolBar(Qt::ToolBarArea::TopToolBarArea, toolbar);
+	toolbar->addAction(_DeviceSelectAct);
+	toolbar->addAction(_DevicePropertiesAct);
+	toolbar->addSeparator();
+	toolbar->addAction(_TriggerModeAct);
+	toolbar->addSeparator();
+	toolbar->addAction(_StartLiveAct);
+	toolbar->addSeparator();
+	toolbar->addAction(_ShootPhotoAct);
+	toolbar->addSeparator();
+	toolbar->addAction(_recordstartact);
+	toolbar->addAction(_recordpauseact);
+	toolbar->addAction(_recordstopact);
+	toolbar->addAction(_codecpropertyact);
 
 	////////////////////////////////////////////////////////////////////////////
 	// Create the video display Widget
 	_VideoWidget = new QWidget();
 	_VideoWidget->setMinimumSize(640, 480);
-	mainLayout->addWidget(_VideoWidget);
+	setCentralWidget(_VideoWidget);
 
 	statusBar()->showMessage(tr("Ready"));
 	_sbCameralabel = new QLabel(statusBar());
 	statusBar()->addPermanentWidget(_sbCameralabel);
-	_sbCameralabel->setText("No Device");
 }
 
 /////////////////////////////////////////////////////////////
@@ -287,26 +263,46 @@ void MainWindow::updateControls()
 	_recordstartact->setEnabled(_grabber.isStreaming());
 
 	if (!_grabber.isDeviceValid())
-		_sbCameralabel->setText("No Device");
-
-	auto propmap = _grabber.devicePropertyMap();
-
-	ic4::Error err;
-	bool enabled = propmap.find(ic4::PropId::TriggerMode, err).getValue(err) == "On";
-	if (err.isError())
-	{
-		enabled = propmap.findBoolean("Trigger", err).getValue(err);
-	}
-		
-	if (err.isError())
 	{
 		_TriggerModeAct->setEnabled(false);
 		_TriggerModeAct->setChecked(false);
 	}
 	else
 	{
-		_TriggerModeAct->setEnabled(true);
-		_TriggerModeAct->setChecked(enabled);
+		auto propmap = _grabber.devicePropertyMap();
+
+		ic4::Error err;
+		bool enabled = propmap.find(ic4::PropId::TriggerMode, err).getValue(err) == "On";
+		if (err.isError())
+		{
+			enabled = propmap.findBoolean("Trigger", err).getValue(err);
+		}
+
+		if (err.isError())
+		{
+			_TriggerModeAct->setEnabled(false);
+			_TriggerModeAct->setChecked(false);
+		}
+		else
+		{
+			_TriggerModeAct->setEnabled(true);
+			_TriggerModeAct->setChecked(enabled);
+		}
+	}
+}
+
+void MainWindow::updateCameraLabel()
+{
+	ic4::Error err;
+	auto deviceInfo = _grabber.deviceInfo(err);
+	if (err.isSuccess())
+	{
+		auto text = deviceInfo.modelName() + " " + deviceInfo.serial();
+		_sbCameralabel->setText(text.c_str());
+	}
+	else
+	{
+		_sbCameralabel->setText("No Device");
 	}
 }
 
@@ -315,10 +311,7 @@ void MainWindow::updateControls()
 /// </summary>
 void MainWindow::onSelectDevice()
 {
-	if (_grabber.isStreaming())
-	{
-		_grabber.streamStop();
-	}
+	_grabber.streamStop(ic4::Error::Ignore());
 
 	DeviceSelectionDlg cDlg(this, &_grabber);
 	if (cDlg.exec() == 1)
@@ -326,12 +319,9 @@ void MainWindow::onSelectDevice()
 		if (_grabber.isDeviceValid())
 		{
 			_grabber.deviceSaveState(_devicefile);
-			_sbCameralabel->setText(std::string(_grabber.deviceInfo().modelName() + " " + _grabber.deviceInfo().serial()).c_str());
 		}
-		else
-		{
-			_sbCameralabel->setText("No Device");
-		}
+		updateCameraLabel();
+		startstopstream();
 	}
 	updateControls();
 }
@@ -341,7 +331,6 @@ void MainWindow::onSelectDevice()
 /// </summary>
 void MainWindow::onDeviceProperties()
 {
-	//PropertyMapDlg cDlg(_grabber.driverPropertyMap(), this);
 	PropertyMapDlg cDlg(_grabber.devicePropertyMap(), this);
 	if (cDlg.exec() == 1)
 	{
@@ -353,20 +342,11 @@ void MainWindow::onDeviceProperties()
 
 void MainWindow::onToggleTriggerMode()
 {
-	try
+	auto propmap = _grabber.devicePropertyMap();
+
+	if (!propmap.setValue(ic4::PropId::TriggerMode, _TriggerModeAct->isChecked(), ic4::Error::Ignore()))
 	{
-		auto propmap = _grabber.devicePropertyMap();
-		try
-		{
-			propmap.findBoolean("Trigger").setValue(_TriggerModeAct->isChecked());
-		}
-		catch (...)
-		{
-			propmap[ic4::PropId::TriggerMode].setValue(_TriggerModeAct->isChecked() ? "On" : "Off");
-		}
-	}
-	catch (...)
-	{
+		propmap.setValue("Trigger", _TriggerModeAct->isChecked(), ic4::Error::Ignore());
 	}
 }
 
@@ -411,6 +391,7 @@ void MainWindow::onDeviceLost()
 	{
 		onStopCaptureVideo();
 	}
+	updateCameraLabel();
 	updateControls();
 }
 
@@ -441,15 +422,19 @@ void MainWindow::savePhoto(const ic4::ImageBuffer& imagebuffer)
 
 	if (dialog.exec())
 	{
+#ifdef WIN32
+		auto fileName = dialog.selectedFiles()[0].toStdWString();
+#else
 		auto fileName = dialog.selectedFiles()[0].toStdString();
-		auto selectedFilter = dialog.selectedNameFilter().toStdString();
+#endif
+		auto selectedFilter = dialog.selectedNameFilter();
 
 		ic4::Error err;
-		if (selectedFilter == "Bitmap(*.bmp)")
+		if (selectedFilter == filters[0])
 			ic4::imageBufferSaveAsBitmap(imagebuffer, fileName, {}, err);
-		else if (selectedFilter == "JPEG (*.jpg)")
+		else if (selectedFilter == filters[1])
 			ic4::imageBufferSaveAsJpeg(imagebuffer, fileName, {}, err);
-		else if (selectedFilter == "Portable Network Graphics (*.png)")
+		else if (selectedFilter == filters[2])
 			ic4::imageBufferSaveAsPng(imagebuffer, fileName, {}, err);
 		else
 			ic4::imageBufferSaveAsTiff(imagebuffer, fileName, {}, err);
@@ -473,15 +458,19 @@ void MainWindow::onStartCaptureVideo()
 
 	if (dialog.exec())
 	{
+#ifdef WIN32
+		auto fileName = dialog.selectedFiles()[0].toStdWString();
+#else
 		auto fileName = dialog.selectedFiles()[0].toStdString();
+#endif
+
 		double fps = 25.0;
 		auto propmap = _grabber.devicePropertyMap();
 		try
 		{
-			fps = propmap.findFloat("AcquisitionFrameRate").getValue();
-			ic4::ImageType imgtype;
-			imgtype = _queuesink->getOutputImageType();
-			_videowriter.beginFile(fileName.c_str(), imgtype, fps);
+			fps = propmap.find(ic4::PropId::AcquisitionFrameRate).getValue();
+			ic4::ImageType imgtype = _queuesink->getOutputImageType();
+			_videowriter.beginFile(fileName, imgtype, fps);
 
 			_capturetovideo = true;
 			_videocapturepause = _recordpauseact->isChecked();
@@ -536,6 +525,8 @@ void MainWindow::onCodecProperties()
 /// <returns></returns>
 bool MainWindow::sinkConnected(ic4::QueueSink& sink, const ic4::ImageType& imageType, size_t 	min_buffers_required)
 {
+	// Allocate more buffers than suggested, because we temporarily take some buffers
+	// out of circulation when saving an image or video files.
 	sink.allocAndQueueBuffers(min_buffers_required + 2);
 	return true;
 };

@@ -34,6 +34,8 @@ private:
 	void onDeviceLost();
 
 	void updateControls();
+	void updateCameraLabel();
+
 	void createUI();
 
 private:
