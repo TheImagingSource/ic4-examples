@@ -23,29 +23,28 @@ void DeviceSelectionDlg::createUI()
 	setMinimumSize(200, 200);
 
 	auto MainLayout = new QVBoxLayout();
-	auto deviceslayout = new QHBoxLayout();
 
 	_cameraTree = new QTreeView();
-	bool ok = connect(_cameraTree, &QAbstractItemView::clicked, this, &DeviceSelectionDlg::onClickedDevice);
+	_cameraTree->setHeaderHidden(true);
+	connect(_cameraTree, &QTreeView::clicked, this, &DeviceSelectionDlg::onClickedDevice);
+	connect(_cameraTree, &QTreeView::doubleClicked, this, &DeviceSelectionDlg::OnOK);
 
-	deviceslayout->addWidget(_cameraTree);
-
-	MainLayout->addLayout(deviceslayout);
+	MainLayout->addWidget(_cameraTree);
 
 	QHBoxLayout* buttons = new QHBoxLayout();
 
 	//////////////////////////////////////////////////////////
 	auto UpdateButton = new QPushButton(tr("Update"));
-	connect(UpdateButton, SIGNAL(released()), this, SLOT(OnUpdateButton()));
+	connect(UpdateButton, &QPushButton::pressed, this, &DeviceSelectionDlg::OnUpdateButton);
 	buttons->addWidget(UpdateButton);
 
-	auto CancelButton = new QPushButton(tr("Cancel"));
-	connect(CancelButton, SIGNAL(released()), this, SLOT(OnCancel()));
-	buttons->addWidget(CancelButton);
+	auto cancelButton = new QPushButton(tr("Cancel"));
+	connect(cancelButton, &QPushButton::pressed, this, &QDialog::reject);
+	buttons->addWidget(cancelButton);
 
-	auto OKButton = new QPushButton(tr("OK"));
-	connect(OKButton, SIGNAL(released()), this, SLOT(OnOK()));
-	buttons->addWidget(OKButton);
+	_OKButton = new QPushButton(tr("OK"));
+	connect(_OKButton, &QPushButton::pressed, this, &DeviceSelectionDlg::OnOK);
+	buttons->addWidget(_OKButton);
 
 	MainLayout->addLayout(buttons);
 
@@ -54,15 +53,13 @@ void DeviceSelectionDlg::createUI()
 
 void DeviceSelectionDlg::enumerateDevices()
 {
-	int r = 0;
 	_model.clear();
 
-	for (auto itf : ic4::DeviceEnum::enumInterfaces())
+	for (auto&& itf : ic4::DeviceEnum::enumInterfaces())
 	{
-		if (itf.enumDevices().size() > 0)
+		if (!itf.enumDevices().empty())
 		{
-			_model.setItem(r, 0, new InterfaceItem(itf));
-			r++;
+			_model.appendRow(new InterfaceItem(itf));
 		}
 	}
 
@@ -72,15 +69,9 @@ void DeviceSelectionDlg::enumerateDevices()
 
 
 void DeviceSelectionDlg::onClickedDevice(const QModelIndex& index)
-{
-	std::cout << index.row() << "  " << index.column() << std::endl;
-
-	_selectedindex = index;
-	if (((ic4item*)_model.itemFromIndex(index))->isDevice())
-	{
-		auto x = (DeviceItem*)_model.itemFromIndex(index);
-		std::cout << x->getDevInfo().modelName() << " " << x->getDevInfo().getInterface().interfaceDisplayName() << std::endl;
-	}
+{	
+	auto* deviceItem = dynamic_cast<DeviceItem*>(_model.itemFromIndex(index));
+	_OKButton->setEnabled(deviceItem != nullptr);
 }
 
 void DeviceSelectionDlg::OnUpdateButton()
@@ -89,28 +80,21 @@ void DeviceSelectionDlg::OnUpdateButton()
 }
 
 void DeviceSelectionDlg::OnOK()
-{
-	if (_model.itemFromIndex(_selectedindex) != nullptr)
-	{
-		if (((ic4item*)_model.itemFromIndex(_selectedindex))->isDevice())
-		{
-			auto x = (DeviceItem*)_model.itemFromIndex(_selectedindex);
-			try
-			{
-				_pgrabber->deviceClose();
-				std::cout << x->getDevInfo().modelName() << " " << x->getDevInfo().getInterface().interfaceDisplayName() << std::endl;
-				_pgrabber->deviceOpen(x->getDevInfo());
-			}
-			catch (ic4::IC4Exception ex)
-			{
-				QMessageBox::critical(this, "IC4 DemoApp", ex.what());
-			}
-		}
-	}
-	this->done(Accepted);
-}
+{	
+	auto index = _cameraTree->selectionModel()->currentIndex();
 
-void DeviceSelectionDlg::OnCancel()
-{
-	this->done(Rejected);
+	auto* deviceItem = dynamic_cast<DeviceItem*>(_model.itemFromIndex(index));
+	if( deviceItem )
+	{
+		try
+		{
+			_pgrabber->deviceClose();
+			_pgrabber->deviceOpen(deviceItem->getDevInfo());
+			QDialog::done(Accepted);
+		}
+		catch (ic4::IC4Exception ex)
+		{
+			QMessageBox::critical(this, "IC4 DemoApp", ex.what());
+		}
+	}	
 }
