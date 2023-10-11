@@ -9,6 +9,7 @@
 #include <QLabel>
 
 #include <mutex>
+#include <atomic>
 
 #include <ic4/ic4.h> 
 
@@ -45,9 +46,10 @@ private:
 	std::string _name;          // Name of the application
 	std::string _devicefile;    // File name of device state xml
 	std::string _codecconfigfile;    // File name of device state xml
+	std::mutex _snapphotomutex;
 	bool _shootPhoto;
-	bool _capturetovideo;
-	bool _videocapturepause;
+	std::atomic<bool> _capturetovideo;
+	std::atomic<bool> _videocapturepause;
 	QWidget* _window;
 	QGridLayout* mainLayout;
 	QWidget* _VideoWidget;
@@ -65,8 +67,7 @@ private:
 	ic4::Grabber _grabber;
 	std::shared_ptr<ic4::Display> _display;
 	std::shared_ptr<ic4::QueueSink> _queuesink;
-	ic4::VideoWriter _videowriter;
-	std::mutex _snapphotomutex;
+	ic4::VideoWriter _videowriter;	
 
 	virtual bool sinkConnected(ic4::QueueSink& sink, const ic4::ImageType& imageType, size_t  	min_buffers_required);
 

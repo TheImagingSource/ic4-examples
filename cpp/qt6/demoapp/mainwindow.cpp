@@ -46,12 +46,14 @@ MainWindow::MainWindow(QWidget* parent) :
 	this->setWindowTitle(_name.c_str());
 	createUI();
 
+	// Make sure the %appdata%/demoapp directory exists
 	auto appDataDirectory = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
 	QDir(appDataDirectory).mkdir(".");
 
 	_devicefile = appDataDirectory.toStdString() + "/device.json";
 	_codecconfigfile = appDataDirectory.toStdString() + "/codecconfig.json";
 
+	// Create the sink for accessing images.
 	_queuesink = ic4::QueueSink::create(*this);
 
 	// Add a device lost handler. 
@@ -59,10 +61,10 @@ MainWindow::MainWindow(QWidget* parent) :
 		QApplication::postEvent(this, new QEvent(DEVICE_LOST_EVENT));
 	});
 
-	// Create the display for the live video and the sink for accessing images. 
-	WId wid = _VideoWidget->winId();
+	// Create the display for the live video
 	try
 	{
+		WId wid = _VideoWidget->winId();
 		_display = ic4::Display::create(ic4::DisplayType::Default, (ic4::WindowHandle)wid);
 		_display->setRenderPosition(ic4::DisplayRenderPosition::StretchCenter);
 	}
@@ -108,7 +110,6 @@ MainWindow::MainWindow(QWidget* parent) :
 
 MainWindow::~MainWindow()
 {
-
 }
 
 /// <summary>
@@ -311,7 +312,7 @@ void MainWindow::updateCameraLabel()
 /// </summary>
 void MainWindow::onSelectDevice()
 {
-	_grabber.streamStop(ic4::Error::Ignore());
+	_grabber.deviceClose(ic4::Error::Ignore());
 
 	DeviceSelectionDlg cDlg(this, &_grabber);
 	if (cDlg.exec() == 1)
@@ -523,7 +524,7 @@ void MainWindow::onCodecProperties()
 /// <param name="imageType"></param>
 /// <param name="min_buffers_required"></param>
 /// <returns></returns>
-bool MainWindow::sinkConnected(ic4::QueueSink& sink, const ic4::ImageType& imageType, size_t 	min_buffers_required)
+bool MainWindow::sinkConnected(ic4::QueueSink& sink, const ic4::ImageType& imageType, size_t min_buffers_required)
 {
 	// Allocate more buffers than suggested, because we temporarily take some buffers
 	// out of circulation when saving an image or video files.
@@ -532,7 +533,7 @@ bool MainWindow::sinkConnected(ic4::QueueSink& sink, const ic4::ImageType& image
 };
 
 /// <summary>
-/// Listener related: Callbak for new frames. 
+/// Listener related: Callback for new frames.
 /// </summary>
 /// <param name="sink"></param>
 void MainWindow::framesQueued(ic4::QueueSink& sink)
