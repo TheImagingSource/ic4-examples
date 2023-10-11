@@ -495,7 +495,7 @@ namespace ic4::ui
 
 	};
 
-	template<class T>
+	template<class T = QWidget>
 	class PropertyTreeWidget : public T
 	{
 	static_assert(std::is_base_of<QWidget, T>::value, "T must be derived from QWidget");
