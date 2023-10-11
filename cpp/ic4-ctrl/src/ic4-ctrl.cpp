@@ -337,7 +337,7 @@ static void    print_property( int offset, const ic4::Property& property )
     {
         auto prop = property.asEnumeration();
         print( offset + 1, "EnumEntries:\n" );
-        for( auto&& entry : prop.getEntries( ic4::ignoreError ) )
+        for( auto&& entry : prop.getEntries( ic4::Error::Ignore() ) )
         {
             auto prop_enum_entry = entry.asEnumEntry();
 
@@ -394,7 +394,7 @@ static void    print_property( int offset, const ic4::Property& property )
     {
         auto prop = property.asCategory();
         print( offset + 1, "Features:\n" );
-        for( auto&& feature : prop.getFeatures( ic4::ignoreError ) )
+        for( auto&& feature : prop.getFeatures( ic4::Error::Ignore() ) )
         {
             print( offset + 2, "{}\n", feature.getName() );
         }
