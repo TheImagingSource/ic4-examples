@@ -26,6 +26,7 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QFileDialog>
+#include <QStandardPaths>
 
 #include <string>
 #include <iostream>
@@ -46,10 +47,10 @@ MainWindow::MainWindow(QWidget* parent) :
 	_videocapturepause(false)
 {
 	this->setWindowTitle(_name.c_str());
-	createUI();
+	createUI();	
 
-	_devicefile = getAppDataDir(_name) + "/device.json";
-	_codecconfigfile = getAppDataDir(_name) + "/codecconfig.json";
+	_devicefile = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation).toStdString() + "/device.json";
+	_codecconfigfile = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation).toStdString() + "/codecconfig.json";
 
 	_queuesink = ic4::QueueSink::create(*this);
 
@@ -71,7 +72,7 @@ MainWindow::MainWindow(QWidget* parent) :
 		QMessageBox::information(NULL, _name.c_str(), ex.what());
 	}
 
-	if (fileexist(_devicefile))
+	if (QFileInfo::exists(_devicefile.c_str()))
 	{
 		try
 		{
@@ -89,7 +90,7 @@ MainWindow::MainWindow(QWidget* parent) :
 	}
 
 
-	if (fileexist(_codecconfigfile))
+	if (QFileInfo::exists(_codecconfigfile.c_str()))
 	{
 		try
 		{
@@ -437,7 +438,7 @@ void MainWindow::savePhoto(const ic4::ImageBuffer& imagebuffer)
 	dialog.setNameFilters(filters);
 	dialog.setFileMode(QFileDialog::AnyFile);
 	dialog.setAcceptMode(QFileDialog::AcceptSave);
-	dialog.setDirectory(getPictureDir(_name).c_str());
+	dialog.setDirectory(QStandardPaths::writableLocation(QStandardPaths::PicturesLocation));
 
 	if (dialog.exec())
 	{
@@ -469,7 +470,7 @@ void MainWindow::onStartCaptureVideo()
 	dialog.setNameFilters(filters);
 	dialog.setFileMode(QFileDialog::AnyFile);
 	dialog.setAcceptMode(QFileDialog::AcceptSave);
-	dialog.setDirectory(getVideoDir(_name).c_str());
+	dialog.setDirectory(QStandardPaths::writableLocation(QStandardPaths::MoviesLocation));
 
 	if (dialog.exec())
 	{

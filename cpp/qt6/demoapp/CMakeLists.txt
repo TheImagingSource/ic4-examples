@@ -30,7 +30,6 @@ qt_add_executable(demoapp
     main.cpp
     mainwindow.cpp
     ic4dialogs/deviceselection/deviceselection.cpp
-    uitils.cpp utils.h
     events.h
     ic4dialogs/propertydlg/propertydlg.cpp
     ic4dialogs/propertydlg/propertydlg.h
