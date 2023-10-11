@@ -30,7 +30,6 @@
 
 #include <string>
 #include <iostream>
-#include "utils.h"
 #include "events.h"
 
 #include "ic4dialogs/deviceselection/deviceselection.h"
