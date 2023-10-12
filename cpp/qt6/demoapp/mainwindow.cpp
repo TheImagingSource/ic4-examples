@@ -17,6 +17,11 @@
 
 
 #include "mainwindow.h"
+#include "events.h"
+
+#include "ic4dialogs/deviceselection/deviceselection.h"
+#include "ic4dialogs/propertydlg/propertydlg.h"
+
 #include <QApplication>
 #include <QMessageBox>
 #include <QToolBar>
@@ -29,11 +34,6 @@
 #include <QStandardPaths>
 
 #include <string>
-#include <iostream>
-#include "events.h"
-
-#include "ic4dialogs/deviceselection/deviceselection.h"
-#include "ic4dialogs/propertydlg/propertydlg.h"
 
 MainWindow::MainWindow(QWidget* parent) :
 	QMainWindow(parent),
@@ -114,7 +114,7 @@ MainWindow::~MainWindow()
 
 static bool isDarkMode()
 {
-	// ...
+	// Compare WindowText vs Window color lightness to detect dark mode
 	const QPalette defaultPalette;
 	return defaultPalette.color(QPalette::WindowText).lightness()
 		 > defaultPalette.color(QPalette::Window).lightness();
@@ -128,6 +128,8 @@ void MainWindow::createUI()
 	////////////////////////////////////////////////////////////////////////////
 	// Define program actions
 
+	// Define a file selector that will choose the appropriate icon file
+	// depending on current darkmode setting
 	QFileSelector selector;
 	QStringList extraSelectors({ isDarkMode() ? "theme_dark" : "theme_light" });
 	selector.setExtraSelectors(extraSelectors);
