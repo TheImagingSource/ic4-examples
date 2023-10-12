@@ -273,10 +273,10 @@ void MainWindow::updateControls()
 		auto propmap = _grabber.devicePropertyMap();
 
 		ic4::Error err;
-		bool enabled = propmap.find(ic4::PropId::TriggerMode, err).getValue(err) == "On";
+		bool enabled = propmap.getValueString(ic4::PropId::TriggerMode, err) == "On";
 		if (err.isError())
 		{
-			enabled = propmap.findBoolean("Trigger", err).getValue(err);
+			enabled = propmap.getValueBool("Trigger", err);
 		}
 
 		if (err.isError())
@@ -466,10 +466,10 @@ void MainWindow::onStartCaptureVideo()
 #endif
 
 		double fps = 25.0;
-		auto propmap = _grabber.devicePropertyMap();
 		try
 		{
-			fps = propmap.find(ic4::PropId::AcquisitionFrameRate).getValue();
+			auto propmap = _grabber.devicePropertyMap();
+			fps = propmap.getValueDouble(ic4::PropId::AcquisitionFrameRate);
 			ic4::ImageType imgtype = _queuesink->getOutputImageType();
 			_videowriter.beginFile(fileName, imgtype, fps);
 
