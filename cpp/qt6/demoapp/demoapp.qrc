@@ -1,17 +1,25 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
 	<qresource>
-		<file>images/camera.png</file>
-		<file>images/imgset.png</file>
-		<file>images/livestream.png</file>
-		<file>images/focus.png</file>
-		<file>images/photo.png</file>
-		<file>images/video.png</file>
-		<file>images/overlay.png</file>
-		<file>images/recordstart.png</file>
-		<file>images/recordpause.png</file>
-		<file>images/recordstop.png</file>
-		<file>images/gear.png</file>
-		<file>images/triggermode.png</file>
+		<file>images/+theme_light/camera.png</file>
+		<file>images/+theme_light/imgset.png</file>
+		<file>images/+theme_light/livestream.png</file>
+		<file>images/+theme_light/photo.png</file>
+		<file>images/+theme_light/video.png</file>
+		<file>images/+theme_light/recordstart.png</file>
+		<file>images/+theme_light/recordpause.png</file>
+		<file>images/+theme_light/recordstop.png</file>
+		<file>images/+theme_light/gear.png</file>
+		<file>images/+theme_light/triggermode.png</file>
+    <file>images/+theme_dark/camera.png</file>
+    <file>images/+theme_dark/imgset.png</file>
+    <file>images/+theme_dark/livestream.png</file>
+    <file>images/+theme_dark/photo.png</file>
+    <file>images/+theme_dark/video.png</file>
+    <file>images/+theme_dark/recordstart.png</file>
+    <file>images/+theme_dark/recordpause.png</file>
+    <file>images/+theme_dark/recordstop.png</file>
+    <file>images/+theme_dark/gear.png</file>
+    <file>images/+theme_dark/triggermode.png</file>
 	</qresource>
 </RCC>	

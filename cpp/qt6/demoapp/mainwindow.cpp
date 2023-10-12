@@ -112,6 +112,14 @@ MainWindow::~MainWindow()
 {
 }
 
+static bool isDarkMode()
+{
+	// ...
+	const QPalette defaultPalette;
+	return defaultPalette.color(QPalette::WindowText).lightness()
+		 > defaultPalette.color(QPalette::Window).lightness();
+}
+
 /// <summary>
 /// Create the user interface of the demo app
 /// </summary>
@@ -120,19 +128,23 @@ void MainWindow::createUI()
 	////////////////////////////////////////////////////////////////////////////
 	// Define program actions
 
+	QFileSelector selector;
+	QStringList extraSelectors({ isDarkMode() ? "theme_dark" : "theme_light" });
+	selector.setExtraSelectors(extraSelectors);
+
 	// Device Selection
-	_DeviceSelectAct = new QAction(QIcon(":/images/camera.png"), tr("&Select"), this);
+	_DeviceSelectAct = new QAction(QIcon(selector.select(":/images/camera.png")), tr("&Select"), this);
 	_DeviceSelectAct->setStatusTip(tr("Select a video capture device"));
 	connect(_DeviceSelectAct, &QAction::triggered, this, &MainWindow::onSelectDevice);
 
 	// Device Properties
-	_DevicePropertiesAct = new QAction(QIcon(":/images/imgset.png"), tr("&Properties"), this);
+	_DevicePropertiesAct = new QAction(QIcon(selector.select(":/images/imgset.png")), tr("&Properties"), this);
 	_DevicePropertiesAct->setStatusTip(tr("Show device property dialog"));
 	_DevicePropertiesAct->setEnabled(false);
 	connect(_DevicePropertiesAct, &QAction::triggered, this, &MainWindow::onDeviceProperties);
 
 	// Trigger Mode
-	_TriggerModeAct = new QAction(QIcon(":/images/triggermode.png"), tr("&Trigger mode"), this);
+	_TriggerModeAct = new QAction(QIcon(selector.select(":/images/triggermode.png")), tr("&Trigger mode"), this);
 	_TriggerModeAct->setStatusTip(tr("Enable and disable trigger mode"));
 	_TriggerModeAct->setCheckable(true);
 	_TriggerModeAct->setEnabled(false);
@@ -140,7 +152,7 @@ void MainWindow::createUI()
 	connect(_TriggerModeAct, &QAction::triggered, this, &MainWindow::onToggleTriggerMode);
 
 	// Start/Stop Live Stream
-	_StartLiveAct = new QAction(QIcon(":/images/livestream.png"), tr("&Live stream"), this);
+	_StartLiveAct = new QAction(QIcon(selector.select(":/images/livestream.png")), tr("&Live stream"), this);
 	_StartLiveAct->setStatusTip(tr("Start and stop the live stream"));
 	_StartLiveAct->setCheckable(true);
 	_StartLiveAct->setEnabled(false);
@@ -148,19 +160,19 @@ void MainWindow::createUI()
 	connect(_StartLiveAct, &QAction::triggered, this, &MainWindow::startstopstream);
 
 	// Capture Photo
-	_ShootPhotoAct = new QAction(QIcon(":/images/photo.png"), tr("&Shoot photo"), this);
+	_ShootPhotoAct = new QAction(QIcon(selector.select(":/images/photo.png")), tr("&Shoot photo"), this);
 	_ShootPhotoAct->setStatusTip(tr("Shoot and save a photo"));
 	_ShootPhotoAct->setEnabled(false);
 	connect(_ShootPhotoAct, &QAction::triggered, this, &MainWindow::onShootPhoto);
 
 	// Capture Video
-	_recordstartact = new QAction(QIcon(":/images/recordstart.png"), tr("&Capture video"), this);
+	_recordstartact = new QAction(QIcon(selector.select(":/images/recordstart.png")), tr("&Capture video"), this);
 	_recordstartact->setStatusTip(tr("Capture video into MP4 file"));
 	_recordstartact->setCheckable(true);
 	connect(_recordstartact, &QAction::triggered, this, &MainWindow::onStartCaptureVideo);
 
 	// Pause Video Recording
-	_recordpauseact = new QAction(QIcon(":/images/recordpause.png"), tr("&Pause capture video"), this);
+	_recordpauseact = new QAction(QIcon(selector.select(":/images/recordpause.png")), tr("&Pause capture video"), this);
 	_recordpauseact->setStatusTip(tr("Pause video capture"));
 	_recordpauseact->setCheckable(true);
 	_recordpauseact->setEnabled(true);
@@ -168,13 +180,13 @@ void MainWindow::createUI()
 	connect(_recordpauseact, &QAction::triggered, this, &MainWindow::onPauseCaptureVideo);
 
 	// Stop Video Recording
-	_recordstopact = new QAction(QIcon(":/images/recordstop.png"), tr("&Stop capture video"), this);
+	_recordstopact = new QAction(QIcon(selector.select(":/images/recordstop.png")), tr("&Stop capture video"), this);
 	_recordstopact->setStatusTip(tr("End capture video into MP4 file"));
 	_recordstopact->setEnabled(false);
 	connect(_recordstopact, &QAction::triggered, this, &MainWindow::onStopCaptureVideo);
 
 	// Codec Properties
-	_codecpropertyact = new QAction(QIcon(":/images/gear.png"), tr("&Codec properties"), this);
+	_codecpropertyact = new QAction(QIcon(selector.select(":/images/gear.png")), tr("&Codec properties"), this);
 	_codecpropertyact->setStatusTip(tr("Configure the video codec"));
 	connect(_codecpropertyact, &QAction::triggered, this, &MainWindow::onCodecProperties);
 
