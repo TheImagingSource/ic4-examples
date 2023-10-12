@@ -1,17 +1,11 @@
-#include <QApplication>
+
 #include "mainwindow.h"
 
-#ifdef WIN32__
-int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
-{
-	int argc = 0;
-	QApplication a(argc, NULL);
+#include <QApplication>
 
-#else
-int  main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
 	QApplication app(argc, argv);
-#endif
 
 	app.setStyle("fusion");
 
@@ -19,8 +13,8 @@ int  main(int argc, char* argv[])
 	conf.apiLogLevel = ic4::LogLevel::Warning;
 	conf.logTargets = ic4::LogTarget::WinDebug;
 	conf.defaultErrorHandlerBehavior = ic4::ErrorHandlerBehavior::Throw;
-
 	ic4::initLibrary(conf);
+
 	MainWindow w;
 	w.show();
 
