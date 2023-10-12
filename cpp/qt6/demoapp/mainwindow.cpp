@@ -538,7 +538,23 @@ bool MainWindow::sinkConnected(ic4::QueueSink& sink, const ic4::ImageType& image
 /// <param name="sink"></param>
 void MainWindow::framesQueued(ic4::QueueSink& sink)
 {
-	auto buffer = sink.popOutputBuffer();
+	ic4::Error err;
+	auto buffer = sink.popOutputBuffer(err);
+	if (!buffer)
+	{		
+		qWarning().noquote() << "Failed to query buffer from QueueSink:" << err.message().c_str();
+		return;
+	}
+
+	// Connect the buffer's chunk data to the device's property map
+	// This allows for properties backed by chunk data to be updated
+	if (!_grabber.devicePropertyMap(err).connectChunkData(buffer, err))
+	{
+		qWarning().noquote() << "Failed to connect new buffer to the device's property map:" << err.message().c_str();
+
+		_grabber.devicePropertyMap(ic4::Error::Ignore()).connectChunkData(nullptr, ic4::Error::Ignore());
+	}
+		
 	std::lock_guard<std::mutex> guard(_snapphotomutex);
 	if (_shootPhoto)
 	{
@@ -551,7 +567,10 @@ void MainWindow::framesQueued(ic4::QueueSink& sink)
 	if (_capturetovideo && !_videocapturepause)
 	{
 		// Save an image into our video file.
-		_videowriter.addFrame(buffer);
+		if (!_videowriter.addFrame(buffer, err))
+		{
+			qWarning().noquote() << "Failed to add frame to video file:" << err.message().c_str();
+		}
 	}
 }
 
