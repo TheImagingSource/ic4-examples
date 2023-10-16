@@ -72,72 +72,6 @@ namespace EventExposureEnd
 
     internal class Program
     {
-        /// <summary>
-        /// Performs a test run. A test run is a number of cycles consisting of the following steps:
-        /// <list type="bullet">
-        ///     <item>Wait until real-world simulation is ready for the next image to be taken</item>
-        ///     <item>Wait until next image can be triggered</item>
-        ///     <item>Issue software trigger</item>
-        /// </list>
-        /// The real-world simulation is instructed to prepare the next scene when an image is received.
-        /// </summary>
-        /// <param name="grabber">The grabber to use for this test</param>
-        /// <param name="realWorld">The real-world simulation to use for this tes</param>
-        /// <param name="numCycles">Number of cycles to run</param>
-        private static void RunTest(Grabber grabber, RealWorld realWorld, int numCycles)
-        {
-            // An event to wait for an image being received by the sink.
-            var imageReceived = new AutoResetEvent(true);
-
-            // Create a new sink.
-            var sink = new QueueSink();
-            sink.FramesQueued += (s, e) =>
-            {
-                using (var buffer = sink.PopOutputBuffer())
-                {
-                    // Notify the test thread that an image was received, and it can proceed.
-                    imageReceived.Set();
-
-                    Console.Write(".");
-
-                    var fid = buffer.MetaData.DeviceFrameNumber;
-
-                    // Request real world scene-setup for next frame.
-                    // This call will be ignored if the setup was already requested by the EventExposureEnd notification handler.
-                    realWorld.BeginSetupScene((long)(fid + 1));
-                }
-            };
-
-            // Setup stream
-            grabber.StreamSetup(sink);
-
-            // Request real-world scene for first frame.
-            realWorld.BeginSetupScene(0);
-
-            Console.WriteLine($"Running {numCycles} cycles...");
-            var sw = System.Diagnostics.Stopwatch.StartNew();
-
-            for (int i = 0; i < numCycles; ++i)
-            {
-                // Wait for the previous image to be received (minimum cycle time).
-                imageReceived.WaitOne();
-
-                // Wait for the scene setup to be completed.
-                realWorld.WaitSetupSceneCompletion();
-
-                // Issue software trigger after both the real-world scene setup is completed and the previous image was received.
-                grabber.DevicePropertyMap.ExecuteCommand(PropId.TriggerSoftware);
-            }
-
-            sw.Stop();
-
-            grabber.StreamStop();
-
-            Console.WriteLine();
-            Console.WriteLine($"Processed {numCycles} cycles in {sw.Elapsed.TotalMilliseconds:#.#} ms. {numCycles / sw.Elapsed.TotalSeconds:#.#} Cycles/sec");
-        }
-
-
         static void Main(string[] args)
         {
             ic4.Library.Init();
@@ -207,34 +141,110 @@ namespace EventExposureEnd
             // Create our "real world" with a next-frame setup time of 40 ms
             var realWorld = new RealWorld(TimeSpan.FromMilliseconds(40));
 
-            // Run test without using EventExposureEnd event
+            // Run test without supplying EventExposureEnd event
             Console.WriteLine("Test WITHOUT EventExposureEnd");
-            RunTest(grabber, realWorld, 50);
+            RunTest(grabber, realWorld, 50, null);
 
             // Reset real world for next test run
             realWorld.Reset();
-
-            // Register a notification handler for EventExposureEnd
-            eventExposureEnd.Notification += (s, e) =>
-            {
-                // Extract frame ID from event data
-                var fid = grabber.DevicePropertyMap.GetValueLong(ic4.PropId.EventExposureEndFrameID);
-
-                // Request real world scene-setup for next frame
-                // At this time, exposure is complete, but the image is still being transmitted.
-                // If we would wait for this call until the image is transmitted completely, we would waste time.
-                realWorld.BeginSetupScene(fid + 1);
-            };
-
-            // Enable EventExposureEnd event notification
-            grabber.DevicePropertyMap.SetValue(ic4.PropId.EventSelector, "ExposureEnd");
-            grabber.DevicePropertyMap.SetValue(ic4.PropId.EventNotification, "On");
 
             // Run test with registered notification handler for EventExposureEnd
             // This time, the real-world simulation is notified to setup the next scene at an earlier point in time than before,
             // leading to a reduced cycle time.
             Console.WriteLine("Test WITH EventExposureEnd");
-            RunTest(grabber, realWorld, 50);
+            RunTest(grabber, realWorld, 50, eventExposureEnd);
+        }
+
+        /// <summary>
+        /// Performs a test run. A test run is a number of cycles consisting of the following steps:
+        /// <list type="bullet">
+        ///     <item>Wait until real-world simulation is ready for the next image to be taken</item>
+        ///     <item>Wait until next image can be triggered</item>
+        ///     <item>Issue software trigger</item>
+        /// </list>
+        /// The real-world simulation is instructed to prepare the next scene when an image is received,
+        /// or the EventExposureEnd notification occurs.
+        /// </summary>
+        /// <param name="grabber">The grabber to use for this test</param>
+        /// <param name="realWorld">The real-world simulation to use for this tes</param>
+        /// <param name="numCycles">Number of cycles to run</param>
+        /// <param name="eventExposureEnd">Optional reference to the EventExposureEnd property of the device</param>
+        private static void RunTest(Grabber grabber, RealWorld realWorld, int numCycles, Property eventExposureEnd)
+        {
+            if (eventExposureEnd != null)
+            {
+                // Register a notification handler for EventExposureEnd
+                eventExposureEnd.Notification += (s, e) =>
+                {
+                    // Extract frame ID from event data
+                    var fid = grabber.DevicePropertyMap.GetValueLong(ic4.PropId.EventExposureEndFrameID);
+
+                    // Request real world scene-setup for next frame
+                    // At this time, exposure is complete, but the image is still being transmitted.
+                    // If we would wait for this call until the image is transmitted completely, we would waste time.
+                    realWorld.BeginSetupScene(fid + 1);
+                };
+
+                // Enable EventExposureEnd event notification
+                grabber.DevicePropertyMap.SetValue(ic4.PropId.EventSelector, "ExposureEnd");
+                grabber.DevicePropertyMap.SetValue(ic4.PropId.EventNotification, "On");
+            }
+            else
+            {
+                // Disable EventExposureEnd event notification
+                grabber.DevicePropertyMap.SetValue(ic4.PropId.EventSelector, "ExposureEnd");
+                grabber.DevicePropertyMap.SetValue(ic4.PropId.EventNotification, "Off");
+            }
+
+            // An event to wait for an image being received by the sink.
+            var imageReceived = new AutoResetEvent(true);
+
+            // Create a new sink.
+            var sink = new QueueSink();
+            sink.FramesQueued += (s, e) =>
+            {
+                using (var buffer = sink.PopOutputBuffer())
+                {
+                    // Notify the test thread that an image was received, and it can proceed.
+                    imageReceived.Set();
+
+                    Console.Write(".");
+
+                    var fid = buffer.MetaData.DeviceFrameNumber;
+
+                    // Request real world scene-setup for next frame.
+                    // This call will be ignored if the setup was already requested by the EventExposureEnd notification handler.
+                    realWorld.BeginSetupScene((long)(fid + 1));
+                }
+            };
+
+            // Setup stream
+            grabber.StreamSetup(sink);
+
+            // Request real-world scene for first frame.
+            realWorld.BeginSetupScene(0);
+
+            Console.WriteLine($"Running {numCycles} cycles...");
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+
+            for (int i = 0; i < numCycles; ++i)
+            {
+                // Wait for the previous image to be received (minimum cycle time).
+                imageReceived.WaitOne();
+
+                // Wait for the scene setup to be completed.
+                realWorld.WaitSetupSceneCompletion();
+
+                // Issue software trigger after both the real-world scene setup is completed and the previous image was received.
+                grabber.DevicePropertyMap.ExecuteCommand(PropId.TriggerSoftware);
+            }
+
+            sw.Stop();
+
+            grabber.StreamStop();
+
+            Console.WriteLine();
+            Console.WriteLine($"Processed {numCycles} cycles in {sw.Elapsed.TotalMilliseconds:#.#} ms. {numCycles / sw.Elapsed.TotalSeconds:#.#} Cycles/sec");
         }
     }
 }
