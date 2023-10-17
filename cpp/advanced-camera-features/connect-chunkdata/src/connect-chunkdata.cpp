@@ -22,8 +22,7 @@ struct PrintChunkExposureTimeListener : ic4::QueueSinkListener
 	{
 		ic4::Error err;
 
-		// #TODO: Replace with ic4::PropId::ChunkExposureTime once available
-		chunkExposureTime_ = map_.findFloat("ChunkExposureTime", err);
+		chunkExposureTime_ = map_.find(ic4::PropId::ChunkExposureTime, err);
 		if (err.isError())
 		{
 			throw std::runtime_error("Float property ChunkExposureTime is not supported: " + err.message());
@@ -42,12 +41,14 @@ struct PrintChunkExposureTimeListener : ic4::QueueSinkListener
 			return;
 		}
 
+		// Use the image buffer as backend for read operations on chunk properties
 		if (!map_.connectChunkData(buffer, err))
 		{
 			std::cerr << "connectChunkData failed: " << err.message() << std::endl;
 			return;
 		}
 		
+		// Read chunk property from image buffer
 		auto val = chunkExposureTime_.getValue(err);
 		if( err.isError() )
 		{
@@ -123,20 +124,20 @@ int main()
 
 		grabber.streamSetup(sink);
 
-		std::cout << "Wait 5 seconds" << std::endl;
-		std::this_thread::sleep_for(std::chrono::seconds(5));
+		std::cout << "Stream for 3 seconds" << std::endl;
+		std::this_thread::sleep_for(std::chrono::seconds(3));
 
 		std::cout << "Set ExposureTime to 8 ms" << std::endl;
 		map.setValue(ic4::PropId::ExposureTime, 8000);
 
-		std::cout << "Wait 5 seconds" << std::endl;
-		std::this_thread::sleep_for(std::chrono::seconds(5));
+		std::cout << "Continue streaming for 3 seconds" << std::endl;
+		std::this_thread::sleep_for(std::chrono::seconds(3));
 
 		std::cout << "Set ExposureTime to 32 ms" << std::endl;
 		map.setValue(ic4::PropId::ExposureTime, 32000);
 
-		std::cout << "Wait 5 seconds" << std::endl;
-		std::this_thread::sleep_for(std::chrono::seconds(5));
+		std::cout << "Continue streaming for 3 seconds" << std::endl;
+		std::this_thread::sleep_for(std::chrono::seconds(3));
 
 		// Stopping the stream is mandatory because we have the listener defined as a stack variable.
 		// Just having everything go out of scope, the listener would be destroyed first and lead to undefined behavior.

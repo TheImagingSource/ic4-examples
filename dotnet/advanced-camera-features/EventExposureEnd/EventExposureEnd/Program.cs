@@ -61,7 +61,7 @@ namespace EventExposureEnd
         }
 
         /// <summary>
-        /// Reset the world to its original state
+        /// Resets the world to its original state
         /// </summary>
         public void Reset()
         {
@@ -181,7 +181,7 @@ namespace EventExposureEnd
 
                     // Request real world scene-setup for next frame
                     // At this time, exposure is complete, but the image is still being transmitted.
-                    // If we would wait for this call until the image is transmitted completely, we would waste time.
+                    // If we waited for this call until the image is transmitted completely, we would waste time.
                     realWorld.BeginSetupScene(fid + 1);
                 };
 
@@ -197,6 +197,7 @@ namespace EventExposureEnd
             }
 
             // An event to wait for an image being received by the sink.
+            // This event indicates that a new image can be triggered, therefore it is initially set.
             var imageReceived = new AutoResetEvent(true);
 
             // Create a new sink.
