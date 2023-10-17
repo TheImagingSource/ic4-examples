@@ -35,18 +35,15 @@ def example_connect_chunkdata():
     # because enabling them increases the payload size
     prop_map.set_value(ic4.PropId.CHUNK_MODE_ACTIVE, True)
     prop_map.set_value(ic4.PropId.CHUNK_SELECTOR, "ExposureTime")
-    try:
-        prop_map.set_value(ic4.PropId.CHUNK_ENABLE, True)
-    except:
-        # Ignore possible error, since the device might have ChunkEnable[ExposureTime] locked to true
-        pass
+    # Ignore possible error, since the device might have ChunkEnable[ExposureTime] locked to true
+    prop_map.try_set_value(ic4.PropId.CHUNK_ENABLE, True)
 
     print("Configure resolution 640x480")
-    prop_map.set_value(ic4.PropId.WIDTH, 640)
-    prop_map.set_value(ic4.PropId.HEIGHT, 480)
+    prop_map.try_set_value(ic4.PropId.WIDTH, 640)
+    prop_map.try_set_value(ic4.PropId.HEIGHT, 480)
 
     print("Set AcquisitionFrameRate to 5")
-    prop_map.set_value(ic4.PropId.ACQUISITION_FRAME_RATE, 5)
+    prop_map.try_set_value(ic4.PropId.ACQUISITION_FRAME_RATE, 5)
 
     print("Set ExposureAuto to Off")
     prop_map.set_value(ic4.PropId.EXPOSURE_AUTO, "Off")
