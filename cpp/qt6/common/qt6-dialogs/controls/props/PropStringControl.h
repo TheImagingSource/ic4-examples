@@ -1,5 +1,9 @@
 
 #include "PropControlBase.h"
+#include "../Event.h"
+
+#include <QKeyEvent>
+#include <QLineEdit>
 
 namespace ic4::ui
 {
@@ -84,7 +88,7 @@ namespace ic4::ui
 			catch (const ic4::IC4Exception iex)
 			{
 				qDebug() << "Error " << prop_.getName().c_str() << " in update_value() " << iex.what();
-				edit_->setText("n/a");
+				edit_->setText("<Error>");
 			}
 
 			edit_->blockSignals(false);

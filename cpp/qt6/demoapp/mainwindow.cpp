@@ -35,13 +35,13 @@
 
 #include <string>
 
-MainWindow::MainWindow(QWidget* parent) :
-	QMainWindow(parent),
-	_name("IC4 Demo App"),
-	_shootPhoto(false),
-	_videowriter(ic4::VideoWriterType::MP4_H264),
-	_capturetovideo(false),
-	_videocapturepause(false)
+MainWindow::MainWindow(QWidget* parent)
+	: QMainWindow(parent)
+	, _name("IC4 Demo App")
+	, _shootPhoto(false)
+	, _videowriter(ic4::VideoWriterType::MP4_H264)
+	, _capturetovideo(false)
+	, _videocapturepause(false)
 {
 	this->setWindowTitle(_name.c_str());
 	createUI();
@@ -83,6 +83,9 @@ MainWindow::MainWindow(QWidget* parent) :
 			auto message = "Loading last used device failed: " + err.message();
 			QMessageBox::information(NULL, _name.c_str(), message.c_str());
 		}
+
+		// Remember the device's property map for later use
+		_devicePropertyMap = _grabber.devicePropertyMap(ic4::Error::Ignore());
 
 		updateCameraLabel();
 	}
@@ -284,13 +287,11 @@ void MainWindow::updateControls()
 	}
 	else
 	{
-		auto propmap = _grabber.devicePropertyMap();
-
 		ic4::Error err;
-		bool enabled = propmap.getValueString(ic4::PropId::TriggerMode, err) == "On";
+		bool enabled = _devicePropertyMap.getValueString(ic4::PropId::TriggerMode, err) == "On";
 		if (err.isError())
 		{
-			enabled = propmap.getValueBool("Trigger", err);
+			enabled = _devicePropertyMap.getValueBool("Trigger", err);
 		}
 
 		if (err.isError())
@@ -335,6 +336,10 @@ void MainWindow::onSelectDevice()
 		{
 			_grabber.deviceSaveState(_devicefile);
 		}
+
+		// Remember the device's property map for later use
+		_devicePropertyMap = _grabber.devicePropertyMap(ic4::Error::Ignore());
+
 		updateCameraLabel();
 		startstopstream();
 	}
@@ -346,7 +351,7 @@ void MainWindow::onSelectDevice()
 /// </summary>
 void MainWindow::onDeviceProperties()
 {
-	PropertyMapDlg cDlg(_grabber.devicePropertyMap(), this);
+	PropertyMapDlg cDlg(_devicePropertyMap, this);
 	if (cDlg.exec() == 1)
 	{
 		_grabber.deviceSaveState(_devicefile);
@@ -357,11 +362,9 @@ void MainWindow::onDeviceProperties()
 
 void MainWindow::onToggleTriggerMode()
 {
-	auto propmap = _grabber.devicePropertyMap();
-
-	if (!propmap.setValue(ic4::PropId::TriggerMode, _TriggerModeAct->isChecked(), ic4::Error::Ignore()))
+	if (!_devicePropertyMap.setValue(ic4::PropId::TriggerMode, _TriggerModeAct->isChecked(), ic4::Error::Ignore()))
 	{
-		propmap.setValue("Trigger", _TriggerModeAct->isChecked(), ic4::Error::Ignore());
+		_devicePropertyMap.setValue("Trigger", _TriggerModeAct->isChecked(), ic4::Error::Ignore());
 	}
 }
 
@@ -482,8 +485,7 @@ void MainWindow::onStartCaptureVideo()
 		double fps = 25.0;
 		try
 		{
-			auto propmap = _grabber.devicePropertyMap();
-			fps = propmap.getValueDouble(ic4::PropId::AcquisitionFrameRate);
+			fps = _devicePropertyMap.getValueDouble(ic4::PropId::AcquisitionFrameRate);
 			ic4::ImageType imgtype = _queuesink->getOutputImageType();
 			_videowriter.beginFile(fileName, imgtype, fps);
 
@@ -562,7 +564,7 @@ void MainWindow::framesQueued(ic4::QueueSink& sink)
 
 	// Connect the buffer's chunk data to the device's property map
 	// This allows for properties backed by chunk data to be updated
-	if (!_grabber.devicePropertyMap(err).connectChunkData(buffer, err))
+	if (!_devicePropertyMap.connectChunkData(buffer, err))
 	{
 		qWarning().noquote() << "Failed to connect new buffer to the device's property map:" << err.message().c_str();
 

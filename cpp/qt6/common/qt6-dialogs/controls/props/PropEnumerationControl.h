@@ -66,8 +66,16 @@ namespace ic4::ui
 			{
 				edit_->blockSignals(true);
 
-				auto selected_entry = prop_.getSelectedEntry();
-				edit_->setText(QString::fromStdString(selected_entry.getDisplayName()));
+				ic4::Error err;
+				auto selected_entry = prop_.getSelectedEntry(err);
+				if (err.isSuccess())
+				{
+					edit_->setText(QString::fromStdString(selected_entry.getDisplayName()));
+				}
+				else
+				{
+					edit_->setText("<Error>");
+				}
 
 				edit_->blockSignals(false);
 			}

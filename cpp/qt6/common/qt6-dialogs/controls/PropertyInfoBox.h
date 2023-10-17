@@ -63,7 +63,13 @@ public:
 				text += showFloatInfo(prop);
 				break;
 			case ic4::PropType::String:
-				text += showStringInfo(prop);		
+				text += showStringInfo(prop);
+				break;
+			case ic4::PropType::Enumeration:
+				text += showEnumerationInfo(prop.asEnumeration());
+				break;
+			case ic4::PropType::Boolean:
+				text += showBooleanInfo(prop.asBoolean());
 				break;
 		}
 
@@ -237,5 +243,59 @@ public:
 		return text;
 	}
 
+	QString showEnumerationInfo(ic4::PropEnumeration prop)
+	{
+		auto text = QString("Type: Enumeration\n\n");
 
+		ic4::Error err;
+		auto val = prop.getValue(err);
+		if (err.isSuccess())
+		{
+			text += QString("Value: %1\n\n").arg(val.c_str());
+		}
+		else
+		{
+			text += QString("Value: <span style='color:red'>%1</span>\n\n").arg(err.message().c_str());
+		}
+
+		text += "Possible Values: ";
+		auto entries = prop.getEntries(err);
+		if (err.isSuccess())
+		{
+			bool first = true;
+			for (auto&& entry : entries)
+			{
+				if (!first)
+					text += ", ";
+				else
+					first = false;
+				text += entry.getName(ic4::Error::Ignore());
+			}
+			text += "\n\n";
+		}
+		else
+		{
+			text += QString("<span style='color:red'>%1</span>\n\n").arg(err.message().c_str());
+		}
+
+		return text;
+	}
+
+	QString showBooleanInfo(ic4::PropBoolean prop)
+	{
+		auto text = QString("Type: Boolean\n\n");
+
+		ic4::Error err;
+		auto val = prop.getValue(err);
+		if (err.isSuccess())
+		{
+			text += QString("Value: %1\n\n").arg(val ? "True" : "False");
+		}
+		else
+		{
+			text += QString("Value: <span style='color:red'>%1</span>\n\n").arg(err.message().c_str());
+		}
+
+		return text;
+	}
 };

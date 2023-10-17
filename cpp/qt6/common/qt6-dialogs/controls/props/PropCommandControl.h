@@ -2,6 +2,7 @@
 #include "PropControlBase.h"
 
 #include <QPushButton>
+#include <QMessageBox>
 
 namespace ic4::ui
 {
@@ -27,12 +28,23 @@ namespace ic4::ui
 	private:
 		void execute()
 		{
-			prop_.execute();
+			ic4::Error err;
+			if (!prop_.execute(err))
+			{
+				QMessageBox::critical(this, {}, err.message().c_str());
+			}
+			else if (!prop_.isDone(err))
+			{
+				button_->setEnabled(false);
+			}
 		}
 
 		void update_all() override
 		{
-			button_->setEnabled(!prop_.isLocked());
+			bool is_done = prop_.isDone(ic4::Error::Ignore());
+			bool is_locked = prop_.isLocked(ic4::Error::Ignore());
+
+			button_->setEnabled(!is_locked && is_done);
 		}
 	};
 }

@@ -64,6 +64,7 @@ private:
 	QAction* _codecpropertyact;
 
 	QLabel* _sbCameralabel;
+	ic4::PropertyMap _devicePropertyMap;
 	ic4::Grabber _grabber;
 	std::shared_ptr<ic4::Display> _display;
 	std::shared_ptr<ic4::QueueSink> _queuesink;

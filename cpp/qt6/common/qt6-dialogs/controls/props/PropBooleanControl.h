@@ -1,6 +1,9 @@
 
 #include "PropControlBase.h"
 
+#include <QMessageBox>
+#include <QCheckBox>
+
 namespace ic4::ui
 {
 	class PropBooleanControl : public PropControlBase<ic4::PropBoolean>
@@ -28,7 +31,11 @@ namespace ic4::ui
 	private:
 		void check(int new_state)
 		{
-			prop_.setValue(new_state == Qt::Checked);
+			ic4::Error err;
+			if (!prop_.setValue(new_state == Qt::Checked, err))
+			{
+				QMessageBox::critical(this, {}, err.message().c_str());
+			}
 		}
 
 		void update_all() override
@@ -36,15 +43,15 @@ namespace ic4::ui
 			check_->setEnabled(!prop_.isLocked() && !prop_.isReadOnly());
 			check_->blockSignals(true);
 
-			try
+			ic4::Error err;
+			auto value = prop_.getValue(err);
+			if( err.isSuccess() )
 			{
-				auto value = prop_.getValue();
 				check_->setChecked(value);
 			}
-			catch (const ic4::IC4Exception iex)
+			else
 			{
-				qDebug() << "Error " << prop_.getName().c_str() << " in update_all " << iex.what();
-				check_->setEnabled(false);
+				qWarning() << "Error " << prop_.getName().c_str() << " in update_all " << err.message();
 			}
 
 			check_->blockSignals(false);

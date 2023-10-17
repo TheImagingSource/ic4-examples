@@ -11,6 +11,7 @@
 #include <QWidget>
 #include <QCheckBox>
 #include <QSlider>
+#include <QMessageBox>
 
 #include <algorithm>
 
@@ -74,19 +75,20 @@ namespace ic4::ui
 	private:
 		void set_value_unchecked(int64_t new_val)
 		{
-			try
+			ic4::Error err;
+			if (!prop_.setValue(new_val, err))
 			{
-				auto testVal = prop_.getValue();
+				QMessageBox::critical(this, {}, err.message().c_str());
+			}
 
-				prop_.setValue(new_val);
-
-				val_ = prop_.getValue();
-
+			val_ = prop_.getValue(err);
+			if (err.isSuccess())
+			{
 				update_value(val_);
 			}
-			catch (const ic4::IC4Exception iex)
+			else
 			{
-				qDebug() << "Error " << prop_.getName().c_str() << " in set_value_unchecked() " << iex.what();
+				qWarning() << "Error reading value back (" << prop_.getName().c_str() << "): " << err.message();
 			}
 		}
 
@@ -126,7 +128,24 @@ namespace ic4::ui
 			catch (const ic4::IC4Exception iex)
 			{
 				qDebug() << "Error " << prop_.getName().c_str() << " : update_all() " << iex.what();
-				spin_->setEnabled(false);
+
+				if (spin_)
+				{
+					bool is_locked = prop_.isLocked();
+					bool is_readonly = prop_.isReadOnly();
+
+					spin_->blockSignals(true);
+					spin_->setEnabled(false);
+					spin_->setSpecialValueText("<Error>");
+					spin_->setValue(min_);
+					spin_->blockSignals(false);
+				}
+				if (edit_)
+				{
+					edit_->blockSignals(true);
+					edit_->setText("<Error>");
+					edit_->blockSignals(false);
+				}
 				return;
 			}
 
@@ -148,16 +167,17 @@ namespace ic4::ui
 				slider_->setSingleStep(inc_);
 				slider_->setValue(val_);
 				slider_->setEnabled(!is_locked);
-				slider_->blockSignals(false);				
+				slider_->blockSignals(false);
 			}
 			if (spin_)
 			{			
 
 				spin_->blockSignals(true);
+				spin_->setSpecialValueText({});
 				spin_->setMinimum(min_);
 				spin_->setMaximum(max_);
 				spin_->setSingleStep(inc_);
-				spin_->setValue(val_);																
+				spin_->setValue(val_);
 				spin_->setReadOnly(is_locked || is_readonly);
 
 				spin_->setEnabled( !(is_locked || is_readonly));
@@ -227,19 +247,24 @@ namespace ic4::ui
 				check_ = new QCheckBox(this);
 				break;
 			case ic4::PropIntRepresentation::HexNumber:
-				spin_ = new PropIntSpinBox(this, 16);
-				spin_->setPrefix("0x");
+				spin_ = is_readonly ? nullptr : new PropIntSpinBox(this, 16);
+				if (spin_)
+					spin_->setPrefix("0x");
+				edit_ = is_readonly ? new QLineEdit(this) : nullptr;
 				break;
 			case ic4::PropIntRepresentation::PureNumber:
-				spin_ = new PropIntSpinBox(this);
+				spin_ = is_readonly ? nullptr : new PropIntSpinBox(this);
+				edit_ = is_readonly ? new QLineEdit(this) : nullptr;
 				break;
 			case ic4::PropIntRepresentation::Linear:
 				slider_ = is_readonly ? nullptr : new QSlider(Qt::Orientation::Horizontal, this);
-				spin_ = new PropIntSpinBox(this);
+				spin_ = is_readonly ? nullptr : new PropIntSpinBox(this);
+				edit_ = is_readonly ? new QLineEdit(this) : nullptr;
 				break;
 			case ic4::PropIntRepresentation::Logarithmic:
 				slider_ = is_readonly ? nullptr : new QSlider(Qt::Orientation::Horizontal, this);
-				spin_ = new PropIntSpinBox(this);
+				spin_ = is_readonly ? nullptr : new PropIntSpinBox(this);
+				edit_ = is_readonly ? new QLineEdit(this) : nullptr;
 				printf("not implemented: IC4_PROPINTREP_LOGARITHMIC\n");
 				break;
 			case ic4::PropIntRepresentation::MACAddress:

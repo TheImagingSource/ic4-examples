@@ -10,6 +10,7 @@
 #include <QWidget>
 #include <QSlider>
 #include <QDoubleSpinBox>
+#include <QMessageBox>
 
 #include <algorithm>
 
@@ -49,7 +50,6 @@ namespace ic4::ui
 	class PropFloatControl : public PropControlBase<ic4::PropFloat>
 	{
 	private:
-		QCheckBox* check_ = nullptr;
 		QSlider* slider_ = nullptr;
 		FormattingDoubleSpinBox* spin_ = nullptr;
 
@@ -64,17 +64,20 @@ namespace ic4::ui
 	private:
 		void set_value_unchecked(double new_val)
 		{
-			if (!prop_.isReadOnly() && !prop_.isLocked())
+			ic4::Error err;
+			if (!prop_.setValue(new_val, err))
 			{
-				try
-				{
-					prop_.setValue(new_val);
-					update_value(prop_.getValue());
-				}
-				catch (const ic4::IC4Exception iex)
-				{
-					qDebug() << "Error " << prop_.getName().c_str() << " in set_value_unchecked " << iex.what();
-				}
+				QMessageBox::critical(this, {}, err.message().c_str());
+			}
+
+			auto val = prop_.getValue(err);
+			if (err.isSuccess())
+			{
+				update_value(val);
+			}
+			else
+			{
+				qWarning() << "Error reading value back (" << prop_.getName().c_str() << "): " << err.message();
 			}
 		}
 
@@ -249,7 +252,6 @@ namespace ic4::ui
 
 			update_all();
 
-			if (check_) layout_->addWidget(check_);
 			if (slider_) layout_->addWidget(slider_);
 			if (spin_) layout_->addWidget(spin_);
 		}
