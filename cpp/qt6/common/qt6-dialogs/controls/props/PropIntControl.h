@@ -4,6 +4,7 @@
 #include "../Event.h"
 
 #include "PropIntSpinBox.h"
+#include "PropIntSlider.h"
 #include "PropControlBase.h"
 
 #include <ic4/ic4.h>
@@ -12,6 +13,8 @@
 #include <QCheckBox>
 #include <QSlider>
 #include <QMessageBox>
+#include <QAbstractSlider>
+#include <QSignalBlocker>
 
 #include <algorithm>
 
@@ -21,7 +24,7 @@ namespace ic4::ui
 	{
 	private:
 		QCheckBox* check_ = nullptr;
-		QSlider* slider_ = nullptr;
+		PropIntSlider* slider_ = nullptr;
 		PropIntSpinBox* spin_ = nullptr;
 		QLineEdit* edit_ = nullptr;
 
@@ -92,6 +95,30 @@ namespace ic4::ui
 			}
 		}
 
+		void value_step(int64_t step)
+		{
+			step *= inc_;
+
+			int64_t new_val = val_;
+
+			if (step < 0)
+			{
+				if (val_ > min_ - step)
+					new_val = val_ + step;
+				else
+					new_val = min_;
+			}
+			else if (step > 0)
+			{
+				if (val_ < max_ - step)
+					new_val = val_ + step;
+				else
+					new_val = max_;
+			}
+
+			set_value_unchecked(new_val);
+		}
+
 		void set_value(int new_pos)
 		{
 			int64_t new_val = std::clamp(static_cast<int64_t>(new_pos), min_, max_);
@@ -131,9 +158,6 @@ namespace ic4::ui
 
 				if (spin_)
 				{
-					bool is_locked = prop_.isLocked();
-					bool is_readonly = prop_.isReadOnly();
-
 					spin_->blockSignals(true);
 					spin_->setEnabled(false);
 					spin_->setSpecialValueText("<Error>");
@@ -153,25 +177,14 @@ namespace ic4::ui
 			bool is_locked = prop_.isLocked();
 			bool is_readonly = prop_.isReadOnly();
 
-			auto int_min_i64 = static_cast<int64_t>(std::numeric_limits<int>::min());
-			auto int_max_i64 = static_cast<int64_t>(std::numeric_limits<int>::max());
-
-			int qt_min = static_cast<int>(std::clamp(min_, int_min_i64, int_max_i64));
-			int qt_max = static_cast<int>(std::clamp(max_, int_min_i64, int_max_i64));
-
 			if (slider_)
 			{
-				slider_->blockSignals(true);
-				slider_->setMinimum(qt_min);
-				slider_->setMaximum(qt_max);
-				slider_->setSingleStep(inc_);
+				slider_->setRange(min_, max_);
 				slider_->setValue(val_);
 				slider_->setEnabled(!is_locked);
-				slider_->blockSignals(false);
 			}
 			if (spin_)
-			{			
-
+			{
 				spin_->blockSignals(true);
 				spin_->setSpecialValueText({});
 				spin_->setMinimum(min_);
@@ -179,39 +192,15 @@ namespace ic4::ui
 				spin_->setSingleStep(inc_);
 				spin_->setValue(val_);
 				spin_->setReadOnly(is_locked || is_readonly);
-
 				spin_->setEnabled( !(is_locked || is_readonly));
-				// use StyleSheet in qss!
-				/*
-				if (is_locked || is_readonly)
-				{
-					spin_->setStyleSheet(R"(background-color: palette(window);)");
-				}
-				else
-				{
-					spin_->setStyleSheet(R"(background-color: palette(base);)");
-				}*/
-
 				spin_->setButtonSymbols(is_readonly ? QAbstractSpinBox::ButtonSymbols::NoButtons : QAbstractSpinBox::ButtonSymbols::UpDownArrows);
 				spin_->blockSignals(false);
 			}
 			if (edit_)
 			{
 				edit_->blockSignals(true);
-
 				edit_->setText(value_to_string(val_, representation_));
-
 				edit_->setReadOnly(is_locked || is_readonly);
-
-				// use StyleSheet in qss!
-				/*if (is_locked || is_readonly)
-				{
-					edit_->setStyleSheet(R"(background-color: palette(window);)");
-				}
-				else
-				{
-					edit_->setStyleSheet(R"(background-color: palette(base);)");
-				}*/
 				edit_->blockSignals(false);
 			}
 		}
@@ -257,12 +246,12 @@ namespace ic4::ui
 				edit_ = is_readonly ? new QLineEdit(this) : nullptr;
 				break;
 			case ic4::PropIntRepresentation::Linear:
-				slider_ = is_readonly ? nullptr : new QSlider(Qt::Orientation::Horizontal, this);
+				slider_ = is_readonly ? nullptr : new PropIntSlider(this);
 				spin_ = is_readonly ? nullptr : new PropIntSpinBox(this);
 				edit_ = is_readonly ? new QLineEdit(this) : nullptr;
 				break;
 			case ic4::PropIntRepresentation::Logarithmic:
-				slider_ = is_readonly ? nullptr : new QSlider(Qt::Orientation::Horizontal, this);
+				slider_ = is_readonly ? nullptr : new PropIntSlider(this);
 				spin_ = is_readonly ? nullptr : new PropIntSpinBox(this);
 				edit_ = is_readonly ? new QLineEdit(this) : nullptr;
 				printf("not implemented: IC4_PROPINTREP_LOGARITHMIC\n");
@@ -279,7 +268,8 @@ namespace ic4::ui
 
 			if (slider_)
 			{
-				connect(slider_, &QSlider::valueChanged, this, &PropIntControl::set_value);
+				slider_->value_changed += [this](auto*, auto v) { set_value_unchecked(v); };
+				slider_->value_step += [this](auto*, auto s) { value_step(s); };
 			}
 			if (spin_)
 			{

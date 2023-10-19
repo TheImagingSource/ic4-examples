@@ -89,7 +89,7 @@ namespace ic4::ui
 			const auto* last = first + s.length();
 			auto res = std::from_chars(first, last, val, number_base_);
 
-			if (res.ptr != last)
+			if (res.ec != std::errc() || res.ptr != last)
 				return std::nullopt;
 
 			return val;
@@ -235,7 +235,7 @@ namespace ic4::ui
 
 		void keyPressEvent(QKeyEvent* e) override
 		{
-			if (e->key() == Qt::Key_Enter)
+			if (e->key() == Qt::Key_Enter || e->key() == Qt::Key_Return)
 			{
 				editingFinished();
 				e->setAccepted(true);

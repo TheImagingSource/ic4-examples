@@ -149,7 +149,15 @@ namespace ic4::ui
 				if (slider_)
 					slider_->setEnabled(false);
 				if (spin_)
+				{
 					spin_->setEnabled(false);
+
+					spin_->blockSignals(true);
+					spin_->setEnabled(false);
+					spin_->setSpecialValueText("<Error>");
+					spin_->setValue(min_);
+					spin_->blockSignals(false);
+				}
 				return;
 			}
 
@@ -169,6 +177,7 @@ namespace ic4::ui
 			if (spin_)
 			{
 				spin_->blockSignals(true);
+				spin_->setSpecialValueText({});
 				spin_->setMinimum(min_);
 				spin_->setMaximum(max_);
 				if (has_increment)
