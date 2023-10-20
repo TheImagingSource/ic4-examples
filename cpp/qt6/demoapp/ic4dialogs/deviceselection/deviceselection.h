@@ -9,46 +9,6 @@
 #include <QPushButton>
 #include <ic4/ic4.h> 
 
-class DeviceItem : public QStandardItem
-{
-public:
-	DeviceItem(ic4::DeviceInfo devinfo)
-		: QStandardItem((devinfo.modelName() + " - " + devinfo.serial()).c_str())
-		, _devinfo(devinfo)
-	{
-		setEditable(false);
-	}
-
-	ic4::DeviceInfo getDevInfo() { return _devinfo; }
-
-private:
-	ic4::DeviceInfo _devinfo;
-};
-
-
-class InterfaceItem : public QStandardItem
-{
-public:
-	InterfaceItem(ic4::Interface itf)
-		: QStandardItem(itf.interfaceDisplayName().c_str())
-		, _itf(itf)
-	{
-		setEditable(false);
-		enumdevices();
-	}
-
-private:
-	void enumdevices()
-	{
-		for (auto&& dev : _itf.enumDevices())
-		{
-			appendRow(new DeviceItem(dev));
-		}
-	}
-
-	ic4::Interface _itf;
-};
-
 
 class DeviceSelectionDlg : public QDialog
 {
@@ -61,6 +21,7 @@ private slots:
 	void OnOK();
 	void OnUpdateButton();
 	void onClickedDevice(const QModelIndex& index);
+	void onSelectDevice(const QModelIndex& current, const QModelIndex& previous);
 
 
 private:
@@ -71,4 +32,5 @@ private:
 	QTreeView* _cameraTree;
 	QStandardItemModel _model;
 	QPushButton* _OKButton;
+	QWidget* _propTree = nullptr;
 };
