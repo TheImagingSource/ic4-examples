@@ -33,22 +33,7 @@ namespace ic4::ui
 			connect(this, &QDoubleSpinBox::editingFinished, this, &FormattingDoubleSpinBox::onEditingFinished);
 		}
 	protected:
-		QString textFromValue(double value) const override
-		{
-			if (notation_ == ic4::PropDisplayNotation::Scientific)
-			{
-				return locale().toString(value, 'E', precision_);
-			}
-
-			if (value >= std::pow(10, precision_))
-			{	
-				return locale().toString(value, 'F', 0);
-			}
-			else
-			{
-				return locale().toString(value, 'G', precision_);
-			}
-		}
+		QString textFromValue(double value) const override;
 
 		void onEditingFinished()
 		{
@@ -132,11 +117,6 @@ namespace ic4::ui
 			set_value_unchecked(clamped_val);
 		}
 
-		void spin_changed(double new_value)
-		{
-			set_value_unchecked(new_value);
-		}
-
 		int slider_position(double val)
 		{
 			std::function<double(double)> f;
@@ -178,13 +158,10 @@ namespace ic4::ui
 					slider_->setEnabled(false);
 				if (spin_)
 				{
-					spin_->setEnabled(false);
-
-					spin_->blockSignals(true);
+					QSignalBlocker blk(spin_);
 					spin_->setEnabled(false);
 					spin_->setSpecialValueText("<Error>");
 					spin_->setValue(min_);
-					spin_->blockSignals(false);
 				}
 				return;
 			}
@@ -195,16 +172,15 @@ namespace ic4::ui
 
 			if (slider_)
 			{
-				slider_->blockSignals(true);
+				QSignalBlocker blk(slider_);
 				slider_->setMinimum(SLIDER_MIN);
 				slider_->setMaximum(SLIDER_MAX);
 				slider_->setValue(slider_position(val));
 				slider_->setEnabled(!is_locked);
-				slider_->blockSignals(false);
 			}
 			if (spin_)
 			{
-				spin_->blockSignals(true);
+				QSignalBlocker blk(spin_);
 				spin_->setKeyboardTracking(false);
 				spin_->setSpecialValueText({});
 				spin_->setMinimum(min_);
@@ -216,17 +192,7 @@ namespace ic4::ui
 				spin_->setValue(val);
 				spin_->setEnabled(true);
 				spin_->setReadOnly(is_locked || is_readonly);
-				//spin_->setEnabled(!(is_locked || is_readonly));
-				//if (is_locked || is_readonly)
-				//{
-				//	spin_->setStyleSheet(R"(background-color: palette(window);)");
-				//}
-				//else
-				//{
-				//	spin_->setStyleSheet(R"(background-color: palette(base);)");
-				//}
 				spin_->setButtonSymbols(is_readonly ? QAbstractSpinBox::ButtonSymbols::NoButtons : QAbstractSpinBox::ButtonSymbols::UpDownArrows);
-				spin_->blockSignals(false);
 			}
 		}
 
@@ -234,15 +200,13 @@ namespace ic4::ui
 		{
 			if (slider_)
 			{
-				slider_->blockSignals(true);
+				QSignalBlocker blk(slider_);
 				slider_->setValue(slider_position(new_value));
-				slider_->blockSignals(false);
 			}
 			if (spin_)
 			{
-				spin_->blockSignals(true);
+				QSignalBlocker blk(spin_);
 				spin_->setValue(new_value);
-				spin_->blockSignals(false);
 			}
 		}
 
@@ -281,8 +245,8 @@ namespace ic4::ui
 				spin_->setKeyboardTracking(false);
 
 				// TODO
-				connect( spin_, QOverload<double>::of(&FormattingDoubleSpinBox::valueChanged), [=](double val) {
-					PropFloatControl::spin_changed(val);
+				connect( spin_, QOverload<double>::of(&FormattingDoubleSpinBox::valueChanged), [this](double val) {
+					set_value_unchecked(val);
 				});
 
 				spin_->setMinimumWidth(120);
@@ -295,18 +259,26 @@ namespace ic4::ui
 			if (spin_) layout_->addWidget(spin_);
 		}
 
-
-		static QString value_to_string(double val, ic4::PropFloatRepresentation rep)
+		static QString textFromValue(double value, ic4::PropDisplayNotation notation, int precision, const QLocale& locale)
 		{
-			switch (rep)
+			if (notation == ic4::PropDisplayNotation::Scientific)
 			{
-				case ic4::PropFloatRepresentation::PureNumber:
-				case ic4::PropFloatRepresentation::Linear:
-				case ic4::PropFloatRepresentation::Logarithmic:
-				default:
-					return QString::number(val);
+				return locale.toString(value, 'E', precision);
+			}
+
+			if (value >= std::pow(10, precision))
+			{
+				return locale.toString(value, 'F', 0);
+			}
+			else
+			{
+				return locale.toString(value, 'G', precision);
 			}
 		}
-
 	};
+
+	inline QString FormattingDoubleSpinBox::textFromValue(double value) const
+	{
+		return PropFloatControl::textFromValue(value, notation_, precision_, locale());
+	}
 }

@@ -201,7 +201,9 @@ public:
 		auto text = QString("Type: Float\n\n");
 		{
 			auto intProp = prop.asFloat();
-			auto rep = intProp.getRepresentation();
+			auto rep = intProp.getRepresentation(ic4::Error::Ignore());
+			auto notation = intProp.getDisplayNotation(ic4::Error::Ignore());
+			auto precision = intProp.getDisplayPrecision(ic4::Error::Ignore());
 			auto unit = intProp.getUnit();
 			if (unit != "")
 			{
@@ -211,7 +213,7 @@ public:
 			try
 			{
 				auto val = intProp.getValue();
-				text += QString("Value: %1\n\n").arg(ic4::ui::PropFloatControl::value_to_string(val, rep));
+				text += QString("Value: %1\n\n").arg(ic4::ui::PropFloatControl::textFromValue(val, notation, precision, locale()));
 			}
 			catch (const ic4::IC4Exception& iex)
 			{

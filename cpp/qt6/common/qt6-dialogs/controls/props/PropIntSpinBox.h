@@ -112,7 +112,6 @@ namespace ic4::ui
 				r.is_empty = true;
 				return r;
 			}
-			//	return ParseResult{ .is_empty = true };
 
 			auto res = parse_number(without_suffix);
 			if (!res.has_value())
@@ -120,14 +119,10 @@ namespace ic4::ui
 				r.is_valid = false;
 				return r;
 			}
-			//	return ParseResult{ .is_valid = false };
-
 
 			r.is_valid = true;
 			r.value = res.value();
 			return r;
-
-			//return ParseResult{ .is_valid = true, .value = res.value() };
 		}
 
 		void parse_new_text()
