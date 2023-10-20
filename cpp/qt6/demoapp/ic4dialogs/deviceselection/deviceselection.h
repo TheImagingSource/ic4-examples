@@ -1,5 +1,7 @@
 #pragma once
 
+#include "PropertyTreeWidget.h"
+
 #include <QDialog>
 #include <QTreeView>
 #include <QTreeWidget>
@@ -32,5 +34,5 @@ private:
 	QTreeView* _cameraTree;
 	QStandardItemModel _model;
 	QPushButton* _OKButton;
-	QWidget* _propTree = nullptr;
+	ic4::ui::PropertyTreeWidget* _propTree = nullptr;
 };

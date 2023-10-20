@@ -377,6 +377,7 @@ namespace ic4::ui
 		void filter_func(std::function<bool(const ic4::Property&)> accept_prop)
 		{
 			filter_func_ = accept_prop;
+			invalidate();
 		}
 
 	protected:
@@ -501,11 +502,8 @@ namespace ic4::ui
 
 	};
 
-	template<class T = QWidget>
-	class PropertyTreeWidget : public T
+	class PropertyTreeWidget : public QWidget
 	{
-	static_assert(std::is_base_of<QWidget, T>::value, "T must be derived from QWidget");
-
 	public:
 		struct Settings
 		{
@@ -649,7 +647,7 @@ namespace ic4::ui
 		void updateModel(ic4::PropCategory cat)
 		{
 			updateModel(new PropertyTreeModel(cat));
-		}
+		}		
 
 		void setPropertyFilter(std::function<bool(const ic4::Property&)> accept_prop)
 		{
@@ -664,7 +662,7 @@ namespace ic4::ui
 
 	private:
 		PropertyTreeWidget(PropertyTreeModel* model, ic4::Grabber* grabber, Settings settings = {}, QWidget* parent = nullptr)
-			: T(parent)
+			: QWidget(parent)
 			, delegate_(proxy_, grabber)
 			, branchPaintDelegate_(proxy_, this)
 			, source_(model)
@@ -687,7 +685,7 @@ namespace ic4::ui
 					"font-size: 13px;"
 					"}");
 
-				T::connect(visibility_combo_, QOverload<int>::of(&QComboBox::currentIndexChanged), [=](int)
+				connect(visibility_combo_, QOverload<int>::of(&QComboBox::currentIndexChanged), [=](int)
 					{
 						update_visibility();
 					});
@@ -699,7 +697,7 @@ namespace ic4::ui
 					"font-size: 13px;"
 					"}");
 				filter_text_->setText(settings.initialFilter);
-				T::connect(filter_text_, &QLineEdit::textChanged, this, [this](const QString&) { update_visibility(); });
+				connect(filter_text_, &QLineEdit::textChanged, this, [this](const QString&) { update_visibility(); });
 				top->addWidget(filter_text_);
 	
 				layout->addLayout(top);
@@ -738,11 +736,11 @@ namespace ic4::ui
 			view_->setItemDelegateForColumn(0, &branchPaintDelegate_);
 			view_->setItemDelegateForColumn(1, &delegate_);
 
-			T::connect(view_, &QTreeView::clicked, this, &PropertyTreeWidget::propSelected);
-			T::connect(view_->selectionModel(), &QItemSelectionModel::selectionChanged, this, &PropertyTreeWidget::propSelectionChanged);
+			connect(view_, &QTreeView::clicked, this, &PropertyTreeWidget::propSelected);
+			connect(view_->selectionModel(), &QItemSelectionModel::selectionChanged, this, &PropertyTreeWidget::propSelectionChanged);
 
-			T::connect(&proxy_, &QSortFilterProxyModel::dataChanged, this, &PropertyTreeWidget::proxyDataChanged);
-			T::connect(&proxy_, &QSortFilterProxyModel::layoutChanged, this, &PropertyTreeWidget::proxyLayoutChanged);
+			connect(&proxy_, &QSortFilterProxyModel::dataChanged, this, &PropertyTreeWidget::proxyDataChanged);
+			connect(&proxy_, &QSortFilterProxyModel::layoutChanged, this, &PropertyTreeWidget::proxyLayoutChanged);
 
 			if (settings_.showInfoBox)
 			{
@@ -765,7 +763,7 @@ namespace ic4::ui
 
 			frame->setLayout(layout);
 
-			T::setLayout(layout);
+			setLayout(layout);
 			update_view();
 		}
 

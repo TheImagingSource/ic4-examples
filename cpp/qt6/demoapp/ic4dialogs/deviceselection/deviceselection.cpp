@@ -2,7 +2,6 @@
 
 #include "deviceselection.h"
 #include "PropertyControls.h"
-#include "PropertyTreeWidget.h"
 
 #include <iostream>
 #include <QMessagebox>
@@ -80,7 +79,7 @@ void DeviceSelectionDlg::createUI()
 
 	auto topLayout = new QHBoxLayout();
 
-	auto MainLayout = new QVBoxLayout();
+	auto leftLayout = new QVBoxLayout();
 
 	_cameraTree = new QTreeView();
 	_cameraTree->setHeaderHidden(true);
@@ -90,7 +89,7 @@ void DeviceSelectionDlg::createUI()
 	connect(_cameraTree, &QTreeView::doubleClicked, this, &DeviceSelectionDlg::OnOK);
 	connect(_cameraTree->selectionModel(), &QItemSelectionModel::currentChanged, this, &DeviceSelectionDlg::onSelectDevice);
 
-	MainLayout->addWidget(_cameraTree);
+	leftLayout->addWidget(_cameraTree);
 
 	QHBoxLayout* buttons = new QHBoxLayout();
 
@@ -107,8 +106,8 @@ void DeviceSelectionDlg::createUI()
 	connect(_OKButton, &QPushButton::pressed, this, &DeviceSelectionDlg::OnOK);
 	buttons->addWidget(_OKButton);
 
-	MainLayout->addLayout(buttons);
-	topLayout->addLayout(MainLayout, 1);
+	leftLayout->addLayout(buttons);
+	topLayout->addLayout(leftLayout, 1);
 
 	auto rightLayout = new QVBoxLayout();
 	topLayout->addLayout(rightLayout, 2);
@@ -147,32 +146,83 @@ void DeviceSelectionDlg::onClickedDevice(const QModelIndex& index)
 
 	ic4::PropertyMap map;
 
-	ic4::ui::PropertyTreeWidget<QWidget>::Settings settings = {};
-	settings.showRootItem = false;
-	settings.showFilter = false;
-	settings.showInfoBox = false;
-	settings.initialVisibility = ic4::PropVisibility::Guru;
-	
 	if (deviceItem)
 	{
 		map = deviceItem->getDevInfo().getInterface().interfacePropertyMap();
 		map.setValue("DeviceSelector", deviceItem->index());
-
-		settings.initialFilter = "InterfaceDisplayName|MaximumTransmissionUnit|DeviceVendorName|DeviceSerialNumber|DeviceManufacturer|DeviceVersion|DeviceUserID|GevDeviceMACAddress|GevDeviceIPAddress";
+	}
+	else if (interfaceItem)
+	{
+		map = interfaceItem->propertyMap();
 	}
 	else
 	{
-		map = interfaceItem->propertyMap();
-
-		settings.initialFilter = "InterfaceDisplayName|MaximumTransmissionUnit";
+		return;
 	}
 
 	auto root = map.findCategory("Root");
-	auto rightLayout = dynamic_cast<QVBoxLayout*>(layout()->itemAt(1));
 
-	delete _propTree;
-	_propTree = new ic4::ui::PropertyTreeWidget(root, nullptr, settings, this);
-	rightLayout->addWidget(_propTree);
+	if (!_propTree)
+	{
+
+		ic4::ui::PropertyTreeWidget::Settings settings = {};
+		settings.showRootItem = false;
+		settings.showFilter = false;
+		settings.showInfoBox = false;
+		settings.initialVisibility = ic4::PropVisibility::Guru;
+
+		_propTree = new ic4::ui::PropertyTreeWidget(root, nullptr, settings, this);
+
+		auto rightLayout = dynamic_cast<QVBoxLayout*>(layout()->itemAt(1));
+		rightLayout->addWidget(_propTree);
+	}
+	else
+	{
+		_propTree->updateModel(root);
+	}
+
+	if (deviceItem)
+	{
+		_propTree->setPropertyFilter(
+			[](const ic4::Property& prop) -> bool
+			{
+				auto name = prop.getName(ic4::Error::Ignore());
+				if (name == "InterfaceDisplayName")
+					return true;
+				if (name == "MaximumTransmissionUnit")
+					return true;
+				if (name == "DeviceVendorName")
+					return true;
+				if (name == "DeviceSerialNumber")
+					return true;
+				if (name == "DeviceManufacturer")
+					return true;
+				if (name == "DeviceVersion")
+					return true;
+				if (name == "DeviceUserID")
+					return true;
+				if (name == "GevDeviceMACAddress")
+					return true;
+				if (name == "GevDeviceIPAddress")
+					return true;
+				return false;
+			}
+		);
+	}
+	else
+	{
+		_propTree->setPropertyFilter(
+			[](const ic4::Property& prop) -> bool
+			{
+				auto name = prop.getName(ic4::Error::Ignore());
+				if (name == "InterfaceDisplayName")
+					return true;
+				if (name == "MaximumTransmissionUnit")
+					return true;
+				return false;
+			}
+		);
+	}
 }
 
 void DeviceSelectionDlg::OnUpdateButton()

@@ -23,7 +23,7 @@ void PropertyMapDlg::createUI()
 
 	auto mainLayout = new QVBoxLayout();
 
-	ic4::ui::PropertyTreeWidget<QWidget>::Settings displaysettigns = { false, true, true };
+	ic4::ui::PropertyTreeWidget::Settings displaysettigns = { false, true, true };
 	auto tree = new ic4::ui::PropertyTreeWidget(_map.findCategory("Root"), _grabber, displaysettigns, this);
 	mainLayout->addWidget(tree);
 
