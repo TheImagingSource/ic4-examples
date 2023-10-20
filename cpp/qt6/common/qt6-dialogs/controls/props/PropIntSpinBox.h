@@ -239,6 +239,7 @@ namespace ic4::ui
 			{
 				editingFinished();
 				e->setAccepted(true);
+				selectAll();
 				return;
 			}
 			if (e->key() == Qt::Key_Escape)

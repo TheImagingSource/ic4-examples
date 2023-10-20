@@ -11,6 +11,8 @@
 #include <QSlider>
 #include <QDoubleSpinBox>
 #include <QMessageBox>
+#include <QKeyEvent>
+#include <QSignalBlocker>
 
 #include <algorithm>
 
@@ -44,6 +46,26 @@ namespace ic4::ui
 			{
 				return QString::number(value, 'G', precision_);
 			}
+		}
+
+		void keyPressEvent(QKeyEvent* e) override
+		{
+			if (e->key() == Qt::Key_Enter || e->key() == Qt::Key_Return)
+			{
+				editingFinished();
+				e->setAccepted(true);
+				selectAll();
+				return;
+			}
+			if (e->key() == Qt::Key_Escape)
+			{
+				QSignalBlocker blk(this);
+				setValue(value());
+				e->setAccepted(true);
+				return;
+			}
+
+			QDoubleSpinBox::keyPressEvent(e);
 		}
 	};
 
@@ -177,6 +199,7 @@ namespace ic4::ui
 			if (spin_)
 			{
 				spin_->blockSignals(true);
+				spin_->setKeyboardTracking(false);
 				spin_->setSpecialValueText({});
 				spin_->setMinimum(min_);
 				spin_->setMaximum(max_);
