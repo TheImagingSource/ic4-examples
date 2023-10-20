@@ -128,6 +128,8 @@ static bool isDarkMode()
 /// </summary>
 void MainWindow::createUI()
 {
+	resize(1024, 768);
+
 	////////////////////////////////////////////////////////////////////////////
 	// Define program actions
 
@@ -326,9 +328,7 @@ void MainWindow::updateCameraLabel()
 /// Show the device selection dialog for selecting a camera.
 /// </summary>
 void MainWindow::onSelectDevice()
-{
-	_grabber.deviceClose(ic4::Error::Ignore());
-
+{	
 	DeviceSelectionDlg cDlg(this, &_grabber);
 	if (cDlg.exec() == 1)
 	{
