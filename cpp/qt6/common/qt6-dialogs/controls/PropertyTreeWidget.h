@@ -35,6 +35,7 @@ namespace ic4::ui
 		ic4::Property prop;
 		int row;
 
+		QString prop_name;
 		QString display_name;
 		std::vector<std::unique_ptr<PropertyTreeNode>> children;
 
@@ -42,10 +43,12 @@ namespace ic4::ui
 		ic4::Property::NotificationToken notification_token = {};
 		bool prev_available;
 
-		PropertyTreeNode(PropertyTreeNode* parent_, const ic4::Property& prop_, int row_) :
-			parent(parent_),
-			prop(prop_),
-			row(row_)
+		PropertyTreeNode(PropertyTreeNode* parent_, const ic4::Property& prop_, int row_, QString pn, QString dn)
+			: parent(parent_)
+			, prop(prop_)
+			, row(row_)
+			, prop_name(std::move(pn))
+			, display_name(std::move(dn))
 		{
 		}
 
@@ -60,13 +63,14 @@ namespace ic4::ui
 			if (!children.empty())
 				return;
 
-			display_name = QString::fromStdString(prop.getDisplayName());
-
 			if (prop.getType() == ic4::PropType::Category)
 			{
 				int index = 0;
 				for (auto&& feature : prop.asCategory().getFeatures())
 				{
+					auto child_name = QString::fromStdString(feature.getName());
+					auto child_display_name = QString::fromStdString(feature.getDisplayName());
+
 					switch (feature.getType())
 					{
 						// only show valid properties
@@ -76,13 +80,13 @@ namespace ic4::ui
 					case ic4::PropType::Enumeration:
 					case ic4::PropType::Boolean:
 					case ic4::PropType::Float:
-						children.push_back(std::make_unique<PropertyTreeNode>(this, feature, index++));
+						children.push_back(std::make_unique<PropertyTreeNode>(this, feature, index++, child_name, child_display_name));
 						break;
 					case ic4::PropType::Category:
 						// only add category note, if not empty
 						if (category_is_empty(feature))
 						{
-							children.push_back(std::make_unique<PropertyTreeNode>(this, feature, index++));
+							children.push_back(std::make_unique<PropertyTreeNode>(this, feature, index++, child_name, child_display_name));
 						}
 						break;
 					default:
@@ -162,11 +166,11 @@ namespace ic4::ui
 	public:
 		PropertyTreeModel(ic4::PropCategory root)
 			: QAbstractItemModel(Q_NULLPTR)
-			, tree_root_(nullptr, root, 0)
+			, tree_root_(nullptr, root, 0, "", "")
 		{
 			// Add extra layer to make sure root element has a parent
 			// QSortFilterProxyModel::filterAcceptsRow works with parent index
-			tree_root_.children.push_back(std::make_unique<PropertyTreeNode>(&tree_root_, root, 0));
+			tree_root_.children.push_back(std::make_unique<PropertyTreeNode>(&tree_root_, root, 0, QString::fromStdString(root.getName()), QString::fromStdString(root.getDisplayName())));
 			prop_root_ = tree_root_.children.front().get();
 		}
 
@@ -417,7 +421,7 @@ namespace ic4::ui
 			if (child.prop.getVisibility() > visibility_)
 				return false;
 
-			if (!filter_regex_.match(child.display_name).hasMatch())
+			if (!filter_regex_.match(child.display_name).hasMatch() && !filter_regex_.match(child.prop_name).hasMatch())
 				return false;
 
 			if (!filter_func_)
@@ -508,6 +512,9 @@ namespace ic4::ui
 			bool showRootItem = false;
 			bool showInfoBox = true;
 			bool showFilter = true;
+
+			QString initialFilter;
+			ic4::PropVisibility initialVisibility;
 		};
 
 	private:
@@ -674,7 +681,7 @@ namespace ic4::ui
 				visibility_combo_->addItem("Beginner", (int)ic4::PropVisibility::Beginner);
 				visibility_combo_->addItem("Expert", (int)ic4::PropVisibility::Expert);
 				visibility_combo_->addItem("Guru", (int)ic4::PropVisibility::Guru);
-				visibility_combo_->setCurrentIndex(0);
+				visibility_combo_->setCurrentIndex((int)settings.initialVisibility);
 				visibility_combo_->setMinimumWidth(200);
 				visibility_combo_->setStyleSheet("QComboBox {"
 					"font-size: 13px;"
@@ -691,6 +698,7 @@ namespace ic4::ui
 				filter_text_->setStyleSheet("QLineEdit {"
 					"font-size: 13px;"
 					"}");
+				filter_text_->setText(settings.initialFilter);
 				T::connect(filter_text_, &QLineEdit::textChanged, this, [this](const QString&) { update_visibility(); });
 				top->addWidget(filter_text_);
 	
@@ -719,6 +727,7 @@ namespace ic4::ui
 				" }"
 			);
 			proxy_.setSourceModel(source_);
+			proxy_.filter(settings.initialFilter, settings.initialVisibility);
 
 			view_->setModel(&proxy_);
 			view_->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
