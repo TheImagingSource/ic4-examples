@@ -57,7 +57,7 @@ namespace ic4::ui
 
 			edit_ = new StringLineEdit(this);
 			edit_->setReadOnly(prop.isReadOnly());
-			connect(edit_, &QLineEdit::editingFinished, this, &PropStringControl::set_value);			
+			connect(edit_, &QLineEdit::editingFinished, this, &PropStringControl::set_value);
 			edit_->escapePressed += [this](auto) { update_value(); };
 			edit_->setMaxLength(max_length);
 
@@ -69,6 +69,9 @@ namespace ic4::ui
 	private:
 		void set_value()
 		{
+			if (edit_->isReadOnly())
+				return;
+
 			auto new_val = edit_->text().toStdString();
 
 			ic4::Error err;
