@@ -8,6 +8,9 @@
 #include <QApplication>
 #include <QEvent>
 #include <QDebug>
+
+#include <utility>
+
 namespace ic4::ui
 {
 	struct IPropControl
@@ -21,6 +24,7 @@ namespace ic4::ui
 	protected:
 		const QEvent::Type UPDATE_ALL = static_cast<QEvent::Type>(QEvent::User + 1);
 		TProperty prop_;
+		ic4::Grabber* grabber_;
 		ic4::Property::NotificationToken notify_;
 
 		QHBoxLayout* layout_;
@@ -29,9 +33,10 @@ namespace ic4::ui
 
 	public:
 
-		PropControlBase(TProperty prop, QWidget* parent)
+		PropControlBase(TProperty prop, QWidget* parent, ic4::Grabber* grabber)
 			: QWidget(parent)
 			, prop_(prop)
+			, grabber_(grabber)
 		{
 
 			layout_ = new QHBoxLayout(this);
@@ -75,6 +80,97 @@ namespace ic4::ui
 			}
 
 			return false;
+		}
+
+	protected:
+		bool shoudDisplayAsLocked() const
+		{
+			bool prop_is_locked = prop_.isLocked(ic4::Error::Ignore());
+
+			if (grabber_ && prop_is_locked)
+			{
+				if (grabber_->isStreaming() && prop_.isLikelyLockedByStream(ic4::Error::Ignore()))
+				{
+					return false;
+				}
+			}
+
+			return prop_is_locked;
+		}
+
+		template<typename T, typename TSetFunc>
+		bool propSetValue(T&& val, ic4::Error& err, TSetFunc set_func)
+		{
+			auto restart_info = stopStreamIfRequired(err);
+			if (err.isError())
+				return false;
+
+			if (!(prop_.*set_func)(std::forward<T>(val), err))
+			{
+				restartStream(restart_info, ic4::Error::Ignore());
+				return false;
+			}
+
+			return restartStream(restart_info, err);
+		}
+
+		template<typename TExecuteFunc>
+		bool propExecute(TExecuteFunc execute_func, ic4::Error& err)
+		{
+			auto restart_info = stopStreamIfRequired(err);
+			if (err.isError())
+				return false;
+
+			if (!(prop_.*execute_func)(err))
+			{
+				restartStream(restart_info, ic4::Error::Ignore());
+				return false;
+			}
+
+			return restartStream(restart_info, err);
+		}
+
+	private:
+		struct StreamRestartInfo
+		{
+			bool do_restart = false;
+			ic4::StreamSetupOption stream_start_option;
+			std::shared_ptr<ic4::Sink> sink;
+			std::shared_ptr<ic4::Display> display;
+		};
+
+		StreamRestartInfo stopStreamIfRequired(ic4::Error& err)
+		{
+			if (!grabber_)
+				return {};
+
+			if (!prop_.isLikelyLockedByStream(ic4::Error::Ignore()))
+				return {};
+
+			if (!grabber_->isStreaming())
+				return {};
+
+			ic4::StreamSetupOption start_option = grabber_->isAcquisitionActive()
+				? ic4::StreamSetupOption::AcquisitionStart : ic4::StreamSetupOption::DeferAcquisitionStart;
+			
+			auto display = grabber_->display(ic4::Error::Ignore());
+			auto sink = grabber_->sink(ic4::Error::Ignore());
+
+			if (!grabber_->streamStop(err))
+				return {};
+
+			return { true, start_option, sink, display };
+		}
+
+		bool restartStream(const StreamRestartInfo& restart_info, ic4::Error& err)
+		{
+			if (!grabber_)
+				return true;
+
+			if (!restart_info.do_restart)
+				return true;
+
+			return grabber_->streamSetup(restart_info.sink, restart_info.display, restart_info.stream_start_option, err);
 		}
 
 	protected:

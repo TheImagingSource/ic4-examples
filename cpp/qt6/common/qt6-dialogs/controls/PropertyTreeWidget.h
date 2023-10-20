@@ -276,10 +276,12 @@ namespace ic4::ui
 	class PropertyTreeItemDelegate : public QStyledItemDelegate
 	{
 		QSortFilterProxyModel& proxy_;
+		ic4::Grabber* grabber_;
 
 	public:
-		PropertyTreeItemDelegate(QSortFilterProxyModel& proxy)
+		PropertyTreeItemDelegate(QSortFilterProxyModel& proxy, ic4::Grabber* grabber)
 			: proxy_(proxy)
+			, grabber_(grabber)
 		{
 		}
 
@@ -294,7 +296,7 @@ namespace ic4::ui
 				return nullptr;
 			}
 				
-			auto* widget = create_prop_control(tree->prop, parent);
+			auto* widget = create_prop_control(tree->prop, parent, grabber_);
 			if (widget)
 			{
 				widget->setContentsMargins(0, 0, 8, 0);
@@ -648,14 +650,15 @@ namespace ic4::ui
 		}
 
 	public:
-		PropertyTreeWidget(ic4::PropCategory cat, Settings settings = {}, QWidget* parent = nullptr)
-			: PropertyTreeWidget(new PropertyTreeModel(cat), settings, parent)
+		PropertyTreeWidget(ic4::PropCategory cat, ic4::Grabber* grabber, Settings settings = {}, QWidget* parent = nullptr)
+			: PropertyTreeWidget(new PropertyTreeModel(cat), grabber, settings, parent)
 		{
 		}
 
-		PropertyTreeWidget(PropertyTreeModel* model, Settings settings = {}, QWidget* parent = nullptr)
+	private:
+		PropertyTreeWidget(PropertyTreeModel* model, ic4::Grabber* grabber, Settings settings = {}, QWidget* parent = nullptr)
 			: T(parent)
-			, delegate_(proxy_)
+			, delegate_(proxy_, grabber)
 			, branchPaintDelegate_(proxy_, this)
 			, source_(model)
 			, settings_(settings)

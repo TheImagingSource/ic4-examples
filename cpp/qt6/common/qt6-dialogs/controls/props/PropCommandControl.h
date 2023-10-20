@@ -11,8 +11,8 @@ namespace ic4::ui
 		QPushButton* button_;
 
 	public:
-		PropCommandControl(ic4::PropCommand prop, QWidget* parent)
-			: PropControlBase(prop, parent)
+		PropCommandControl(ic4::PropCommand prop, QWidget* parent, ic4::Grabber* grabber)
+			: PropControlBase(prop, parent, grabber)
 		{
 			std::string text = prop_.getDisplayName();
 
@@ -29,7 +29,7 @@ namespace ic4::ui
 		void execute()
 		{
 			ic4::Error err;
-			if (!prop_.execute(err))
+			if (!propExecute(&PropCommand::execute, err))
 			{
 				QMessageBox::critical(this, {}, err.message().c_str());
 			}

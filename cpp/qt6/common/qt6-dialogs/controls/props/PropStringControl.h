@@ -4,6 +4,7 @@
 
 #include <QKeyEvent>
 #include <QLineEdit>
+#include <QMessageBox>
 
 namespace ic4::ui
 {
@@ -40,8 +41,8 @@ namespace ic4::ui
 		StringLineEdit* edit_;
 
 	public:
-		PropStringControl(ic4::PropString prop, QWidget* parent)
-			: PropControlBase(prop, parent)
+		PropStringControl(ic4::PropString prop, QWidget* parent, ic4::Grabber* grabber)
+			: PropControlBase(prop, parent, grabber)
 		{
 			uint64_t max_length = (uint64_t)-1;
 			try
@@ -68,12 +69,14 @@ namespace ic4::ui
 	private:
 		void set_value()
 		{
-			if (!prop_.isReadOnly() && !prop_.isLocked())
-			{
-				auto s = edit_->text().toStdString();
+			auto new_val = edit_->text().toStdString();
 
-				prop_.setValue(s);
+			ic4::Error err;
+			if (!propSetValue(new_val, err, &PropString::setValue))
+			{
+				QMessageBox::critical(this, {}, err.message().c_str());
 			}
+
 			update_value();
 		}
 

@@ -7,15 +7,16 @@
 #include <QLabel>
 #include <QDialogButtonBox>
 
-PropertyMapDlg::PropertyMapDlg(ic4::PropertyMap map, QWidget* parent)
+PropertyMapDlg::PropertyMapDlg(ic4::PropertyMap map, QWidget* parent, ic4::Grabber* grabber)
 	: QDialog(parent)
 	, _map(map)
+	, _grabber(grabber)
 {
 	_map.serialize(oldstate);
-	createUI(map);
+	createUI();
 }
 
-void PropertyMapDlg::createUI(ic4::PropertyMap map)
+void PropertyMapDlg::createUI()
 {
 	this->setWindowTitle("Properties");
 	setMinimumSize(500, 700);
@@ -23,7 +24,7 @@ void PropertyMapDlg::createUI(ic4::PropertyMap map)
 	auto mainLayout = new QVBoxLayout();
 
 	ic4::ui::PropertyTreeWidget<QWidget>::Settings displaysettigns = { false, true, true };
-	auto tree = new ic4::ui::PropertyTreeWidget(_map.findCategory("Root"), displaysettigns, this);
+	auto tree = new ic4::ui::PropertyTreeWidget(_map.findCategory("Root"), _grabber, displaysettigns, this);
 	mainLayout->addWidget(tree);
 
 	auto buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);

@@ -7,5 +7,5 @@
 
 namespace ic4::ui
 {
-	QWidget* create_prop_control(const ic4::Property& prop, QWidget* parent);
+	QWidget* create_prop_control(const ic4::Property& prop, QWidget* parent, ic4::Grabber* grabber);
 }

@@ -9,7 +9,7 @@ namespace ic4::ui
 	{
 	public:
 		PropCategoryControl(ic4::PropCategory cat, QWidget* parent)
-			: PropControlBase(cat, parent)
+			: PropControlBase(cat, parent, nullptr)
 		{
 			this->setStyleSheet("QWidget { "
 				"background-color: palette(mid);"

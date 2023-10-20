@@ -11,8 +11,8 @@ namespace ic4::ui
 		QCheckBox* check_;
 
 	public:
-		PropBooleanControl(ic4::PropBoolean prop, QWidget* parent)
-			: PropControlBase(prop, parent)
+		PropBooleanControl(ic4::PropBoolean prop, QWidget* parent, ic4::Grabber* grabber)
+			: PropControlBase(prop, parent, grabber)
 		{
 			check_ = new QCheckBox(this);
 			check_->setText("");
@@ -32,7 +32,7 @@ namespace ic4::ui
 		void check(int new_state)
 		{
 			ic4::Error err;
-			if (!prop_.setValue(new_state == Qt::Checked, err))
+			if (!propSetValue(new_state == Qt::Checked, err, &PropBoolean::setValue))
 			{
 				QMessageBox::critical(this, {}, err.message().c_str());
 			}

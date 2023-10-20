@@ -351,7 +351,7 @@ void MainWindow::onSelectDevice()
 /// </summary>
 void MainWindow::onDeviceProperties()
 {
-	PropertyMapDlg cDlg(_devicePropertyMap, this);
+	PropertyMapDlg cDlg(_devicePropertyMap, this, &_grabber);
 	if (cDlg.exec() == 1)
 	{
 		_grabber.deviceSaveState(_devicefile);
@@ -526,7 +526,7 @@ void MainWindow::onStopCaptureVideo()
 
 void MainWindow::onCodecProperties()
 {
-	PropertyMapDlg cDlg(_videowriter.getPropertyMap(), this);
+	PropertyMapDlg cDlg(_videowriter.getPropertyMap(), this, nullptr);
 	if (cDlg.exec() == 1)
 	{
 		_videowriter.getPropertyMap().serialize(_codecconfigfile);

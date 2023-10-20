@@ -24,7 +24,7 @@ namespace ic4::ui
 			if (combo_)
 			{
 				combo_->blockSignals(true);
-				combo_->setEnabled(!(prop_.isReadOnly() || prop_.isLocked()));
+				combo_->setEnabled(!(prop_.isReadOnly() || shoudDisplayAsLocked()));
 				combo_->clear();
 
 				auto selected_entry = prop_.getSelectedEntry();
@@ -86,15 +86,15 @@ namespace ic4::ui
 			auto value = combo_->currentData().toLongLong();
 
 			ic4::Error err;
-			if (!prop_.setIntValue(value, err))
+			if (!propSetValue(value, err, &PropEnumeration::setIntValue))
 			{
 				QMessageBox::warning(NULL, "Set property", err.message().c_str());
 			}
 		}
 
 	public:
-		PropEnumerationControl(ic4::PropEnumeration prop, QWidget* parent)
-			: PropControlBase(prop, parent)
+		PropEnumerationControl(ic4::PropEnumeration prop, QWidget* parent, ic4::Grabber* grabber)
+			: PropControlBase(prop, parent, grabber)
 		{
 			bool is_readonly = prop.isReadOnly();
 

@@ -65,7 +65,7 @@ namespace ic4::ui
 		void set_value_unchecked(double new_val)
 		{
 			ic4::Error err;
-			if (!prop_.setValue(new_val, err))
+			if (!propSetValue(new_val, err, &PropFloat::setValue))
 			{
 				QMessageBox::critical(this, {}, err.message().c_str());
 			}
@@ -217,8 +217,8 @@ namespace ic4::ui
 		}
 
 	public:
-		PropFloatControl(ic4::PropFloat prop, QWidget* parent)
-			: PropControlBase(prop, parent)
+		PropFloatControl(ic4::PropFloat prop, QWidget* parent, ic4::Grabber* grabber)
+			: PropControlBase(prop, parent, grabber)
 		{
 			bool is_readonly = prop.isReadOnly();
 

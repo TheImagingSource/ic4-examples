@@ -79,7 +79,7 @@ namespace ic4::ui
 		void set_value_unchecked(int64_t new_val)
 		{
 			ic4::Error err;
-			if (!prop_.setValue(new_val, err))
+			if (!propSetValue(new_val, err, &ic4::PropInteger::setValue))
 			{
 				QMessageBox::critical(this, {}, err.message().c_str());
 			}
@@ -174,7 +174,7 @@ namespace ic4::ui
 			}
 
 
-			bool is_locked = prop_.isLocked();
+			bool is_locked = shoudDisplayAsLocked();
 			bool is_readonly = prop_.isReadOnly();
 
 			if (slider_)
@@ -222,8 +222,8 @@ namespace ic4::ui
 		}
 
 	public:
-		PropIntControl(ic4::PropInteger prop, QWidget* parent)
-			: PropControlBase(prop, parent)
+		PropIntControl(ic4::PropInteger prop, QWidget* parent, ic4::Grabber* grabber)
+			: PropControlBase(prop, parent, grabber)
 		{
 			bool is_readonly = prop.isReadOnly();
 
@@ -274,8 +274,6 @@ namespace ic4::ui
 			if (spin_)
 			{
 				spin_->setKeyboardTracking(false);
-				//connect(spin_, &QSpinBox::valueChanged, this, &PropIntControl::set_value);
-
 				spin_->value_changed += [this](auto* /* sender */, auto v) { set_value_unchecked(v); };
 				spin_->setMinimumWidth(120);
 				spin_->setSuffix(QString("%1").arg(prop_.getUnit().c_str()));
