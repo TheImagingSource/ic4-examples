@@ -37,16 +37,16 @@ namespace ic4::ui
 		{
 			if (notation_ == ic4::PropDisplayNotation::Scientific)
 			{
-				return QString::number(value, 'E', precision_);
+				return locale().toString(value, 'E', precision_);
 			}
 
 			if (value >= std::pow(10, precision_))
-			{
-				return QString::number(value, 'F', 0);
+			{	
+				return locale().toString(value, 'F', 0);
 			}
 			else
 			{
-				return QString::number(value, 'G', precision_);
+				return locale().toString(value, 'G', precision_);
 			}
 		}
 
