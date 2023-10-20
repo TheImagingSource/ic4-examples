@@ -167,6 +167,7 @@ namespace ic4::ui
 				if (edit_)
 				{
 					edit_->blockSignals(true);
+					edit_->setEnabled(false);
 					edit_->setText("<Error>");
 					edit_->blockSignals(false);
 				}
@@ -191,8 +192,8 @@ namespace ic4::ui
 				spin_->setMaximum(max_);
 				spin_->setSingleStep(inc_);
 				spin_->setValue(val_);
+				spin_->setEnabled(true);
 				spin_->setReadOnly(is_locked || is_readonly);
-				spin_->setEnabled( !(is_locked || is_readonly));
 				spin_->setButtonSymbols(is_readonly ? QAbstractSpinBox::ButtonSymbols::NoButtons : QAbstractSpinBox::ButtonSymbols::UpDownArrows);
 				spin_->blockSignals(false);
 			}
@@ -200,6 +201,7 @@ namespace ic4::ui
 			{
 				edit_->blockSignals(true);
 				edit_->setText(value_to_string(val_, representation_));
+				edit_->setEnabled(true);
 				edit_->setReadOnly(is_locked || is_readonly);
 				edit_->blockSignals(false);
 			}

@@ -208,8 +208,9 @@ namespace ic4::ui
 					spin_->setSingleStep(inc);
 				}
 				spin_->setValue(val);
+				spin_->setEnabled(true);
 				spin_->setReadOnly(is_locked || is_readonly);
-				spin_->setEnabled(!(is_locked || is_readonly));
+				//spin_->setEnabled(!(is_locked || is_readonly));
 				//if (is_locked || is_readonly)
 				//{
 				//	spin_->setStyleSheet(R"(background-color: palette(window);)");
