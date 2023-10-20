@@ -13,6 +13,7 @@
 #include <QMessageBox>
 #include <QKeyEvent>
 #include <QSignalBlocker>
+#include <QLineEdit>
 
 #include <algorithm>
 
@@ -29,6 +30,7 @@ namespace ic4::ui
 			, notation_(notation)
 			, precision_(precision)
 		{
+			connect(this, &QDoubleSpinBox::editingFinished, this, &FormattingDoubleSpinBox::onEditingFinished);
 		}
 	protected:
 		QString textFromValue(double value) const override
@@ -46,6 +48,20 @@ namespace ic4::ui
 			{
 				return QString::number(value, 'G', precision_);
 			}
+		}
+
+		void onEditingFinished()
+		{
+			auto text = lineEdit()->text();
+
+			int pos = 0;
+			if (validate(text, pos) != QValidator::State::Acceptable)
+			{
+				fixup(text);
+			}
+
+			auto val = valueFromText(text);
+			setValue(val);
 		}
 
 		void keyPressEvent(QKeyEvent* e) override
