@@ -107,7 +107,6 @@ namespace ic4::ui
 
 			edit_->setSelection(0, 0);
 			edit_->setReadOnly(is_readonly || is_locked);
-			edit_->setEnabled(!(is_readonly || is_locked));
 
 			// use StyleSheet in qss!
 			//if (is_readonly || is_locked)
