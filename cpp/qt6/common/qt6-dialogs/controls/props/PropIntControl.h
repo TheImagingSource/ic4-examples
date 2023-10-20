@@ -268,7 +268,7 @@ namespace ic4::ui
 
 			if (slider_)
 			{
-				slider_->value_changed += [this](auto*, auto v) { set_value_unchecked(v); };
+				slider_->value_changed += [this](auto*, auto v) { set_value(v); };
 				slider_->value_step += [this](auto*, auto s) { value_step(s); };
 			}
 			if (spin_)
