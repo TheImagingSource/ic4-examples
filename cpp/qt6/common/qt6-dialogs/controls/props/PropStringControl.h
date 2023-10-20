@@ -76,8 +76,6 @@ namespace ic4::ui
 			{
 				QMessageBox::critical(this, {}, err.message().c_str());
 			}
-
-			update_value();
 		}
 
 		void update_value()

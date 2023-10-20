@@ -107,16 +107,6 @@ namespace ic4::ui
 			{
 				QMessageBox::critical(this, {}, err.message().c_str());
 			}
-
-			auto val = prop_.getValue(err);
-			if (err.isSuccess())
-			{
-				update_value(val);
-			}
-			else
-			{
-				qWarning() << "Error reading value back (" << prop_.getName().c_str() << "): " << err.message();
-			}
 		}
 
 		void slider_moved(int new_pos)

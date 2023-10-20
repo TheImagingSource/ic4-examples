@@ -83,16 +83,6 @@ namespace ic4::ui
 			{
 				QMessageBox::critical(this, {}, err.message().c_str());
 			}
-
-			val_ = prop_.getValue(err);
-			if (err.isSuccess())
-			{
-				update_value(val_);
-			}
-			else
-			{
-				qWarning() << "Error reading value back (" << prop_.getName().c_str() << "): " << err.message();
-			}
 		}
 
 		void value_step(int64_t step)
