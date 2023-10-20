@@ -184,7 +184,7 @@ namespace ic4::ui
 			}
 
 
-			bool is_locked = prop_.isLocked();
+			bool is_locked = shoudDisplayAsLocked();
 			bool is_readonly = prop_.isReadOnly();
 
 			if (slider_)

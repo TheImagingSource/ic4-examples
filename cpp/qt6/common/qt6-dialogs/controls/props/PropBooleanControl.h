@@ -40,7 +40,7 @@ namespace ic4::ui
 
 		void update_all() override
 		{
-			check_->setEnabled(!prop_.isLocked() && !prop_.isReadOnly());
+			check_->setEnabled(!shoudDisplayAsLocked() && !prop_.isReadOnly());
 			check_->blockSignals(true);
 
 			ic4::Error err;

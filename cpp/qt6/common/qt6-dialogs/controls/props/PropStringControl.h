@@ -105,7 +105,7 @@ namespace ic4::ui
 			edit_->blockSignals(true);
 
 			bool is_readonly = prop_.isReadOnly();
-			bool is_locked = prop_.isLocked();
+			bool is_locked = shoudDisplayAsLocked();
 
 			edit_->setSelection(0, 0);
 			edit_->setReadOnly(is_readonly || is_locked);

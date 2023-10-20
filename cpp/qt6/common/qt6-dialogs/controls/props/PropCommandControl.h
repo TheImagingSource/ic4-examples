@@ -42,7 +42,7 @@ namespace ic4::ui
 		void update_all() override
 		{
 			bool is_done = prop_.isDone(ic4::Error::Ignore());
-			bool is_locked = prop_.isLocked(ic4::Error::Ignore());
+			bool is_locked = shoudDisplayAsLocked();
 
 			button_->setEnabled(!is_locked && is_done);
 		}
