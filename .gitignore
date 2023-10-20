@@ -358,3 +358,5 @@ CMakeUserPresets.json
 # vcpkg
 vcpkg_installed/
 
+# Visual Studio Code user files
+.vscode
