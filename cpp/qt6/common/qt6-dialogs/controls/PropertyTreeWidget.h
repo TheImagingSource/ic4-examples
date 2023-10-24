@@ -33,6 +33,7 @@ namespace ic4::ui
 	{
 		PropertyTreeNode* parent;
 		ic4::Property prop;
+		ic4::PropType prop_type;
 		int row;
 
 		QString prop_name;
@@ -43,9 +44,10 @@ namespace ic4::ui
 		ic4::Property::NotificationToken notification_token = {};
 		bool prev_available;
 
-		PropertyTreeNode(PropertyTreeNode* parent_, const ic4::Property& prop_, int row_, QString pn, QString dn)
+		PropertyTreeNode(PropertyTreeNode* parent_, const ic4::Property& prop_, ic4::PropType type, int row_, QString pn, QString dn)
 			: parent(parent_)
 			, prop(prop_)
+			, prop_type(type)
 			, row(row_)
 			, prop_name(std::move(pn))
 			, display_name(std::move(dn))
@@ -71,7 +73,9 @@ namespace ic4::ui
 					auto child_name = QString::fromStdString(feature.getName());
 					auto child_display_name = QString::fromStdString(feature.getDisplayName());
 
-					switch (feature.getType())
+					auto prop_type = feature.getType(ic4::Error::Ignore());
+
+					switch (prop_type)
 					{
 						// only show valid properties
 					case ic4::PropType::Integer:
@@ -80,43 +84,14 @@ namespace ic4::ui
 					case ic4::PropType::Enumeration:
 					case ic4::PropType::Boolean:
 					case ic4::PropType::Float:
-						children.push_back(std::make_unique<PropertyTreeNode>(this, feature, index++, child_name, child_display_name));
-						break;
 					case ic4::PropType::Category:
-						// only add category note, if not empty
-						if (category_is_empty(feature))
-						{
-							children.push_back(std::make_unique<PropertyTreeNode>(this, feature, index++, child_name, child_display_name));
-						}
+						children.push_back(std::make_unique<PropertyTreeNode>(this, feature, prop_type, index++, child_name, child_display_name));
 						break;
 					default:
 						break;
 					}
 				}
 			}
-		}
-
-		bool category_is_empty(const ic4::Property& prop)
-		{
-			int cnt = 0;
-			for (auto&& feature : prop.asCategory().getFeatures())
-			{
-				switch (feature.getType())
-				{
-				case ic4::PropType::Integer:
-				case ic4::PropType::Command:
-				case ic4::PropType::String:
-				case ic4::PropType::Enumeration:
-				case ic4::PropType::Boolean:
-				case ic4::PropType::Float:
-				case ic4::PropType::Category:
-					cnt++;
-					break;
-				default:
-					break;
-				}
-			}
-			return cnt > 0;
 		}
 
 		int num_children() const
@@ -155,6 +130,11 @@ namespace ic4::ui
 				}
 			);
 		}
+
+		bool is_category() const
+		{
+			return prop_type == ic4::PropType::Category;
+		}
 	};
 
 	class PropertyTreeModel : public QAbstractItemModel
@@ -166,11 +146,11 @@ namespace ic4::ui
 	public:
 		PropertyTreeModel(ic4::PropCategory root)
 			: QAbstractItemModel(Q_NULLPTR)
-			, tree_root_(nullptr, root, 0, "", "")
+			, tree_root_(nullptr, root, ic4::PropType::Category, 0, "", "")
 		{
 			// Add extra layer to make sure root element has a parent
 			// QSortFilterProxyModel::filterAcceptsRow works with parent index
-			tree_root_.children.push_back(std::make_unique<PropertyTreeNode>(&tree_root_, root, 0, QString::fromStdString(root.getName()), QString::fromStdString(root.getDisplayName())));
+			tree_root_.children.push_back(std::make_unique<PropertyTreeNode>(&tree_root_, root, ic4::PropType::Category, 0, QString::fromStdString(root.getName()), QString::fromStdString(root.getDisplayName())));
 			prop_root_ = tree_root_.children.front().get();
 		}
 
@@ -399,7 +379,7 @@ namespace ic4::ui
 
 			// Set all categories as hidden.
 			// Qt will still show them if they have visible children.
-			if (child.prop.getType(ic4::Error::Ignore()) == ic4::PropType::Category)
+			if (child.is_category())
 				return false;
 
 			if (!child.prop.isAvailable())
