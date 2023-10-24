@@ -391,30 +391,16 @@ namespace ic4::ui
 
 		bool filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const
 		{
-
 			auto* tree = static_cast<PropertyTreeNode*>(sourceParent.internalPointer());
 			if (!tree)
 				return false;
 
 			auto& child = *tree->children[sourceRow];
 
-			if (child.display_name == "Software Transform")
-			{
-				qDebug() << (int)child.prop.getVisibility();
-				int a = 10;
-			}
-
-			if (child.display_name == "Show Debug Overlay")
-			{
-				qDebug() << (int)child.prop.getVisibility();
-				int a = 10;
-			}
-
-			if (child.display_name == "Action Control")
-			{
-				qDebug() << (int)child.prop.getVisibility();
-				int a = 10;
-			}
+			// Set all categories as hidden.
+			// Qt will still show them if they have visible children.
+			if (child.prop.getType(ic4::Error::Ignore()) == ic4::PropType::Category)
+				return false;
 
 			if (!child.prop.isAvailable())
 				return false;
