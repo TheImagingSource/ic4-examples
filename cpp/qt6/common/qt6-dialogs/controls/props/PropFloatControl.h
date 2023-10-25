@@ -232,7 +232,7 @@ namespace ic4::ui
 			case ic4::PropFloatRepresentation::Logarithmic:
 				slider_ = is_readonly ? nullptr : new QSlider(Qt::Orientation::Horizontal, this);
 				spin_ = new FormattingDoubleSpinBox(this, notation, precision);
-				spin_->setStepType(QAbstractSpinBox::StepType::AdaptiveDecimalStepType);				
+				spin_->setStepType(QAbstractSpinBox::StepType::AdaptiveDecimalStepType);
 				break;
 			}
 

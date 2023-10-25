@@ -65,7 +65,7 @@ namespace ic4::ui
 			if (!children.empty())
 				return;
 
-			if (prop.getType() == ic4::PropType::Category)
+			if (prop.getType(ic4::Error::Ignore()) == ic4::PropType::Category)
 			{
 				int index = 0;
 				for (auto&& feature : prop.asCategory().getFeatures())
@@ -116,18 +116,19 @@ namespace ic4::ui
 			if (notification_token)
 				return;
 
-			prev_available = prop.isAvailable();
+			prev_available = prop.isAvailable(ic4::Error::Ignore());
 
 			notification_token = prop.eventAddNotification(
 				[this, item_changed](ic4::Property& prop)
 				{
-					bool new_available = prop.isAvailable();
+					bool new_available = prop.isAvailable(ic4::Error::Ignore());
 					if (prev_available != new_available)
 					{
 						item_changed(this);
 						prev_available = new_available;
 					}
-				}
+				},
+				ic4::Error::Ignore()
 			);
 		}
 
@@ -150,7 +151,9 @@ namespace ic4::ui
 		{
 			// Add extra layer to make sure root element has a parent
 			// QSortFilterProxyModel::filterAcceptsRow works with parent index
-			tree_root_.children.push_back(std::make_unique<PropertyTreeNode>(&tree_root_, root, ic4::PropType::Category, 0, QString::fromStdString(root.getName()), QString::fromStdString(root.getDisplayName())));
+			auto root_name = root.getName(ic4::Error::Ignore());
+			auto root_display_name = root.getDisplayName(ic4::Error::Ignore());
+			tree_root_.children.push_back(std::make_unique<PropertyTreeNode>(&tree_root_, root, ic4::PropType::Category, 0, QString::fromStdString(root_name), QString::fromStdString(root_display_name)));
 			prop_root_ = tree_root_.children.front().get();
 		}
 
@@ -626,6 +629,11 @@ namespace ic4::ui
 		{
 		}
 
+		~PropertyTreeWidget()
+		{
+			delete source_;
+		}
+
 	private:
 		PropertyTreeWidget(PropertyTreeModel* model, ic4::Grabber* grabber, Settings settings = {}, QWidget* parent = nullptr)
 			: QWidget(parent)
@@ -731,11 +739,6 @@ namespace ic4::ui
 
 			setLayout(layout);
 			update_view();
-		}
-
-		~PropertyTreeWidget()
-		{
-			delete source_;
 		}
 	};
 }

@@ -3,10 +3,7 @@
 #include "PropertyTreeWidget.h"
 
 #include <QDialog>
-#include <QTreeView>
 #include <QTreeWidget>
-#include <QStandardItemModel>
-#include <QStandardItem>
 #include <QModelIndex>
 #include <QPushButton>
 #include <ic4/ic4.h> 
@@ -19,20 +16,23 @@ class DeviceSelectionDlg : public QDialog
 public:
 	DeviceSelectionDlg(QWidget* parent, ic4::Grabber* pgrabber);
 
+protected:
+	void customEvent(QEvent* event) override;
+
 private slots:
 	void OnOK();
 	void OnUpdateButton();
-	void onClickedDevice(const QModelIndex& index);
-	void onSelectDevice(const QModelIndex& current, const QModelIndex& previous);
+	void onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous);
 
 
 private:
 	void createUI();
 	void enumerateDevices();
+	void selectPreviousItem(QVariant itemData);
 
 	ic4::Grabber* _pgrabber;
-	QTreeView* _cameraTree;
-	QStandardItemModel _model;
+	ic4::DeviceEnum _enumerator;
+	QTreeWidget* _cameraTree;
 	QPushButton* _OKButton;
 	ic4::ui::PropertyTreeWidget* _propTree = nullptr;
 };
