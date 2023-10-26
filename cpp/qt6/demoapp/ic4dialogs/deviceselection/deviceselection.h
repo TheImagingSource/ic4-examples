@@ -1,12 +1,12 @@
 #pragma once
 
-#include "PropertyTreeWidget.h"
-
 #include <QDialog>
 #include <QTreeWidget>
 #include <QModelIndex>
 #include <QPushButton>
-#include <ic4/ic4.h> 
+#include <QFormLayout>
+#include <QLabel>
+#include <ic4/ic4.h>
 
 
 class DeviceSelectionDlg : public QDialog
@@ -34,5 +34,9 @@ private:
 	ic4::DeviceEnum _enumerator;
 	QTreeWidget* _cameraTree;
 	QPushButton* _OKButton;
-	ic4::ui::PropertyTreeWidget* _propTree = nullptr;
+
+	QLabel* _itfInfoHeader;
+	QFormLayout* _itfInfoLayout;
+	QLabel* _devInfoHeader;
+	QFormLayout* _devInfoLayout;
 };

@@ -8,7 +8,13 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QPushButton>
-#include <iostream>
+#include <QFormLayout>
+#include <QEvent>
+#include <QApplication>
+#include <QLabel>
+#include <QLineEdit>
+#include <QPlainTextEdit>
+#include <QtAlgorithms>
 
 const QEvent::Type EVENT_DEVICE_LIST_CHANGED = static_cast<QEvent::Type>(QEvent::User + 3);
 
@@ -97,14 +103,22 @@ void DeviceSelectionDlg::createUI()
 
 	auto rightLayout = new QVBoxLayout();
 
-	ic4::ui::PropertyTreeWidget::Settings settings = {};
-	settings.showRootItem = false;
-	settings.showFilter = false;
-	settings.showInfoBox = false;
-	settings.initialVisibility = ic4::PropVisibility::Guru;
+	_itfInfoLayout = new QFormLayout();
+	_itfInfoLayout->setContentsMargins(4, 4, 4, 4);
+	_itfInfoLayout->setLabelAlignment(Qt::AlignRight);
+	_devInfoLayout = new QFormLayout();
+	_devInfoLayout->setContentsMargins(4, 4, 4, 4);
+	_devInfoLayout->setLabelAlignment(Qt::AlignRight);
 
-	_propTree = new ic4::ui::PropertyTreeWidget(ic4::PropCategory(), nullptr, settings, this);
-	rightLayout->addWidget(_propTree);
+	_itfInfoHeader = new QLabel(tr("Interface Information"));
+	_itfInfoHeader->setStyleSheet("QLabel { background-color: palette(base); padding: 4px }");
+	_devInfoHeader = new QLabel(tr("Device Information"));
+	_devInfoHeader->setStyleSheet("QLabel { background-color: palette(base); padding: 4px }");
+
+	rightLayout->addWidget(_itfInfoHeader, 0);
+	rightLayout->addLayout(_itfInfoLayout, 0);
+	rightLayout->addWidget(_devInfoHeader, 0);
+	rightLayout->addLayout(_devInfoLayout, 1);
 
 	topLayout->addLayout(rightLayout, 2);
 
@@ -172,91 +186,214 @@ void DeviceSelectionDlg::enumerateDevices()
 	_cameraTree->expandAll();
 }
 
+static void clearFormLayout(QFormLayout& layout)
+{
+	while (layout.count() != 0)
+	{
+		QLayoutItem* forDeletion = layout.takeAt(0);
+		delete forDeletion->widget();
+		delete forDeletion;
+	}
+}
+
+static QString buildIPAddress(const ic4::PropertyMap& map, const char* ip_feature, const char* subnet_feature)
+{
+	ic4::Error err;
+
+	auto ip = map.getValueString(ip_feature, err);
+	if (err.isError())
+		return {};
+
+	auto subnet = map.getValueInt64(subnet_feature, err);
+	if (err.isError())
+		return {};
+
+	int leadingOnes = qCountLeadingZeroBits(static_cast<uint32_t>(~subnet));
+	int trailingZeros = qCountTrailingZeroBits(static_cast<uint32_t>(subnet));
+
+	if (leadingOnes + trailingZeros == 32)
+	{
+		return QString("%1/%2")
+			.arg(ip.c_str())
+			.arg(leadingOnes);
+	}
+	else
+	{
+		auto subnetString = map.getValueString(subnet_feature, err);
+		if (err.isError())
+			return {};
+
+		return QString("%1/%2")
+			.arg(ip.c_str())
+			.arg(subnetString.c_str());
+	}
+}
+
+static QStringList buildInterfaceIPAddressList(const ic4::PropertyMap& map)
+{
+	ic4::Error err;
+	auto selector = map.findInteger("GevInterfaceSubnetSelector", err);
+	if (err.isError())
+		return {};
+
+	int64_t max = selector.getMaximum(ic4::Error::Ignore());
+	QStringList result;
+
+	for (int64_t i = 0; i <= max; ++i)
+	{
+		if (!selector.setValue(i, err))
+			continue;
+
+		auto addr = buildIPAddress(map, "GevInterfaceSubnetIPAddress", "GevInterfaceSubnetMask");
+		if (addr.isEmpty())
+			continue;
+
+		result.push_back(addr);
+	}
+
+	return result;
+}
+
 void DeviceSelectionDlg::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous)
 {
-	_OKButton->setEnabled(false);
+	_OKButton->setEnabled(false);	
+
+	clearFormLayout(*_itfInfoLayout);
+	_devInfoHeader->hide();
+	clearFormLayout(*_devInfoLayout);
 
 	if (current == nullptr)
 	{
-		_propTree->updateModel(ic4::PropCategory());
 		return;
 	}
 
-	auto variant = current->data(0, Qt::UserRole + 1);
+	auto variant = current->data(0, Qt::UserRole + 1);	
 
-	auto prop_filter_interface = [](const ic4::Property& prop) -> bool
-		{
-			auto name = prop.getName(ic4::Error::Ignore());
-			if (name == "InterfaceDisplayName")
-				return true;
-			if (name == "GevInterfaceSubnetSelector")
-				return true;
-			if (name == "GevInterfaceSubnetIPAddress")
-				return true;
-			if (name == "GevInterfaceSubnetMask")
-				return true;
-			if (name == "MaximumTransmissionUnit")
-				return true;
-			return false;
-		};
-
-	auto prop_filter_device = [&prop_filter_interface](const ic4::Property& prop) -> bool
-	{
-		auto name = prop.getName(ic4::Error::Ignore());
-		if (name == "InterfaceDisplayName")
-			return true;
-		if (name == "MaximumTransmissionUnit")
-			return true;
-		if (name == "DeviceVendorName")
-			return true;
-		if (name == "DeviceSerialNumber")
-			return true;
-		if (name == "DeviceManufacturer")
-			return true;
-		if (name == "DeviceVersion")
-			return true;
-		if (name == "DeviceUserID")
-			return true;
-		if (name == "GevDeviceMACAddress")
-			return true;
-		if (name == "GevDeviceIPAddress")
-			return true;
-		if (name == "GevDeviceSubnetMask")
-			return true;
-		if (name == "GevDeviceGateway")
-			return true;
-		return prop_filter_interface(prop);
-	};
+	ic4::PropertyMap map;
 
 	if (variant.canConvert<DeviceInfoContainer>())
 	{
 		auto selectedDeviceInfo = variant.value<DeviceInfoContainer>();
 
-		auto map = selectedDeviceInfo.info.getInterface().interfacePropertyMap(ic4::Error::Ignore());
+		map = selectedDeviceInfo.info.getInterface().interfacePropertyMap(ic4::Error::Ignore());
 		if (map.setValue("DeviceSelector", selectedDeviceInfo.index, ic4::Error::Ignore()))
 		{
 			_OKButton->setEnabled(true);
-
-			auto root = map.findCategory("Root", ic4::Error::Ignore());
-
-			_propTree->updateModel(root);
-			_propTree->setPropertyFilter(prop_filter_device);
-			return;
 		}
 	}
 	else if (variant.canConvert<InterfaceContainer>())
 	{
 		auto selectedInterfaceInfo = variant.value<InterfaceContainer>();
 
-		auto map = selectedInterfaceInfo.itf.interfacePropertyMap(ic4::Error::Ignore());
-		auto root = map.findCategory("Root", ic4::Error::Ignore());
-
-		_propTree->updateModel(root);
-		_propTree->setPropertyFilter(prop_filter_interface);
+		map = selectedInterfaceInfo.itf.interfacePropertyMap(ic4::Error::Ignore());
+	}
+	else
+	{
 		return;
 	}
-	
-	_propTree->updateModel(ic4::PropCategory());
+
+	auto addStringItem = [](const char* label, const QString& value, QFormLayout& layout)
+		{
+			auto edit = new QLineEdit(value);
+			edit->setReadOnly(true);
+			edit->setCursorPosition(0);
+			layout.addRow(tr(label), edit);
+		};
+
+	auto buildStringItemIfExists = [&addStringItem](const ic4::PropertyMap& map, const char* prop_item, const char* label, QFormLayout& layout)
+		{
+			ic4::Error err;
+			auto value = map.getValueString(prop_item, err);
+			if (err.isSuccess())
+			{
+				addStringItem(label, QString::fromStdString(value), layout);
+			}
+		};
+
+	buildStringItemIfExists(map, "InterfaceDisplayName", "Interface Name", *_itfInfoLayout);	
+
+	auto interfaceIPAddresses = buildInterfaceIPAddressList(map);
+	if (interfaceIPAddresses.count() == 1)
+	{
+		auto edit = new QLineEdit(interfaceIPAddresses.at(0));
+		edit->setReadOnly(true);
+		_itfInfoLayout->addRow(tr("IP Address"), edit);
+	}
+	else if (!interfaceIPAddresses.isEmpty())
+	{
+		auto txt = interfaceIPAddresses.join("\r\n");
+		auto edit = new QPlainTextEdit(txt);
+		edit->document()->setDocumentMargin(2);
+		edit->setReadOnly(true);
+		auto docmargin = edit->document()->documentMargin();
+		auto margins = edit->contentsMargins();
+		auto frameWidth = edit->frameWidth();
+		auto fontHeight = edit->fontMetrics().height();
+		edit->setFixedHeight(fontHeight * interfaceIPAddresses.count() + frameWidth * 2 + margins.top() + margins.bottom() + (int)docmargin * 2);
+		edit->setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
+		_itfInfoLayout->addRow("IP Addresses", edit);
+	}
+
+	buildStringItemIfExists(map, "MaximumTransmissionUnit", "Maximum Transmission Unit", *_itfInfoLayout);
+
+	if (variant.canConvert<DeviceInfoContainer>())
+	{
+		_devInfoHeader->show();
+
+		buildStringItemIfExists(map, "DeviceModelName", "Model Name", *_devInfoLayout);
+		buildStringItemIfExists(map, "DeviceVendorName", "Vendor Name", *_devInfoLayout);
+		buildStringItemIfExists(map, "DeviceSerialNumber", "Serial Number", *_devInfoLayout);
+		buildStringItemIfExists(map, "DeviceVersion", "Device Version", *_devInfoLayout);
+		buildStringItemIfExists(map, "DeviceUserID", "Device User ID", *_devInfoLayout);
+
+		auto devIPAddress = buildIPAddress(map, "GevDeviceIPAddress", "GevDeviceSubnetMask");
+		if( !devIPAddress.isEmpty() )
+			addStringItem("Device IP Address", devIPAddress, *_devInfoLayout);
+
+		buildStringItemIfExists(map, "GevDeviceGateway", "Device Gateway", *_devInfoLayout);
+		buildStringItemIfExists(map, "GevDeviceMACAddress", "Device MAC Address", *_devInfoLayout);
+	}
+
+	int maxWidth = 0;
+	for (int i = 0; i < _itfInfoLayout->rowCount(); ++i)
+	{
+		auto* label = _itfInfoLayout->itemAt(i, QFormLayout::ItemRole::LabelRole);
+		if (label != nullptr)
+		{
+			auto* w = label->widget();
+			auto* lbl = (QLabel*)w;
+			auto width = lbl->fontMetrics().size(0, lbl->text()).width();
+			maxWidth = std::max(maxWidth, width);
+		}
+	}
+	for (int i = 0; i < _devInfoLayout->rowCount(); ++i)
+	{
+		auto* label = _devInfoLayout->itemAt(i, QFormLayout::ItemRole::LabelRole);
+		if (label != nullptr)
+		{
+			auto* w = label->widget();
+			auto* lbl = (QLabel*)w;
+			auto width = lbl->fontMetrics().size(0, lbl->text()).width();
+			maxWidth = std::max(maxWidth, width);
+		}
+	}
+
+	for (int i = 0; i < _itfInfoLayout->rowCount(); ++i)
+	{
+		auto* label = _itfInfoLayout->itemAt(i, QFormLayout::ItemRole::LabelRole);
+		if (label != nullptr)
+		{
+			label->widget()->setMinimumWidth(maxWidth);
+		}
+	}
+	for (int i = 0; i < _devInfoLayout->rowCount(); ++i)
+	{
+		auto* label = _devInfoLayout->itemAt(i, QFormLayout::ItemRole::LabelRole);
+		if (label != nullptr)
+		{
+			label->widget()->setMinimumWidth(maxWidth);
+		}
+	}
 }
 
 void DeviceSelectionDlg::selectPreviousItem(QVariant itemData)
@@ -318,7 +455,6 @@ void DeviceSelectionDlg::OnUpdateButton()
 	{
 		_cameraTree->setCurrentItem(nullptr);
 	}
-	//_cameraTree->setFocus();
 }
 
 void DeviceSelectionDlg::OnOK()
