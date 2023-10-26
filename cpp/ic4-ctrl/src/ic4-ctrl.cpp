@@ -1,6 +1,11 @@
 ﻿
 #include <ic4/ic4.h>
+
+#ifdef WIN32
+
 #include <ic4-gui/ic4gui.h>
+
+#endif
 
 #include <CLI/CLI.hpp>
 #include <fmt/core.h>
@@ -606,6 +611,8 @@ static void save_image( std::string id, std::string filename, int count, int tim
     }
 }
 
+#ifdef WIN32
+
 static void show_live( std::string id )
 {
     auto dev = find_device( id );
@@ -660,6 +667,8 @@ static void show_prop_page( std::string id, bool id_is_interface )
         ic4gui::showPropertyDialog( 0, map );
     }
 }
+
+#endif // WIN32
 
 static void show_system_info()
 {
@@ -731,6 +740,7 @@ int main( int argc, char** argv )
     image_cmd->add_option( "--type", image_type, "Image file type to save. [bmp,png,jpeg,tiff]" )->default_val( image_type );
     image_cmd->add_option( "device-id", arg_device_id,
         "Specifies the device to open. You can specify an index e.g. '0'." )->required();
+#ifdef WIN32
 
     auto live_cmd = app.add_subcommand( "live", "Display a live stream. 'ic4-ctrl live <device-id>'." );
     live_cmd->add_option( "device-id", arg_device_id,
@@ -741,6 +751,8 @@ int main( int argc, char** argv )
         "Specifies the device to open. You can specify an index e.g. '0'." )->required();
     show_prop_page_cmd->add_flag( "--interface", force_interface,
         "If set the <device-id> is interpreted as an interface-id." );
+
+#endif // WIN32
 
     auto system_cmd = app.add_subcommand( "system",
         "List some information for about the system."
@@ -801,13 +813,18 @@ int main( int argc, char** argv )
         else if( image_cmd->parsed() ) {
             save_image( arg_device_id, arg_filename, count, timeout, image_type );
         }
-        else if( live_cmd->parsed() ) {
-            show_live( arg_device_id );
+#ifdef WIN32
+        else if( live_cmd->parsed() )
+        {
+            show_live(arg_device_id);
         }
-        else if( show_prop_page_cmd->parsed() ) {
-            show_prop_page( arg_device_id, force_interface );
+        else if( show_prop_page_cmd->parsed() )
+        {
+            show_prop_page(arg_device_id, force_interface);
         }
-        else if( system_cmd->parsed() ) {
+#endif // WIN32
+        else if( system_cmd->parsed() )
+        {
             show_system_info();
         }
         else
