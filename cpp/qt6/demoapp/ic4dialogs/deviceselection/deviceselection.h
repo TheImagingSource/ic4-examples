@@ -5,7 +5,8 @@
 #include <QModelIndex>
 #include <QPushButton>
 #include <QFormLayout>
-#include <QLabel>
+#include <QGroupBox>
+
 #include <ic4/ic4.h>
 
 
@@ -35,8 +36,8 @@ private:
 	QTreeWidget* _cameraTree;
 	QPushButton* _OKButton;
 
-	QLabel* _itfInfoHeader;
+	QGroupBox* _itfInfoGroup;
 	QFormLayout* _itfInfoLayout;
-	QLabel* _devInfoHeader;
+	QGroupBox* _devInfoGroup;
 	QFormLayout* _devInfoLayout;
 };

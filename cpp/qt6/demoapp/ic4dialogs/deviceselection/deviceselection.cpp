@@ -101,8 +101,6 @@ void DeviceSelectionDlg::createUI()
 	leftLayout->addLayout(buttons);
 	topLayout->addLayout(leftLayout, 1);
 
-	auto rightLayout = new QVBoxLayout();
-
 	_itfInfoLayout = new QFormLayout();
 	_itfInfoLayout->setContentsMargins(4, 4, 4, 4);
 	_itfInfoLayout->setLabelAlignment(Qt::AlignRight);
@@ -110,16 +108,15 @@ void DeviceSelectionDlg::createUI()
 	_devInfoLayout->setContentsMargins(4, 4, 4, 4);
 	_devInfoLayout->setLabelAlignment(Qt::AlignRight);
 
-	_itfInfoHeader = new QLabel(tr("Interface Information"));
-	_itfInfoHeader->setStyleSheet("QLabel { background-color: palette(base); padding: 4px }");
-	_devInfoHeader = new QLabel(tr("Device Information"));
-	_devInfoHeader->setStyleSheet("QLabel { background-color: palette(base); padding: 4px }");
+	_itfInfoGroup = new QGroupBox(tr("Interface Information"));
+	_itfInfoGroup->setLayout(_itfInfoLayout);
+	_devInfoGroup = new QGroupBox(tr("Device Information"));
+	_devInfoGroup->setLayout(_devInfoLayout);
 
-	rightLayout->addWidget(_itfInfoHeader, 0);
-	rightLayout->addLayout(_itfInfoLayout, 0);
-	rightLayout->addWidget(_devInfoHeader, 0);
-	rightLayout->addLayout(_devInfoLayout, 1);
-
+	auto rightLayout = new QVBoxLayout();
+	rightLayout->addWidget(_itfInfoGroup, 0);
+	rightLayout->addWidget(_devInfoGroup, 1);
+	rightLayout->addStretch(10);
 	topLayout->addLayout(rightLayout, 2);
 
 	setLayout(topLayout);
@@ -295,7 +292,7 @@ void DeviceSelectionDlg::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWid
 	_OKButton->setEnabled(false);	
 
 	clearFormLayout(*_itfInfoLayout);
-	_devInfoHeader->hide();
+	_devInfoGroup->hide();
 	clearFormLayout(*_devInfoLayout);
 
 	if (current == nullptr)
@@ -362,7 +359,7 @@ void DeviceSelectionDlg::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWid
 
 	if (itemData.isDevice())
 	{
-		_devInfoHeader->show();
+		_devInfoGroup->show();
 
 		buildStringItemIfExists(map, "DeviceModelName", "Model Name", *_devInfoLayout);
 		buildStringItemIfExists(map, "DeviceVendorName", "Vendor Name", *_devInfoLayout);
