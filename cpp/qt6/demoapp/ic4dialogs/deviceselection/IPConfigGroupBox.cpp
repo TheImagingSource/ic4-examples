@@ -17,6 +17,7 @@ namespace
 		auto* check = new QCheckBox();
 		check->setChecked(prop.getValue(ic4::Error::Ignore()));
 		check->setEnabled(!prop.isReadOnly(ic4::Error::Ignore()));
+		check->setMinimumHeight(24);
 		layout.addRow(QObject::tr(label), check);
 		return check;
 	}
@@ -38,6 +39,7 @@ namespace
 		edit->setValidator(ipValidator);
 
 		layout.addRow(QObject::tr(label), edit);
+
 		return edit;
 	}
 }

@@ -7,7 +7,7 @@
 #include <QModelIndex>
 #include <QPushButton>
 #include <QFormLayout>
-#include <QGroupBox>
+#include <QScrollArea>
 
 #include <ic4/ic4.h>
 
@@ -38,9 +38,8 @@ private:
 	QTreeWidget* _cameraTree;
 	QPushButton* _OKButton;
 
-	QGroupBox* _itfInfoGroup;
-	QFormLayout* _itfInfoLayout;
-	QGroupBox* _devInfoGroup;
-	QFormLayout* _devInfoLayout;
+	QScrollArea* _rightScroll;
+	FormGroupBox* _itfInfoGroup;
+	FormGroupBox* _devInfoGroup;
 	IPConfigGroupBox* _ipConfigGroup;
 };
