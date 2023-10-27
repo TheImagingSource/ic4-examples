@@ -2,6 +2,7 @@
 <RCC version="1.0">
 	<qresource>
 		<file>images/+theme_light/camera.png</file>
+    <file>images/+theme_light/camera_icon_usb3.png</file>
 		<file>images/+theme_light/imgset.png</file>
 		<file>images/+theme_light/livestream.png</file>
 		<file>images/+theme_light/photo.png</file>
@@ -12,6 +13,7 @@
 		<file>images/+theme_light/gear.png</file>
 		<file>images/+theme_light/triggermode.png</file>
     <file>images/+theme_dark/camera.png</file>
+    <file>images/+theme_dark/camera_icon_usb3.png</file>
     <file>images/+theme_dark/imgset.png</file>
     <file>images/+theme_dark/livestream.png</file>
     <file>images/+theme_dark/photo.png</file>

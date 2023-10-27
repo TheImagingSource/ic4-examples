@@ -18,6 +18,7 @@
 
 #include "mainwindow.h"
 #include "events.h"
+#include "main.h"
 
 #include "ic4dialogs/deviceselection/deviceselection.h"
 #include "ic4dialogs/propertydlg/propertydlg.h"
@@ -138,6 +139,9 @@ void MainWindow::createUI()
 	QFileSelector selector;
 	QStringList extraSelectors({ isDarkMode() ? "theme_dark" : "theme_light" });
 	selector.setExtraSelectors(extraSelectors);
+
+	auto f = selector.select(":/images/camera.png");
+	auto g = DemoAppFileSelector::select(":/images/camera.png");
 
 	// Device Selection
 	_DeviceSelectAct = new QAction(QIcon(selector.select(":/images/camera.png")), tr("&Select"), this);

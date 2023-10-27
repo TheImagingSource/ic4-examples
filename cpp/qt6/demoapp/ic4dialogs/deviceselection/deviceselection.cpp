@@ -2,6 +2,7 @@
 
 #include "deviceselection.h"
 #include "PropertyControls.h"
+#include "../../main.h"
 
 #include <iostream>
 #include <QMessagebox>
@@ -65,7 +66,7 @@ void DeviceSelectionDlg::createUI()
 	auto leftLayout = new QVBoxLayout();
 
 	_cameraTree = new QTreeWidget();
-	_cameraTree->setIconSize(QSize(32, 32));
+	_cameraTree->setIconSize(QSize(24, 24));
 	_cameraTree->setIndentation(16);
 	//_cameraTree->setStyleSheet("QTreeWidget { border: 1px solid #3f3f46; max-height: 1024; padding: 4px 4px 4px 4px; } QTreeView::item  {  padding: 4px 4px 4px 4px; } ");
 	_cameraTree->setStyleSheet("QTreeView::item { padding: 4px; } ");
@@ -75,7 +76,10 @@ void DeviceSelectionDlg::createUI()
 	QStringList headerLabels = { tr("Device"), tr("Serial Number"), tr("IP Address"), tr("Device User ID") };
 	_cameraTree->setColumnCount(headerLabels.count());
 	_cameraTree->setHeaderLabels(headerLabels);
-	_cameraTree->setColumnWidth(0, 140);
+	_cameraTree->setColumnWidth(0, 160);
+	_cameraTree->setColumnWidth(1, 100);
+	_cameraTree->setColumnWidth(2, 100);
+	_cameraTree->setColumnWidth(3, 80);
 	_cameraTree->setHeaderHidden(false);
 
 	connect(_cameraTree, &QTreeWidget::currentItemChanged, this, &DeviceSelectionDlg::onCurrentItemChanged);
@@ -179,6 +183,9 @@ void DeviceSelectionDlg::enumerateDevices()
 			node->setText(1, QString::fromStdString(serial));
 			node->setText(2, strIPAddress);
 			node->setText(3, QString::fromStdString(deviceUserID));
+
+			auto cam = DemoAppFileSelector::select(":/images/camera_icon_usb3.png");
+			node->setIcon(0, QIcon(QPixmap(cam)));
 
 			itf_item->addChild(node);
 
