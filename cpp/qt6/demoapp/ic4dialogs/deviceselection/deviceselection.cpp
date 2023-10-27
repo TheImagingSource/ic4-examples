@@ -41,19 +41,19 @@ void DeviceSelectionDlg::customEvent(QEvent* event)
 	}
 }
 
-
-struct DeviceInfoContainer
-{
-	ic4::DeviceInfo info;
-	int64_t index = 0;
-};
-Q_DECLARE_METATYPE(DeviceInfoContainer)
-
-struct InterfaceContainer
+struct InterfaceDeviceItemData
 {
 	ic4::Interface itf;
+	ic4::PropertyMap itfPropertyMap;
+	ic4::DeviceInfo device;
+	int64_t deviceIndex = 0;
+
+	bool isDevice() const
+	{
+		return device.is_valid();
+	}
 };
-Q_DECLARE_METATYPE(InterfaceContainer)
+Q_DECLARE_METATYPE(InterfaceDeviceItemData)
 
 void DeviceSelectionDlg::createUI()
 {
@@ -136,13 +136,17 @@ void DeviceSelectionDlg::enumerateDevices()
 		if (itf_devices.empty())
 			continue;
 
+		ic4::Error err;
+
+		auto map = itf.interfacePropertyMap(err);
+		if (err.isError())
+			continue;
+
 		auto* itf_item = new QTreeWidgetItem(_cameraTree);
 		itf_item->setText(0, QString::fromStdString(itf.interfaceDisplayName()));
 		itf_item->setForeground(0, QPalette().windowText());
-		itf_item->setData(0, Qt::UserRole + 1, QVariant::fromValue(InterfaceContainer{ itf }));
+		itf_item->setData(0, Qt::UserRole + 1, QVariant::fromValue(InterfaceDeviceItemData{ itf, map }));
 		itf_item->setFirstColumnSpanned(true);
-
-		auto map = itf.interfacePropertyMap(ic4::Error::Ignore());
 
 		int index = 0;
 		for (auto&& dev : itf_devices)
@@ -169,7 +173,7 @@ void DeviceSelectionDlg::enumerateDevices()
 
 			auto* node = new QTreeWidgetItem();
 
-			auto variant = QVariant::fromValue(DeviceInfoContainer{ dev, index });
+			auto variant = QVariant::fromValue(InterfaceDeviceItemData{ itf, map, dev, index });
 			node->setData(0, Qt::UserRole + 1, variant);
 
 			node->setText(0, QString::fromStdString(device));
@@ -254,6 +258,38 @@ static QStringList buildInterfaceIPAddressList(const ic4::PropertyMap& map)
 	return result;
 }
 
+void synchronizeColumnWidths(std::vector<QFormLayout*> layouts)
+{
+	int maxWidth = 0;
+
+	for (auto&& layout : layouts)
+	{
+		for (int i = 0; i < layout->rowCount(); ++i)
+		{
+			auto* label = layout->itemAt(i, QFormLayout::ItemRole::LabelRole);
+			if (label != nullptr)
+			{
+				auto* w = label->widget();
+				auto* lbl = (QLabel*)w;
+				auto width = lbl->fontMetrics().size(0, lbl->text()).width();
+				maxWidth = std::max(maxWidth, width);
+			}
+		}
+	}
+
+	for (auto&& layout : layouts)
+	{
+		for (int i = 0; i < layout->rowCount(); ++i)
+		{
+			auto* label = layout->itemAt(i, QFormLayout::ItemRole::LabelRole);
+			if (label != nullptr)
+			{
+				label->widget()->setMinimumWidth(maxWidth);
+			}
+		}
+	}
+}
+
 void DeviceSelectionDlg::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous)
 {
 	_OKButton->setEnabled(false);	
@@ -267,29 +303,17 @@ void DeviceSelectionDlg::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWid
 		return;
 	}
 
-	auto variant = current->data(0, Qt::UserRole + 1);	
+	auto variant = current->data(0, Qt::UserRole + 1);
+	auto itemData = variant.value<InterfaceDeviceItemData>();
 
-	ic4::PropertyMap map;
+	ic4::PropertyMap map = itemData.itfPropertyMap;
 
-	if (variant.canConvert<DeviceInfoContainer>())
+	if (itemData.isDevice())
 	{
-		auto selectedDeviceInfo = variant.value<DeviceInfoContainer>();
-
-		map = selectedDeviceInfo.info.getInterface().interfacePropertyMap(ic4::Error::Ignore());
-		if (map.setValue("DeviceSelector", selectedDeviceInfo.index, ic4::Error::Ignore()))
+		if (map.setValue("DeviceSelector", itemData.deviceIndex, ic4::Error::Ignore()))
 		{
 			_OKButton->setEnabled(true);
 		}
-	}
-	else if (variant.canConvert<InterfaceContainer>())
-	{
-		auto selectedInterfaceInfo = variant.value<InterfaceContainer>();
-
-		map = selectedInterfaceInfo.itf.interfacePropertyMap(ic4::Error::Ignore());
-	}
-	else
-	{
-		return;
 	}
 
 	auto addStringItem = [](const char* label, const QString& value, QFormLayout& layout)
@@ -336,7 +360,7 @@ void DeviceSelectionDlg::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWid
 
 	buildStringItemIfExists(map, "MaximumTransmissionUnit", "Maximum Transmission Unit", *_itfInfoLayout);
 
-	if (variant.canConvert<DeviceInfoContainer>())
+	if (itemData.isDevice())
 	{
 		_devInfoHeader->show();
 
@@ -354,82 +378,37 @@ void DeviceSelectionDlg::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWid
 		buildStringItemIfExists(map, "GevDeviceMACAddress", "Device MAC Address", *_devInfoLayout);
 	}
 
-	int maxWidth = 0;
-	for (int i = 0; i < _itfInfoLayout->rowCount(); ++i)
-	{
-		auto* label = _itfInfoLayout->itemAt(i, QFormLayout::ItemRole::LabelRole);
-		if (label != nullptr)
-		{
-			auto* w = label->widget();
-			auto* lbl = (QLabel*)w;
-			auto width = lbl->fontMetrics().size(0, lbl->text()).width();
-			maxWidth = std::max(maxWidth, width);
-		}
-	}
-	for (int i = 0; i < _devInfoLayout->rowCount(); ++i)
-	{
-		auto* label = _devInfoLayout->itemAt(i, QFormLayout::ItemRole::LabelRole);
-		if (label != nullptr)
-		{
-			auto* w = label->widget();
-			auto* lbl = (QLabel*)w;
-			auto width = lbl->fontMetrics().size(0, lbl->text()).width();
-			maxWidth = std::max(maxWidth, width);
-		}
-	}
-
-	for (int i = 0; i < _itfInfoLayout->rowCount(); ++i)
-	{
-		auto* label = _itfInfoLayout->itemAt(i, QFormLayout::ItemRole::LabelRole);
-		if (label != nullptr)
-		{
-			label->widget()->setMinimumWidth(maxWidth);
-		}
-	}
-	for (int i = 0; i < _devInfoLayout->rowCount(); ++i)
-	{
-		auto* label = _devInfoLayout->itemAt(i, QFormLayout::ItemRole::LabelRole);
-		if (label != nullptr)
-		{
-			label->widget()->setMinimumWidth(maxWidth);
-		}
-	}
+	synchronizeColumnWidths({ _devInfoLayout, _itfInfoLayout });
 }
 
-void DeviceSelectionDlg::selectPreviousItem(QVariant itemData)
+void DeviceSelectionDlg::selectPreviousItem(QVariant itemVariant)
 {
+	auto itemData = itemVariant.value<InterfaceDeviceItemData>();
+
 	for (int i = 0; i < _cameraTree->topLevelItemCount(); ++i)
 	{
-		QTreeWidgetItem* itf_item = _cameraTree->topLevelItem(i);
+		QTreeWidgetItem* itfItem = _cameraTree->topLevelItem(i);
 
-		if (itemData.canConvert<InterfaceContainer>())
+		if (!itemData.isDevice())
 		{
-			auto itf_variant = itf_item->data(0, Qt::UserRole + 1);
-
-			if (itf_variant.canConvert<InterfaceContainer>())
+			auto itfVariant = itfItem->data(0, Qt::UserRole + 1);
+			if (itfVariant.value<InterfaceDeviceItemData>().itf == itemData.itf)
 			{
-				if (itf_variant.value<InterfaceContainer>().itf == itemData.value<InterfaceContainer>().itf)
-				{
-					_cameraTree->setCurrentItem(itf_item);
-					return;
-				}
+				_cameraTree->setCurrentItem(itfItem);
+				return;
 			}
 		}
-		else if (itemData.canConvert<DeviceInfoContainer>())
+		else
 		{
-			for (int j = 0; j < itf_item->childCount(); ++j)
+			for (int j = 0; j < itfItem->childCount(); ++j)
 			{
-				QTreeWidgetItem* dev_item = itf_item->child(j);
+				QTreeWidgetItem* devItem = itfItem->child(j);
+				auto devVariant = devItem->data(0, Qt::UserRole + 1);
 
-				auto dev_variant = dev_item->data(0, Qt::UserRole + 1);
-
-				if (dev_variant.canConvert<DeviceInfoContainer>())
+				if (devVariant.value<InterfaceDeviceItemData>().device == itemData.device)
 				{
-					if (dev_variant.value<DeviceInfoContainer>().info == itemData.value<DeviceInfoContainer>().info)
-					{
-						_cameraTree->setCurrentItem(dev_item);
-						return;
-					}
+					_cameraTree->setCurrentItem(devItem);
+					return;
 				}
 			}
 		}
@@ -464,14 +443,14 @@ void DeviceSelectionDlg::OnOK()
 		return;
 
 	auto variant = item->data(0, Qt::UserRole + 1);
-	if (variant.canConvert<DeviceInfoContainer>())
-	{
-		auto selectedDeviceInfo = variant.value<DeviceInfoContainer>();
+	auto itemData = variant.value<InterfaceDeviceItemData>();
 
+	if (itemData.isDevice())
+	{
 		try
 		{
 			_pgrabber->deviceClose();
-			_pgrabber->deviceOpen(selectedDeviceInfo.info);
+			_pgrabber->deviceOpen(itemData.device);
 			accept();
 		}
 		catch (ic4::IC4Exception ex)
