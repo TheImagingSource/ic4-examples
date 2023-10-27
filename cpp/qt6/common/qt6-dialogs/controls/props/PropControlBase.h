@@ -53,7 +53,7 @@ namespace ic4::ui
 		}
 		~PropControlBase()
 		{
-			prop_.eventRemoveNotification(notify_);
+			prop_.eventRemoveNotification(notify_, ic4::Error::Ignore());
 		}
 
 	public:
