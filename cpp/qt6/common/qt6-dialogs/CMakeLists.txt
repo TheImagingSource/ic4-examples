@@ -19,9 +19,11 @@ else()
 endif( Qt6Widgets_FOUND)
 
 qt_standard_project_setup()
+qt_add_resources(QT6DIALOGS_RESOURCES qt6dialogs.qrc)
 
 qt_add_library(qt6-dialogs STATIC
-    controls/Event.h
+	${QT6DIALOGS_RESOURCES}
+	controls/Event.h
 	controls/PropertyInfoBox.h
 	controls/PropertyControls.h
 	controls/PropertyControls.cpp
@@ -35,10 +37,14 @@ qt_add_library(qt6-dialogs STATIC
 	controls/props/PropFloatControl.h
 	controls/props/PropCategoryControl.h
 	controls/PropertyTreeWidget.h
+	deviceselection.h
+	deviceselection.cpp
+    controls/IPConfigGroupBox.cpp
+	controls/IPConfigGroupBox.h
 )
 
 target_include_directories(qt6-dialogs 
-	PUBLIC controls/
+	PUBLIC /
 )
 
 target_link_libraries(qt6-dialogs PUBLIC Qt6::Widgets Qt6::Core ic4::core)

@@ -29,8 +29,6 @@ qt_add_executable(demoapp
     ${DEMOAPP_RESOURCES}
     main.cpp
     mainwindow.cpp
-    ic4dialogs/deviceselection/deviceselection.cpp
-    ic4dialogs/deviceselection/IPConfigGroupBox.cpp
     events.h
     ic4dialogs/propertydlg/propertydlg.cpp
     ic4dialogs/propertydlg/propertydlg.h

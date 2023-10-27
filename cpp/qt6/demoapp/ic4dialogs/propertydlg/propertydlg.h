@@ -1,8 +1,11 @@
 #pragma once
 
-#include <QDialog>
+#include "controls/PropertyTreeWidget.h"
+
 #include <ic4/ic4.h> 
-#include "PropertyTreeWidget.h"
+
+#include <QDialog>
+
 #include <vector>
 
 class PropertyMapDlg : public QDialog

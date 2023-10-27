@@ -1,8 +1,8 @@
 #pragma once
 
 #include "deviceselection.h"
-#include "PropertyControls.h"
-#include "../../main.h"
+#include "controls/PropertyControls.h"
+#include "ResourceSelector.h"
 
 #include <iostream>
 #include <QMessagebox>
@@ -61,6 +61,8 @@ Q_DECLARE_METATYPE(InterfaceDeviceItemData)
 
 void DeviceSelectionDlg::createUI()
 {
+	Q_INIT_RESOURCE(qt6dialogs);
+
 	this->setWindowTitle("Select Device");
 	setMinimumSize(900, 400);
 
@@ -194,8 +196,8 @@ void DeviceSelectionDlg::enumerateDevices()
 			node->setText(2, strIPAddress);
 			node->setText(3, QString::fromStdString(deviceUserID));
 
-			auto cam = DemoAppFileSelector::select(":/images/camera_icon_usb3.png");
-			node->setIcon(0, QIcon(QPixmap(cam)));
+			auto cam = ResourceSelector::instance().loadIcon(":/images/camera_icon_usb3.png");
+			node->setIcon(0, cam);
 
 			itf_item->addChild(node);
 

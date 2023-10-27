@@ -1,0 +1,7 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+	<qresource>
+		<file>images/+theme_light/camera_icon_usb3.png</file>
+		<file>images/+theme_dark/camera_icon_usb3.png</file>
+	</qresource>
+</RCC>

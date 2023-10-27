@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IPConfigGroupBox.h"
+#include "controls/IPConfigGroupBox.h"
 
 #include <QDialog>
 #include <QTreeWidget>
