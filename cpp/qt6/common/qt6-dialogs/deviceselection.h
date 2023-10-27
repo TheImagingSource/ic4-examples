@@ -17,7 +17,7 @@ class DeviceSelectionDlg : public QDialog
 	Q_OBJECT
 
 public:
-	DeviceSelectionDlg(QWidget* parent, ic4::Grabber* pgrabber);
+	DeviceSelectionDlg(QWidget* parent, ic4::Grabber* pgrabber, std::function<bool(const ic4::DeviceInfo&)> filter = nullptr);
 
 protected:
 	void customEvent(QEvent* event) override;
@@ -32,6 +32,8 @@ private:
 	void createUI();
 	void enumerateDevices();
 	void selectPreviousItem(QVariant itemData);
+
+	std::function<bool(const ic4::DeviceInfo&)> _filter_func;
 
 	ic4::Grabber* _pgrabber;
 	ic4::DeviceEnum _enumerator;

@@ -22,10 +22,11 @@
 
 const QEvent::Type EVENT_DEVICE_LIST_CHANGED = static_cast<QEvent::Type>(QEvent::User + 3);
 
-DeviceSelectionDlg::DeviceSelectionDlg(QWidget* parent, ic4::Grabber* pgrabber) : QDialog(parent)
+DeviceSelectionDlg::DeviceSelectionDlg(QWidget* parent, ic4::Grabber* pgrabber, std::function<bool(const ic4::DeviceInfo&)> filter)
+	: QDialog(parent)
+	, _filter_func(filter)
+	, _pgrabber(pgrabber)
 {
-	_pgrabber = pgrabber;
-
 	createUI();
 	enumerateDevices();
 
@@ -148,7 +149,18 @@ void DeviceSelectionDlg::enumerateDevices()
 	for (auto&& itf : ic4::DeviceEnum::enumInterfaces())
 	{
 		auto itf_devices = itf.enumDevices();
-		if (itf_devices.empty())
+
+		std::vector<ic4::DeviceInfo> filtered_itf_devices;
+		if (_filter_func)
+		{
+			std::copy_if(itf_devices.begin(), itf_devices.end(), std::back_inserter(filtered_itf_devices), _filter_func);
+		}
+		else
+		{
+			filtered_itf_devices = itf_devices;
+		}
+
+		if (filtered_itf_devices.empty())
 			continue;
 
 		ic4::Error err;
@@ -164,7 +176,7 @@ void DeviceSelectionDlg::enumerateDevices()
 		itf_item->setFirstColumnSpanned(true);
 
 		int index = 0;
-		for (auto&& dev : itf_devices)
+		for (auto&& dev : filtered_itf_devices)
 		{
 			QString strIPAddress;
 
