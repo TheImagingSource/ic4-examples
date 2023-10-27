@@ -1,5 +1,7 @@
 #pragma once
 
+#include "IPConfigGroupBox.h"
+
 #include <QDialog>
 #include <QTreeWidget>
 #include <QModelIndex>
@@ -40,4 +42,5 @@ private:
 	QFormLayout* _itfInfoLayout;
 	QGroupBox* _devInfoGroup;
 	QFormLayout* _devInfoLayout;
+	IPConfigGroupBox* _ipConfigGroup;
 };

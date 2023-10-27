@@ -14,6 +14,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QPlainTextEdit>
+#include <QCheckBox>
 #include <QtAlgorithms>
 
 const QEvent::Type EVENT_DEVICE_LIST_CHANGED = static_cast<QEvent::Type>(QEvent::User + 3);
@@ -101,22 +102,23 @@ void DeviceSelectionDlg::createUI()
 	leftLayout->addLayout(buttons);
 	topLayout->addLayout(leftLayout, 1);
 
+	_itfInfoGroup = new QGroupBox(tr("Interface Information"));
 	_itfInfoLayout = new QFormLayout();
 	_itfInfoLayout->setContentsMargins(4, 4, 4, 4);
-	_itfInfoLayout->setLabelAlignment(Qt::AlignRight);
+	_itfInfoGroup->setLayout(_itfInfoLayout);
+
+	_devInfoGroup = new QGroupBox(tr("Device Information"));
 	_devInfoLayout = new QFormLayout();
 	_devInfoLayout->setContentsMargins(4, 4, 4, 4);
-	_devInfoLayout->setLabelAlignment(Qt::AlignRight);
-
-	_itfInfoGroup = new QGroupBox(tr("Interface Information"));
-	_itfInfoGroup->setLayout(_itfInfoLayout);
-	_devInfoGroup = new QGroupBox(tr("Device Information"));
 	_devInfoGroup->setLayout(_devInfoLayout);
+
+	_ipConfigGroup = new IPConfigGroupBox(tr("IP Configuration"));	
 
 	auto rightLayout = new QVBoxLayout();
 	rightLayout->addWidget(_itfInfoGroup, 0);
-	rightLayout->addWidget(_devInfoGroup, 1);
-	rightLayout->addStretch(10);
+	rightLayout->addWidget(_devInfoGroup, 0);
+	rightLayout->addWidget(_ipConfigGroup, 0);
+	rightLayout->addStretch(1);
 	topLayout->addLayout(rightLayout, 2);
 
 	setLayout(topLayout);
@@ -291,9 +293,12 @@ void DeviceSelectionDlg::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWid
 {
 	_OKButton->setEnabled(false);	
 
+	_itfInfoGroup->hide();
 	clearFormLayout(*_itfInfoLayout);
 	_devInfoGroup->hide();
 	clearFormLayout(*_devInfoLayout);
+	_ipConfigGroup->hide();
+	_ipConfigGroup->clear();
 
 	if (current == nullptr)
 	{
@@ -303,6 +308,7 @@ void DeviceSelectionDlg::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWid
 	auto variant = current->data(0, Qt::UserRole + 1);
 	auto itemData = variant.value<InterfaceDeviceItemData>();
 
+	bool isGigEVisionInterface = itemData.itf.transportLayerType(ic4::Error::Ignore()) == ic4::TransportLayerType::GigEVision;
 	ic4::PropertyMap map = itemData.itfPropertyMap;
 
 	if (itemData.isDevice())
@@ -313,49 +319,56 @@ void DeviceSelectionDlg::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWid
 		}
 	}
 
-	auto addStringItem = [](const char* label, const QString& value, QFormLayout& layout)
+	auto addStringItem = [](const char* label, const QString& value, QFormLayout& layout) -> QLineEdit*
 		{
 			auto edit = new QLineEdit(value);
 			edit->setReadOnly(true);
 			edit->setCursorPosition(0);
 			layout.addRow(tr(label), edit);
+			return edit;
 		};
 
-	auto buildStringItemIfExists = [&addStringItem](const ic4::PropertyMap& map, const char* prop_item, const char* label, QFormLayout& layout)
+	auto buildStringItemIfExists = [&addStringItem](const ic4::PropertyMap& map, const char* prop_item, const char* label, QFormLayout& layout) -> QLineEdit*
 		{
 			ic4::Error err;
 			auto value = map.getValueString(prop_item, err);
 			if (err.isSuccess())
 			{
-				addStringItem(label, QString::fromStdString(value), layout);
+				return addStringItem(label, QString::fromStdString(value), layout);
 			}
+			return nullptr;
 		};
+
+	_itfInfoGroup->show();
 
 	buildStringItemIfExists(map, "InterfaceDisplayName", "Interface Name", *_itfInfoLayout);	
 
-	auto interfaceIPAddresses = buildInterfaceIPAddressList(map);
-	if (interfaceIPAddresses.count() == 1)
+	if (isGigEVisionInterface)
 	{
-		auto edit = new QLineEdit(interfaceIPAddresses.at(0));
-		edit->setReadOnly(true);
-		_itfInfoLayout->addRow(tr("IP Address"), edit);
-	}
-	else if (!interfaceIPAddresses.isEmpty())
-	{
-		auto txt = interfaceIPAddresses.join("\r\n");
-		auto edit = new QPlainTextEdit(txt);
-		edit->document()->setDocumentMargin(2);
-		edit->setReadOnly(true);
-		auto docmargin = edit->document()->documentMargin();
-		auto margins = edit->contentsMargins();
-		auto frameWidth = edit->frameWidth();
-		auto fontHeight = edit->fontMetrics().height();
-		edit->setFixedHeight(fontHeight * interfaceIPAddresses.count() + frameWidth * 2 + margins.top() + margins.bottom() + (int)docmargin * 2);
-		edit->setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
-		_itfInfoLayout->addRow("IP Addresses", edit);
-	}
+		auto interfaceIPAddresses = buildInterfaceIPAddressList(map);
+		if (interfaceIPAddresses.count() == 1)
+		{
+			auto edit = new QLineEdit(interfaceIPAddresses.at(0));
+			edit->setReadOnly(true);
+			_itfInfoLayout->addRow(tr("IP Address"), edit);
+		}
+		else if (!interfaceIPAddresses.isEmpty())
+		{
+			auto txt = interfaceIPAddresses.join("\r\n");
+			auto edit = new QPlainTextEdit(txt);
+			edit->document()->setDocumentMargin(2);
+			edit->setReadOnly(true);
+			auto docmargin = edit->document()->documentMargin();
+			auto margins = edit->contentsMargins();
+			auto frameWidth = edit->frameWidth();
+			auto fontHeight = edit->fontMetrics().height();
+			edit->setFixedHeight(fontHeight * interfaceIPAddresses.count() + frameWidth * 2 + margins.top() + margins.bottom() + (int)docmargin * 2);
+			edit->setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
+			_itfInfoLayout->addRow("IP Addresses", edit);
+		}
 
-	buildStringItemIfExists(map, "MaximumTransmissionUnit", "Maximum Transmission Unit", *_itfInfoLayout);
+		buildStringItemIfExists(map, "MaximumTransmissionUnit", "Maximum Transmission Unit", *_itfInfoLayout);
+	}
 
 	if (itemData.isDevice())
 	{
@@ -367,15 +380,30 @@ void DeviceSelectionDlg::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWid
 		buildStringItemIfExists(map, "DeviceVersion", "Device Version", *_devInfoLayout);
 		buildStringItemIfExists(map, "DeviceUserID", "Device User ID", *_devInfoLayout);
 
-		auto devIPAddress = buildIPAddress(map, "GevDeviceIPAddress", "GevDeviceSubnetMask");
-		if( !devIPAddress.isEmpty() )
-			addStringItem("Device IP Address", devIPAddress, *_devInfoLayout);
+		if (isGigEVisionInterface)
+		{
+			auto devIPAddress = buildIPAddress(map, "GevDeviceIPAddress", "GevDeviceSubnetMask");
+			if (!devIPAddress.isEmpty())
+				addStringItem("Device IP Address", devIPAddress, *_devInfoLayout);
 
-		buildStringItemIfExists(map, "GevDeviceGateway", "Device Gateway", *_devInfoLayout);
-		buildStringItemIfExists(map, "GevDeviceMACAddress", "Device MAC Address", *_devInfoLayout);
+			buildStringItemIfExists(map, "GevDeviceGateway", "Device Gateway", *_devInfoLayout);
+			buildStringItemIfExists(map, "GevDeviceMACAddress", "Device MAC Address", *_devInfoLayout);
+
+			auto reachableStatus = map.getValueString("DeviceReachableStatus", ic4::Error::Ignore());
+			if (reachableStatus == "Reachable")
+			{				
+				_ipConfigGroup->update(itemData.device);
+			}
+			else
+			{
+				_ipConfigGroup->updateUnreachable(map);
+			}
+
+			_ipConfigGroup->show();
+		}
 	}
 
-	synchronizeColumnWidths({ _devInfoLayout, _itfInfoLayout });
+	synchronizeColumnWidths({ _devInfoLayout, _itfInfoLayout, _ipConfigGroup->formLayout() });
 }
 
 void DeviceSelectionDlg::selectPreviousItem(QVariant itemVariant)
