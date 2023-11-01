@@ -175,6 +175,8 @@ void DeviceSelectionDlg::enumerateDevices()
 		itf_item->setData(0, Qt::UserRole + 1, QVariant::fromValue(InterfaceDeviceItemData{ itf, map }));
 		itf_item->setFirstColumnSpanned(true);
 
+		bool isGigEVisionInterface = itf.transportLayerType(ic4::Error::Ignore()) == ic4::TransportLayerType::GigEVision;
+
 		int index = 0;
 		for (auto&& dev : filtered_itf_devices)
 		{
@@ -208,8 +210,19 @@ void DeviceSelectionDlg::enumerateDevices()
 			node->setText(2, strIPAddress);
 			node->setText(3, QString::fromStdString(deviceUserID));
 
-			auto cam = ResourceSelector::instance().loadIcon(":/images/camera_icon_usb3.png");
-			node->setIcon(0, cam);
+			auto icon = style()->standardIcon(QStyle::SP_MessageBoxWarning);
+			auto iconSize = icon.actualSize(QSize(32, 32));
+
+			if (!isGigEVisionInterface || map.getValueString("DeviceReachableStatus", ic4::Error::Ignore()) == "Reachable")
+			{
+				auto cam = ResourceSelector::instance().loadIcon(":/images/camera_icon_usb3.png");
+				node->setIcon(0, cam);
+			}
+			else
+			{
+				auto warning = style()->standardIcon(QStyle::SP_MessageBoxWarning);
+				node->setIcon(0, warning);
+			}
 
 			itf_item->addChild(node);
 

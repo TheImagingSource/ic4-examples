@@ -7,6 +7,7 @@
 #include <QRegularExpressionValidator>
 #include <QLabel>
 #include <QMessageBox>
+#include <QStyle>
 
 namespace
 {
@@ -222,6 +223,29 @@ void IPConfigGroupBox::onApplyButtonPressed()
 void IPConfigGroupBox::updateUnreachable(ic4::PropertyMap itfPropertyMap)
 {
 	_itfPropertyMap = itfPropertyMap;
+
+	auto* frame = new QFrame();
+	frame->setObjectName("WarningFrame");
+	frame->setStyleSheet("QFrame#WarningFrame { border: 1px solid red; background-color: palette(base); color: red; padding: 4px }");
+
+	auto* iconLabel = new QLabel();
+	auto icon = style()->standardIcon(QStyle::SP_MessageBoxWarning);
+	auto iconSize = icon.actualSize(QSize(32, 32));
+	iconLabel->setPixmap(icon.pixmap(iconSize));
+
+	auto* textLabel = new QLabel(tr("The device is currently not reachable by unicast messages. "
+		"It has to be reconfigured to be in (one of) the subnet(s) of the network adapter."));
+	textLabel->setWordWrap(true);
+	//label->setStyleSheet("border: 1px solid red; background-color: palette(base); color: red; padding: 4px");
+
+
+	auto* hbox = new QHBoxLayout();
+	hbox->setContentsMargins(0, 0, 0, 0);
+	hbox->addWidget(iconLabel, 0);
+	hbox->addWidget(textLabel, 1);
+	frame->setLayout(hbox);
+
+	_layout->addRow(frame);
 
 	_forceIPAddress = addIPEdit(_itfPropertyMap, "GevDeviceForceIPAddress", "0.0.0.0", "Force IP Address", *_layout);
 	_forceSubnetMask = addIPEdit(_itfPropertyMap, "GevDeviceForceSubnetMask", "0.0.0.0", "Force Subnet Mask", *_layout);
