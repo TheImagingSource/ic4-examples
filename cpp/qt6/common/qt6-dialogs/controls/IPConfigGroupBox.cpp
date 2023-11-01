@@ -1,5 +1,6 @@
 
 #include "IPConfigGroupBox.h"
+#include "../ResourceSelector.h"
 
 #include <QCheckBox>
 #include <QLineEdit>
@@ -68,7 +69,14 @@ namespace
 				}
 				else
 				{
-					edit->setStyleSheet("background-color: darkred");
+					if (ResourceSelector::isDarkMode())
+					{
+						edit->setStyleSheet("background-color: darkred");
+					}
+					else
+					{
+						edit->setStyleSheet("background-color: #FF4040");
+					}
 				}
 			}
 		);

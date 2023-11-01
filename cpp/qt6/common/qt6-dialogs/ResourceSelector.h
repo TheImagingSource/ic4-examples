@@ -10,6 +10,7 @@ class ResourceSelector
 private:
 	QFileSelector fileSelector;
 
+public:
 	static bool isDarkMode()
 	{
 		// Compare WindowText vs Window color lightness to detect dark mode
@@ -18,7 +19,6 @@ private:
 			 > defaultPalette.color(QPalette::Window).lightness();
 	}
 
-public:
 	ResourceSelector()
 	{
 		QStringList extraSelectors({ isDarkMode() ? "theme_dark" : "theme_light" });
