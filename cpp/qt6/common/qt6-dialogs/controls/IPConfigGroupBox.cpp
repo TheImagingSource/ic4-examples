@@ -22,6 +22,25 @@ namespace
 		return check;
 	}
 
+	class IPV4Validator : public QValidator
+	{
+	public:
+		using QValidator::QValidator;
+
+	public:
+		QValidator::State	validate(QString& input, int& pos) const override
+		{
+			static QRegularExpression regex("^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$");
+
+			if (regex.match(input).hasMatch())
+			{
+				return QValidator::State::Acceptable;
+			}
+
+			return QValidator::State::Intermediate;
+		}
+	};
+
 	QLineEdit* addIPEdit(const ic4::PropertyMap& map, const char* propName, const std::string& defaultValue, const char* label, QFormLayout& layout)
 	{
 		ic4::Error err;
@@ -34,11 +53,24 @@ namespace
 		auto* edit = new QLineEdit(QString::fromStdString(value));
 		edit->setEnabled(true);
 
-		QRegularExpression ipRegex("^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$");
-		auto* ipValidator = new QRegularExpressionValidator(ipRegex, edit);
+		auto* ipValidator = new IPV4Validator(edit);
 		edit->setValidator(ipValidator);
 
 		layout.addRow(QObject::tr(label), edit);
+
+		QObject::connect(edit, &QLineEdit::textChanged,
+			[edit]()
+			{
+				if (edit->hasAcceptableInput())
+				{
+					edit->setStyleSheet("background-color: palette(base)");
+				}
+				else
+				{
+					edit->setStyleSheet("background-color: darkred");
+				}
+			}
+		);
 
 		return edit;
 	}
@@ -78,6 +110,20 @@ void IPConfigGroupBox::update(const ic4::DeviceInfo& deviceInfo)
 			_layout->addRow(_applyButton);
 
 			connect(_applyButton, &QPushButton::pressed, this, &IPConfigGroupBox::onApplyButtonPressed);
+
+			auto updateApplyButtonEnabled = [this]()
+				{
+					bool allIPValid = _persistentIPAddress->hasAcceptableInput()
+						&& _persistentSubnetMask->hasAcceptableInput()
+						&& _persistentDefaultGateway->hasAcceptableInput();
+
+					_applyButton->setEnabled(allIPValid || (_chkPersistentIP->checkState() != Qt::Checked));
+				};
+
+			connect(_persistentIPAddress, &QLineEdit::textChanged, updateApplyButtonEnabled);
+			connect(_persistentSubnetMask, &QLineEdit::textChanged, updateApplyButtonEnabled);
+			connect(_persistentDefaultGateway, &QLineEdit::textChanged, updateApplyButtonEnabled);
+			connect(_chkPersistentIP, &QCheckBox::stateChanged, updateApplyButtonEnabled);
 		}
 	}
 }
@@ -131,31 +177,34 @@ void IPConfigGroupBox::onApplyButtonPressed()
 		return;
 	}
 
-	if (!map.setValue("GevDeviceIPConfigPersistentIPAddress", _persistentIPAddress->text().toStdString(), err))
+	if (_chkPersistentIP->checkState() == Qt::Checked)
 	{
-		QMessageBox::critical(this, {},
-			QString("Failed to set GevDeviceIPConfigPersistentIPAddress:\n%1")
-				.arg(err.message().c_str())
-		);
-		return;
-	}
+		if (!map.setValue("GevDeviceIPConfigPersistentIPAddress", _persistentIPAddress->text().toStdString(), err))
+		{
+			QMessageBox::critical(this, {},
+				QString("Failed to set GevDeviceIPConfigPersistentIPAddress:\n%1")
+					.arg(err.message().c_str())
+			);
+			return;
+		}
 
-	if (!map.setValue("GevDeviceIPConfigPersistentSubnetMask", _persistentSubnetMask->text().toStdString(), err))
-	{
-		QMessageBox::critical(this, {},
-			QString("Failed to set GevDeviceIPConfigPersistentSubnetMask:\n%1")
-				.arg(err.message().c_str())
-		);
-		return;
-	}
+		if (!map.setValue("GevDeviceIPConfigPersistentSubnetMask", _persistentSubnetMask->text().toStdString(), err))
+		{
+			QMessageBox::critical(this, {},
+				QString("Failed to set GevDeviceIPConfigPersistentSubnetMask:\n%1")
+					.arg(err.message().c_str())
+			);
+			return;
+		}
 
-	if (!map.setValue("GevDeviceIPConfigPersistentGateway", _persistentDefaultGateway->text().toStdString(), err))
-	{
-		QMessageBox::critical(this, {},
-			QString("Failed to set GevDeviceIPConfigPersistentGateway:\n%1")
-				.arg(err.message().c_str())
-		);
-		return;
+		if (!map.setValue("GevDeviceIPConfigPersistentGateway", _persistentDefaultGateway->text().toStdString(), err))
+		{
+			QMessageBox::critical(this, {},
+				QString("Failed to set GevDeviceIPConfigPersistentGateway:\n%1")
+					.arg(err.message().c_str())
+			);
+			return;
+		}
 	}
 
 	if (!map.executeCommand("GevDeviceIPConfigApply", err))
@@ -182,6 +231,18 @@ void IPConfigGroupBox::updateUnreachable(ic4::PropertyMap itfPropertyMap)
 	_layout->addRow(_forceButton);
 
 	connect(_forceButton, &QPushButton::pressed, this, &IPConfigGroupBox::onForceButtonPressed);
+
+	auto updateForceButtonEnabled = [this]()
+		{
+			bool allIPValid = _forceIPAddress->hasAcceptableInput()
+				&& _forceSubnetMask->hasAcceptableInput()
+				&& _forceDefaultGateway->hasAcceptableInput();
+			_forceButton->setEnabled(allIPValid);
+		};
+
+	connect(_forceIPAddress, &QLineEdit::textChanged, updateForceButtonEnabled);
+	connect(_forceSubnetMask, &QLineEdit::textChanged, updateForceButtonEnabled);
+	connect(_forceDefaultGateway, &QLineEdit::textChanged, updateForceButtonEnabled);
 }
 
 void IPConfigGroupBox::onForceButtonPressed()
