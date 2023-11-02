@@ -8,12 +8,12 @@
 
 #include <vector>
 
-class PropertyMapDlg : public QDialog
+class PropertyDialog : public QDialog
 {
 	Q_OBJECT
 
 public:
-	PropertyMapDlg(ic4::PropertyMap map, QWidget* parent, ic4::Grabber* grabber);
+	PropertyDialog(ic4::PropertyMap map, QWidget* parent, ic4::Grabber* grabber);
 
 private:
 	void createUI();

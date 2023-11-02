@@ -1,6 +1,6 @@
 #pragma once
 
-#include "deviceselection.h"
+#include "DeviceSelectionDialog.h"
 #include "controls/PropertyControls.h"
 #include "ResourceSelector.h"
 

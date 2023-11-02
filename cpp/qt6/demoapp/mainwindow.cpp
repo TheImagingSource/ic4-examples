@@ -19,10 +19,9 @@
 #include "mainwindow.h"
 #include "events.h"
 
-#include "deviceselection.h"
+#include "DeviceSelectionDialog.h"
+#include "PropertyDialog.h"
 #include "ResourceSelector.h"
-
-#include "ic4dialogs/propertydlg/propertydlg.h"
 
 #include <QApplication>
 #include <QMessageBox>
@@ -343,7 +342,7 @@ void MainWindow::onSelectDevice()
 /// </summary>
 void MainWindow::onDeviceProperties()
 {
-	PropertyMapDlg cDlg(_devicePropertyMap, this, &_grabber);
+	PropertyDialog cDlg(_devicePropertyMap, this, &_grabber);
 	if (cDlg.exec() == 1)
 	{
 		_grabber.deviceSaveState(_devicefile);
@@ -518,7 +517,7 @@ void MainWindow::onStopCaptureVideo()
 
 void MainWindow::onCodecProperties()
 {
-	PropertyMapDlg cDlg(_videowriter.getPropertyMap(), this, nullptr);
+	PropertyDialog cDlg(_videowriter.getPropertyMap(), this, nullptr);
 	if (cDlg.exec() == 1)
 	{
 		_videowriter.getPropertyMap().serialize(_codecconfigfile);

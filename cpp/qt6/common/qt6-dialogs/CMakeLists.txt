@@ -37,10 +37,13 @@ qt_add_library(qt6-dialogs STATIC
 	controls/props/PropFloatControl.h
 	controls/props/PropCategoryControl.h
 	controls/PropertyTreeWidget.h
-	deviceselection.h
-	deviceselection.cpp
     controls/IPConfigGroupBox.cpp
 	controls/IPConfigGroupBox.h
+
+	DeviceSelectionDialog.h
+	DeviceSelectionDialog.cpp
+	PropertyDialog.h
+	PropertyDialog.cpp
 )
 
 target_include_directories(qt6-dialogs 

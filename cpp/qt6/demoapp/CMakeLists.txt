@@ -30,8 +30,6 @@ qt_add_executable(demoapp
     main.cpp
     mainwindow.cpp
     events.h
-    ic4dialogs/propertydlg/propertydlg.cpp
-    ic4dialogs/propertydlg/propertydlg.h
 )
 
 target_link_libraries(demoapp

@@ -1,5 +1,5 @@
 
-#include "propertydlg.h"
+#include "PropertyDialog.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -7,7 +7,7 @@
 #include <QLabel>
 #include <QDialogButtonBox>
 
-PropertyMapDlg::PropertyMapDlg(ic4::PropertyMap map, QWidget* parent, ic4::Grabber* grabber)
+PropertyDialog::PropertyDialog(ic4::PropertyMap map, QWidget* parent, ic4::Grabber* grabber)
 	: QDialog(parent)
 	, _map(map)
 	, _grabber(grabber)
@@ -16,7 +16,7 @@ PropertyMapDlg::PropertyMapDlg(ic4::PropertyMap map, QWidget* parent, ic4::Grabb
 	createUI();
 }
 
-void PropertyMapDlg::createUI()
+void PropertyDialog::createUI()
 {
 	this->setWindowTitle("Properties");
 	setMinimumSize(500, 700);
