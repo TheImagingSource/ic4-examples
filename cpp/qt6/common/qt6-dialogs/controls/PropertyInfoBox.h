@@ -57,13 +57,13 @@ public:
 				text += QString("Type: Category\n\n");
 				break;
 			case ic4::PropType::Integer:
-				text += showIntegerInfo(prop);
+				text += showIntegerInfo(prop.asInteger());
 				break;
 			case ic4::PropType::Float:
-				text += showFloatInfo(prop);
+				text += showFloatInfo(prop.asFloat());
 				break;
 			case ic4::PropType::String:
-				text += showStringInfo(prop);
+				text += showStringInfo(prop.asString());
 				break;
 			case ic4::PropType::Enumeration:
 				text += showEnumerationInfo(prop.asEnumeration());
@@ -112,30 +112,30 @@ public:
 	QString showStringInfo(ic4::Property prop)
 	{
 		auto text = QString("Type: String\n\n");
+
+		auto stringProp = prop.asString();
+		try
 		{
-			auto stringProp = prop.asString();
+			auto val = stringProp.getValue();
+			auto str = QString::fromStdString(val);
+			str.replace("@", "<span>@</span>");
+
+			text += QString("Value: %1\n\n").arg(str);
+		}
+		catch (const ic4::IC4Exception& iex)
+		{
+			text += QString("Value: <span style='color:red'>%1</span>\n\n").arg(iex.what());
+		}
+
+		if (!stringProp.isReadOnly())
+		{
 			try
 			{
-				auto val = stringProp.getValue();
-				auto str = QString::fromStdString(val);
-				str.replace("@", "<span>@</span>");
-
-				text += QString("Value: %1\n\n").arg(str);
+				text += QString("Maximum Length: %1\n\n").arg(stringProp.getMaxLength());
 			}
-			catch (const ic4::IC4Exception& iex)
-			{
-				text += QString("Value: <span style='color:red'>%1</span>\n\n").arg(iex.what());
-			}
-
-			if (!stringProp.isReadOnly())
-			{
-				try
-				{
-					text += QString("Maximum Length: %1\n\n").arg(stringProp.getMaxLength());
-				}
-				catch (...) {}
-			}
+			catch (...) {}
 		}
+
 		return text;
 	}
 	/// <summary>
@@ -143,48 +143,47 @@ public:
 	/// </summary>
 	/// <param name="prop"></param>
 	/// <returns></returns>
-	QString showIntegerInfo(ic4::Property prop)
+	QString showIntegerInfo(ic4::PropInteger prop)
 	{
 		auto text = QString("Type: Integer\n\n");
+
+		auto rep = prop.getRepresentation();
+		auto unit = prop.getUnit();
+		if (unit != "")
 		{
-			auto intProp = prop.asInteger();
-			auto rep = intProp.getRepresentation();
-			auto unit = intProp.getUnit();
-			if (unit != "")
+			text += QString("Unit: %1\n\n").arg(unit.c_str());
+		}
+
+		try
+		{
+			auto val = prop.getValue();
+			text += QString("Value: %1\n\n").arg(ic4::ui::PropIntControl::value_to_string(val, rep));
+		}
+		catch (const ic4::IC4Exception &iex)
+		{
+			text += QString("Value: <span style='color:red'>%1</span>\n\n").arg(iex.what());
+		}
+
+		if (!prop.isReadOnly())
+		{
+			ic4::Error err;
+
+			auto minimum = prop.getMinimum(err);
+			if (err.isSuccess())
 			{
-				text += QString("Unit: %1\n\n").arg(unit.c_str());
+				text += QString("Minimum: %1\n\n").arg(minimum);
 			}
 
-			try
+			auto maximum = prop.getMinimum(err);
+			if (err.isSuccess())
 			{
-				auto val = intProp.getValue();
-				text += QString("Value: %1\n\n").arg(ic4::ui::PropIntControl::value_to_string(val, rep));
-			}
-			catch (const ic4::IC4Exception &iex)
-			{
-				text += QString("Value: <span style='color:red'>%1</span>\n\n").arg(iex.what());
+				text += QString("Maximum: %1\n\n").arg(maximum);
 			}
 
-			if (!intProp.isReadOnly())
+			auto increment = prop.getIncrement(err);
+			if (err.isSuccess())
 			{
-				try
-				{
-					text += QString("Minimum: %1\n\n").arg(intProp.getMinimum());
-				}
-				catch (...) {}
-
-				try
-				{
-					text += QString("Maximum: %1\n\n").arg(intProp.getMaximum());
-				}
-				catch (...) {}
-
-				try
-				{
-					text += QString("Increment: %1\n\n").arg(intProp.getIncrement());
-				}
-				catch (...) {}
-
+				text += QString("Maximum: %1\n\n").arg(increment);
 			}
 		}
 
@@ -196,49 +195,49 @@ public:
 	/// </summary>
 	/// <param name="prop"></param>
 	/// <returns></returns>
-	QString showFloatInfo(ic4::Property prop)
+	QString showFloatInfo(ic4::PropFloat prop)
 	{
 		auto text = QString("Type: Float\n\n");
+
+		auto rep = prop.getRepresentation(ic4::Error::Ignore());
+		auto notation = prop.getDisplayNotation(ic4::Error::Ignore());
+		auto precision = prop.getDisplayPrecision(ic4::Error::Ignore());
+		auto unit = prop.getUnit();
+		if (unit != "")
 		{
-			auto intProp = prop.asFloat();
-			auto rep = intProp.getRepresentation(ic4::Error::Ignore());
-			auto notation = intProp.getDisplayNotation(ic4::Error::Ignore());
-			auto precision = intProp.getDisplayPrecision(ic4::Error::Ignore());
-			auto unit = intProp.getUnit();
-			if (unit != "")
+			text += QString("Unit: %1\n\n").arg(unit.c_str()) ;
+		}
+
+		try
+		{
+			auto val = prop.getValue();
+			text += QString("Value: %1\n\n").arg(ic4::ui::PropFloatControl::textFromValue(val, notation, precision, locale()));
+		}
+		catch (const ic4::IC4Exception& iex)
+		{
+			text += QString("Value: <span style='color:red'>%1</span>\n\n").arg(iex.what());
+		}
+
+		if (!prop.isReadOnly())
+		{
+			ic4::Error err;
+
+			auto minimum = prop.getMinimum(err);
+			if (err.isSuccess())
 			{
-				text += QString("Unit: %1\n\n").arg(unit.c_str()) ;
+				text += QString("Minimum: %1\n\n").arg(minimum);
 			}
 
-			try
+			auto maximum = prop.getMinimum(err);
+			if (err.isSuccess())
 			{
-				auto val = intProp.getValue();
-				text += QString("Value: %1\n\n").arg(ic4::ui::PropFloatControl::textFromValue(val, notation, precision, locale()));
-			}
-			catch (const ic4::IC4Exception& iex)
-			{
-				text += QString("Value: <span style='color:red'>%1</span>\n\n").arg(iex.what());
+				text += QString("Maximum: %1\n\n").arg(maximum);
 			}
 
-			if (!intProp.isReadOnly())
+			auto increment = prop.getIncrement(err);
+			if (err.isSuccess())
 			{
-				try
-				{
-					text += QString("Minimum: %1\n\n").arg(intProp.getMinimum());
-				}
-				catch (...) {}
-
-				try
-				{
-					text += QString("Maximum: %1\n\n").arg(intProp.getMaximum());
-				}
-				catch (...) {}
-
-				try
-				{
-					text += QString("Increment: %1\n\n").arg(intProp.getIncrement());
-				}
-				catch (...) {}
+				text += QString("Maximum: %1\n\n").arg(increment);
 			}
 		}
 
