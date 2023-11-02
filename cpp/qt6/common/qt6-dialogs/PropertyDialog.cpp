@@ -7,36 +7,46 @@
 #include <QLabel>
 #include <QDialogButtonBox>
 
-PropertyDialog::PropertyDialog(ic4::PropertyMap map, QWidget* parent, ic4::Grabber* grabber)
+PropertyDialog::PropertyDialog(ic4::PropertyMap map, QWidget* parent, const QString& title)
+	: PropertyDialog(map, nullptr, parent, title)
+{
+}
+
+PropertyDialog::PropertyDialog(ic4::Grabber& grabber, QWidget* parent, const QString& title)
+	: PropertyDialog(grabber.devicePropertyMap(), &grabber, parent, title)
+{
+}
+
+PropertyDialog::PropertyDialog(ic4::PropertyMap map, ic4::Grabber* grabber, QWidget* parent, const QString& title)
 	: QDialog(parent)
 	, _map(map)
 	, _grabber(grabber)
 {
-	_map.serialize(oldstate);
+	_map.serialize(oldstate, ic4::Error::Ignore());
+
+	setWindowTitle(title);
 	createUI();
 }
 
 void PropertyDialog::createUI()
 {
-	this->setWindowTitle("Properties");
 	setMinimumSize(500, 700);
 
-	auto mainLayout = new QVBoxLayout();
-
-	ic4::ui::PropertyTreeWidget::Settings displaysettigns = { false, true, true };
-	auto tree = new ic4::ui::PropertyTreeWidget(_map.findCategory("Root"), _grabber, displaysettigns, this);
-	mainLayout->addWidget(tree);
+	ic4::ui::PropertyTreeWidget::Settings treeSettings = { false, true, true };
+	auto tree = new ic4::ui::PropertyTreeWidget(_map.findCategory("Root"), _grabber, treeSettings, this);
 
 	auto buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 	connect(buttons, &QDialogButtonBox::accepted, this, &QDialog::accept);
 	connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
+
+	auto mainLayout = new QVBoxLayout();
+	mainLayout->addWidget(tree);
 	mainLayout->addWidget(buttons);
+	setLayout(mainLayout);
 
 	connect(this, &QDialog::rejected,
 		[this] {
 			_map.deSerialize(oldstate, ic4::Error::Ignore());
 		}
 	);
-	
-	setLayout(mainLayout);
 }
