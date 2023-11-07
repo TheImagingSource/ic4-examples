@@ -43,7 +43,6 @@ private:
 	void customEvent(QEvent* event);
 	void savePhoto(const ic4::ImageBuffer& imagebuffer);
 
-	std::string _name;          // Name of the application
 	std::string _devicefile;    // File name of device state xml
 	std::string _codecconfigfile;    // File name of device state xml
 	std::mutex _snapphotomutex;
@@ -68,7 +67,7 @@ private:
 	ic4::Grabber _grabber;
 	std::shared_ptr<ic4::Display> _display;
 	std::shared_ptr<ic4::QueueSink> _queuesink;
-	ic4::VideoWriter _videowriter;	
+	ic4::VideoWriter _videowriter;
 
 	virtual bool sinkConnected(ic4::QueueSink& sink, const ic4::ImageType& imageType, size_t  	min_buffers_required);
 

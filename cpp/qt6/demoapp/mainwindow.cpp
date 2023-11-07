@@ -38,13 +38,11 @@
 
 MainWindow::MainWindow(QWidget* parent)
 	: QMainWindow(parent)
-	, _name("IC4 Demo App")
 	, _shootPhoto(false)
 	, _videowriter(ic4::VideoWriterType::MP4_H264)
 	, _capturetovideo(false)
 	, _videocapturepause(false)
 {
-	this->setWindowTitle(_name.c_str());
 	createUI();
 
 	// Make sure the %appdata%/demoapp directory exists
@@ -71,7 +69,7 @@ MainWindow::MainWindow(QWidget* parent)
 	}
 	catch (const ic4::IC4Exception& ex)
 	{
-		QMessageBox::information(NULL, _name.c_str(), ex.what());
+		QMessageBox::information(this, {}, ex.what());
 	}
 
 	if (QFileInfo::exists(_devicefile.c_str()))
@@ -82,7 +80,7 @@ MainWindow::MainWindow(QWidget* parent)
 		if (!_grabber.deviceOpenFromState(_devicefile, err))
 		{
 			auto message = "Loading last used device failed: " + err.message();
-			QMessageBox::information(NULL, _name.c_str(), message.c_str());
+			QMessageBox::information(this, {}, message.c_str());
 		}
 
 		// Remember the device's property map for later use
@@ -103,7 +101,7 @@ MainWindow::MainWindow(QWidget* parent)
 		catch (const ic4::IC4Exception& ex)
 		{
 			auto message = "Loading last codec configuration failed: " + std::string(ex.what());
-			QMessageBox::information(NULL, _name.c_str(), message.c_str());
+			QMessageBox::information(this, {}, message.c_str());
 		}
 	}
 
@@ -382,7 +380,7 @@ void MainWindow::startstopstream()
 	}
 	catch (ic4::IC4Exception ex)
 	{
-		QMessageBox::warning(NULL, _name.c_str(), ex.what());
+		QMessageBox::warning(this, {}, ex.what());
 	}
 
 	updateControls();
@@ -395,7 +393,7 @@ void MainWindow::startstopstream()
 
 void MainWindow::onDeviceLost()
 {
-	QMessageBox::warning(NULL, _name.c_str(), "The video capture device is lost!");
+	QMessageBox::warning(this, {}, "The video capture device is lost!");
 	if (_capturetovideo)
 	{
 		onStopCaptureVideo();
@@ -450,7 +448,7 @@ void MainWindow::savePhoto(const ic4::ImageBuffer& imagebuffer)
 
 		if (err.isError())
 		{
-			QMessageBox::warning(NULL, _name.c_str(), err.message().c_str());
+			QMessageBox::warning(this, {}, err.message().c_str());
 		}
 	}
 }
@@ -492,7 +490,7 @@ void MainWindow::onStartCaptureVideo()
 			_recordstopact->setEnabled(false);
 			_recordstartact->setChecked(false);
 
-			QMessageBox::critical(this, _name.c_str(), iex.what());
+			QMessageBox::critical(this, {}, iex.what());
 		}
 	}
 	else
