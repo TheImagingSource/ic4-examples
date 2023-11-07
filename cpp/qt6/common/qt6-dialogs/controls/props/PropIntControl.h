@@ -133,50 +133,65 @@ namespace ic4::ui
 			set_value_unchecked(new_val);
 		}
 
+		void show_error()
+		{
+			if (spin_)
+			{
+				spin_->blockSignals(true);
+				spin_->setEnabled(false);
+				spin_->setSpecialValueText("<Error>");
+				spin_->setValue(min_);
+				spin_->blockSignals(false);
+			}
+			if (edit_)
+			{
+				edit_->blockSignals(true);
+				edit_->setEnabled(false);
+				edit_->setText("<Error>");
+				edit_->blockSignals(false);
+			}
+		}
+
 		void update_all() override
 		{
-			try
+			ic4::Error err;
+			min_ = prop_.getMinimum(err);
+			if( err.isError() )
 			{
-				min_ = prop_.getMinimum();
-				max_ = prop_.getMaximum();
-				inc_ = prop_.getIncrement();
-				val_ = prop_.getValue();
-			}
-			catch (const ic4::IC4Exception iex)
-			{
-				qDebug() << "Error " << prop_.getName().c_str() << " : update_all() " << iex.what();
-
-				if (spin_)
-				{
-					spin_->blockSignals(true);
-					spin_->setEnabled(false);
-					spin_->setSpecialValueText("<Error>");
-					spin_->setValue(min_);
-					spin_->blockSignals(false);
-				}
-				if (edit_)
-				{
-					edit_->blockSignals(true);
-					edit_->setEnabled(false);
-					edit_->setText("<Error>");
-					edit_->blockSignals(false);
-				}
-				return;
+				return show_error();
 			}
 
+			max_ = prop_.getMaximum(err);
+			if (err.isError())
+			{
+				return show_error();
+			}
+
+			inc_ = prop_.getIncrement(err);
+			if (err.isError())
+			{
+				return show_error();
+			}
+
+			val_ = prop_.getValue(err);
+			if (err.isError())
+			{
+				return show_error();
+			}
 
 			bool is_locked = shoudDisplayAsLocked();
-			bool is_readonly = prop_.isReadOnly();
+			bool is_readonly = prop_.isReadOnly(err);
 
 			if (slider_)
 			{
+				QSignalBlocker blk(slider_);
 				slider_->setRange(min_, max_);
 				slider_->setValue(val_);
 				slider_->setEnabled(!is_locked);
 			}
 			if (spin_)
 			{
-				spin_->blockSignals(true);
+				QSignalBlocker blk(spin_);
 				spin_->setSpecialValueText({});
 				spin_->setMinimum(min_);
 				spin_->setMaximum(max_);
@@ -185,15 +200,13 @@ namespace ic4::ui
 				spin_->setEnabled(true);
 				spin_->setReadOnly(is_locked || is_readonly);
 				spin_->setButtonSymbols(is_readonly ? QAbstractSpinBox::ButtonSymbols::NoButtons : QAbstractSpinBox::ButtonSymbols::UpDownArrows);
-				spin_->blockSignals(false);
 			}
 			if (edit_)
 			{
-				edit_->blockSignals(true);
+				QSignalBlocker blk(edit_);
 				edit_->setText(value_to_string(val_, representation_));
 				edit_->setEnabled(true);
 				edit_->setReadOnly(is_locked || is_readonly);
-				edit_->blockSignals(false);
 			}
 		}
 
@@ -201,15 +214,13 @@ namespace ic4::ui
 		{
 			if (slider_)
 			{
-				slider_->blockSignals(true);
+				QSignalBlocker blk(slider_);
 				slider_->setValue(new_value);
-				slider_->blockSignals(false);
 			}
 			if (spin_)
 			{
-				spin_->blockSignals(true);
+				QSignalBlocker blk(spin_);
 				spin_->setValue(new_value);
-				spin_->blockSignals(false);
 			}
 		}
 
@@ -276,7 +287,7 @@ namespace ic4::ui
 			if (check_) layout_->addWidget(check_);
 			if (slider_) layout_->addWidget(slider_);
 			if (spin_) layout_->addWidget(spin_);
-			if (edit_) layout_->addWidget(edit_);		
+			if (edit_) layout_->addWidget(edit_);
 		}
 	};
 }
