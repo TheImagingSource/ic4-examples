@@ -182,17 +182,20 @@ void DeviceSelectionDlg::enumerateDevices()
 		{
 			QString strIPAddress;
 
-			ic4::Error err;
-			if (map.setValue("DeviceSelector", index, err))
+			if (isGigEVisionInterface)
 			{
-				auto ip = map.getValueInt64("GevDeviceIPAddress", err);
-				if (err.isSuccess())
+				ic4::Error err;
+				if (map.setValue("DeviceSelector", index, err))
 				{
-					strIPAddress = QString("%1.%2.%3.%4")
-						.arg((ip >> 24) & 0xFF)
-						.arg((ip >> 16) & 0xFF)
-						.arg((ip >> 8) & 0xFF)
-						.arg((ip >> 0) & 0xFF);
+					auto ip = map.getValueInt64("GevDeviceIPAddress", err);
+					if (err.isSuccess())
+					{
+						strIPAddress = QString("%1.%2.%3.%4")
+							.arg((ip >> 24) & 0xFF)
+							.arg((ip >> 16) & 0xFF)
+							.arg((ip >> 8) & 0xFF)
+							.arg((ip >> 0) & 0xFF);
+					}
 				}
 			}
 
