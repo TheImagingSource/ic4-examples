@@ -143,7 +143,6 @@ void DeviceSelectionDlg::createUI()
 
 void DeviceSelectionDlg::enumerateDevices()
 {
-	//QSignalBlocker blk(_cameraTree);
 	_cameraTree->clear();
 
 	for (auto&& itf : ic4::DeviceEnum::enumInterfaces())
@@ -212,9 +211,6 @@ void DeviceSelectionDlg::enumerateDevices()
 			node->setText(1, QString::fromStdString(serial));
 			node->setText(2, strIPAddress);
 			node->setText(3, QString::fromStdString(deviceUserID));
-
-			auto icon = style()->standardIcon(QStyle::SP_MessageBoxWarning);
-			auto iconSize = icon.actualSize(QSize(32, 32));
 
 			if (!isGigEVisionInterface || map.getValueString("DeviceReachableStatus", ic4::Error::Ignore()) == "Reachable")
 			{
