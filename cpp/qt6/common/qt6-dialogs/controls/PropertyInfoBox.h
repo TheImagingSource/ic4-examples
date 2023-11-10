@@ -11,6 +11,8 @@
 
 class PropertyInfoBox : public QTextEdit
 {
+	Q_OBJECT
+
 public:
 	PropertyInfoBox(QWidget* parent)
 		: QTextEdit(parent)

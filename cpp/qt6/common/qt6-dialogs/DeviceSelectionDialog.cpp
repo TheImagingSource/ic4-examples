@@ -21,14 +21,15 @@
 #include <QScrollBar>
 
 const QEvent::Type EVENT_DEVICE_LIST_CHANGED = static_cast<QEvent::Type>(QEvent::User + 3);
+const Qt::ItemDataRole ROLE_ITEM_DATA = static_cast<Qt::ItemDataRole>(Qt::UserRole + 1);
 
 DeviceSelectionDlg::DeviceSelectionDlg(QWidget* parent, ic4::Grabber* pgrabber, std::function<bool(const ic4::DeviceInfo&)> filter)
 	: QDialog(parent)
 	, _filter_func(filter)
-	, _pgrabber(pgrabber)
+	, _grabber(pgrabber)
 {
 	createUI();
-	enumerateDevices();
+	onUpdateButton();
 
 	_enumerator.eventAddDeviceListChanged(
 		[this](auto&)
@@ -42,7 +43,7 @@ void DeviceSelectionDlg::customEvent(QEvent* event)
 {
 	if (event->type() == EVENT_DEVICE_LIST_CHANGED)
 	{
-		OnUpdateButton();
+		onUpdateButton();
 	}
 }
 
@@ -73,7 +74,6 @@ void DeviceSelectionDlg::createUI()
 	_cameraTree = new QTreeWidget();
 	_cameraTree->setIconSize(QSize(24, 24));
 	_cameraTree->setIndentation(16);
-	//_cameraTree->setStyleSheet("QTreeWidget { border: 1px solid #3f3f46; max-height: 1024; padding: 4px 4px 4px 4px; } QTreeView::item  {  padding: 4px 4px 4px 4px; } ");
 	_cameraTree->setStyleSheet("QTreeView::item { padding: 4px; } ");
 	_cameraTree->setRootIsDecorated(false);
 	_cameraTree->setMinimumWidth(450);
@@ -88,7 +88,7 @@ void DeviceSelectionDlg::createUI()
 	_cameraTree->setHeaderHidden(false);
 
 	connect(_cameraTree, &QTreeWidget::currentItemChanged, this, &DeviceSelectionDlg::onCurrentItemChanged);
-	connect(_cameraTree, &QTreeWidget::itemDoubleClicked, [&](QTreeWidgetItem* item, int column) { OnOK(); });
+	connect(_cameraTree, &QTreeWidget::itemDoubleClicked, [&](QTreeWidgetItem* item, int column) { onOK(); });
 
 	leftLayout->addWidget(_cameraTree);
 
@@ -96,24 +96,27 @@ void DeviceSelectionDlg::createUI()
 
 	//////////////////////////////////////////////////////////
 	auto UpdateButton = new QPushButton(tr("Update"));
-	connect(UpdateButton, &QPushButton::pressed, this, &DeviceSelectionDlg::OnUpdateButton);
+	connect(UpdateButton, &QPushButton::pressed, this, &DeviceSelectionDlg::onUpdateButton);
 	buttons->addWidget(UpdateButton);
 
 	auto cancelButton = new QPushButton(tr("Cancel"));
 	connect(cancelButton, &QPushButton::pressed, this, &QDialog::reject);
 	buttons->addWidget(cancelButton);
 
-	_OKButton = new QPushButton(tr("OK"));
-	_OKButton->setDefault(true);
-	connect(_OKButton, &QPushButton::pressed, this, &DeviceSelectionDlg::OnOK);
-	buttons->addWidget(_OKButton);
+	_okButton = new QPushButton(tr("OK"));
+	_okButton->setDefault(true);
+	connect(_okButton, &QPushButton::pressed, this, &DeviceSelectionDlg::onOK);
+	buttons->addWidget(_okButton);
 
 	leftLayout->addLayout(buttons);
 	topLayout->addLayout(leftLayout, 1);
 
 	_itfInfoGroup = new FormGroupBox(tr("Interface Information"));
+	_itfInfoGroup->setVisible(false);
 	_devInfoGroup = new FormGroupBox(tr("Device Information"));
+	_devInfoGroup->setVisible(false);
 	_ipConfigGroup = new IPConfigGroupBox(tr("IP Configuration"));
+	_ipConfigGroup->setVisible(false);
 
 	_rightScroll = new QScrollArea();
 	_rightScroll->setObjectName("rightScroll");
@@ -171,7 +174,7 @@ void DeviceSelectionDlg::enumerateDevices()
 		auto* itf_item = new QTreeWidgetItem(_cameraTree);
 		itf_item->setText(0, QString::fromStdString(itf.interfaceDisplayName()));
 		itf_item->setForeground(0, QPalette().windowText());
-		itf_item->setData(0, Qt::UserRole + 1, QVariant::fromValue(InterfaceDeviceItemData{ itf, map }));
+		itf_item->setData(0, ROLE_ITEM_DATA, QVariant::fromValue(InterfaceDeviceItemData{ itf, map }));
 		itf_item->setFirstColumnSpanned(true);
 
 		bool isGigEVisionInterface = itf.transportLayerType(ic4::Error::Ignore()) == ic4::TransportLayerType::GigEVision;
@@ -205,7 +208,7 @@ void DeviceSelectionDlg::enumerateDevices()
 			auto* node = new QTreeWidgetItem();
 
 			auto variant = QVariant::fromValue(InterfaceDeviceItemData{ itf, map, dev, index });
-			node->setData(0, Qt::UserRole + 1, variant);
+			node->setData(0, ROLE_ITEM_DATA, variant);
 
 			node->setText(0, QString::fromStdString(device));
 			node->setText(1, QString::fromStdString(serial));
@@ -230,16 +233,6 @@ void DeviceSelectionDlg::enumerateDevices()
 	}
 
 	_cameraTree->expandAll();
-}
-
-static void clearFormLayout(QFormLayout& layout)
-{
-	while (layout.count() != 0)
-	{
-		QLayoutItem* forDeletion = layout.takeAt(0);
-		delete forDeletion->widget();
-		delete forDeletion;
-	}
 }
 
 static QString buildIPAddress(const ic4::PropertyMap& map, const char* ip_feature, const char* subnet_feature)
@@ -300,7 +293,7 @@ static QStringList buildInterfaceIPAddressList(const ic4::PropertyMap& map)
 	return result;
 }
 
-void synchronizeColumnWidths(std::vector<QFormLayout*> layouts)
+static void synchronizeColumnWidths(std::vector<QFormLayout*> layouts)
 {
 	int maxWidth = 0;
 
@@ -308,13 +301,15 @@ void synchronizeColumnWidths(std::vector<QFormLayout*> layouts)
 	{
 		for (int i = 0; i < layout->rowCount(); ++i)
 		{
-			auto* label = layout->itemAt(i, QFormLayout::ItemRole::LabelRole);
-			if (label != nullptr)
+			auto* labelItem = layout->itemAt(i, QFormLayout::ItemRole::LabelRole);
+			if (labelItem)
 			{
-				auto* w = label->widget();
-				auto* lbl = (QLabel*)w;
-				auto width = lbl->fontMetrics().size(0, lbl->text()).width();
-				maxWidth = std::max(maxWidth, width);
+				auto* lbl = qobject_cast<QLabel*>(labelItem->widget());
+				if (lbl)
+				{
+					auto width = lbl->fontMetrics().size(0, lbl->text()).width();
+					maxWidth = std::max(maxWidth, width);
+				}
 			}
 		}
 	}
@@ -336,7 +331,7 @@ void DeviceSelectionDlg::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWid
 {	
 	_rightScroll->hide();
 
-	_OKButton->setEnabled(false);
+	_okButton->setEnabled(false);
 
 	_itfInfoGroup->hide();
 	_itfInfoGroup->clear();
@@ -351,7 +346,7 @@ void DeviceSelectionDlg::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWid
 		return;
 	}
 
-	auto variant = current->data(0, Qt::UserRole + 1);
+	auto variant = current->data(0, ROLE_ITEM_DATA);
 	auto itemData = variant.value<InterfaceDeviceItemData>();
 
 	bool isGigEVisionInterface = itemData.itf.transportLayerType(ic4::Error::Ignore()) == ic4::TransportLayerType::GigEVision;
@@ -361,7 +356,7 @@ void DeviceSelectionDlg::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWid
 	{
 		if (map.setValue("DeviceSelector", itemData.deviceIndex, ic4::Error::Ignore()))
 		{
-			_OKButton->setEnabled(true);
+			_okButton->setEnabled(true);
 		}
 	}
 
@@ -455,7 +450,7 @@ void DeviceSelectionDlg::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWid
 	_rightScroll->show();
 }
 
-void DeviceSelectionDlg::selectPreviousItem(QVariant itemVariant)
+bool DeviceSelectionDlg::selectPreviousItem(QVariant itemVariant)
 {
 	auto itemData = itemVariant.value<InterfaceDeviceItemData>();
 
@@ -465,11 +460,11 @@ void DeviceSelectionDlg::selectPreviousItem(QVariant itemVariant)
 
 		if (!itemData.isDevice())
 		{
-			auto itfVariant = itfItem->data(0, Qt::UserRole + 1);
+			auto itfVariant = itfItem->data(0, ROLE_ITEM_DATA);
 			if (itfVariant.value<InterfaceDeviceItemData>().itf == itemData.itf)
 			{
 				_cameraTree->setCurrentItem(itfItem);
-				return;
+				return true;
 			}
 		}
 		else
@@ -477,54 +472,61 @@ void DeviceSelectionDlg::selectPreviousItem(QVariant itemVariant)
 			for (int j = 0; j < itfItem->childCount(); ++j)
 			{
 				QTreeWidgetItem* devItem = itfItem->child(j);
-				auto devVariant = devItem->data(0, Qt::UserRole + 1);
+				auto devVariant = devItem->data(0, ROLE_ITEM_DATA);
 
 				if (devVariant.value<InterfaceDeviceItemData>().device == itemData.device)
 				{
 					_cameraTree->setCurrentItem(devItem);
-					return;
+					return true;
 				}
 			}
 		}
 	}
+
+	return false;
 }
 
-void DeviceSelectionDlg::OnUpdateButton()
+void DeviceSelectionDlg::onUpdateButton()
 {
 	QVariant previousData;
 
 	auto* item = _cameraTree->currentItem();
 	if (item != nullptr)
 	{
-		previousData = item->data(0, Qt::UserRole + 1);
+		previousData = item->data(0, ROLE_ITEM_DATA);
 	}
 
 	enumerateDevices();
+
 	if (previousData.isValid())
 	{
-		selectPreviousItem(previousData);
+		if (!selectPreviousItem(previousData))
+		{
+			_okButton->setEnabled(false);
+		}
 	}
 	else
 	{
 		_cameraTree->setCurrentItem(nullptr);
+		_okButton->setEnabled(false);
 	}
 }
 
-void DeviceSelectionDlg::OnOK()
+void DeviceSelectionDlg::onOK()
 {
 	auto* item = _cameraTree->currentItem();
 	if (item == nullptr)
 		return;
 
-	auto variant = item->data(0, Qt::UserRole + 1);
+	auto variant = item->data(0, ROLE_ITEM_DATA);
 	auto itemData = variant.value<InterfaceDeviceItemData>();
 
 	if (itemData.isDevice())
 	{
 		try
 		{
-			_pgrabber->deviceClose();
-			_pgrabber->deviceOpen(itemData.device);
+			_grabber->deviceClose();
+			_grabber->deviceOpen(itemData.device);
 			accept();
 		}
 		catch (ic4::IC4Exception ex)

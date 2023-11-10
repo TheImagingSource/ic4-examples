@@ -402,11 +402,13 @@ namespace ic4::ui
 	};
 
 
-	class MyTreeView : public QTreeView
+	class PropertyTreeView : public QTreeView
 	{
+		Q_OBJECT
+
 		QSortFilterProxyModel& proxy_;
 	public:
-		MyTreeView(QSortFilterProxyModel& proxy)
+		PropertyTreeView(QSortFilterProxyModel& proxy)
 			: proxy_(proxy)
 		{
 
@@ -490,7 +492,7 @@ namespace ic4::ui
 
 		PropertyInfoBox* info_text_ = nullptr;
 
-		MyTreeView* view_ = nullptr;
+		PropertyTreeView* view_ = nullptr;
 		PropertyTreeModel* source_ = nullptr;
 		FilterPropertiesProxy proxy_;
 
@@ -678,7 +680,7 @@ namespace ic4::ui
 				update_visibility();
 			}
 
-			view_ = new MyTreeView(proxy_);
+			view_ = new PropertyTreeView(proxy_);
 			view_->setStyleSheet("QTreeView::branch, QTreeView::item, QTreeView { "
 				"outline: none; "
 				"show-decoration-selected: 0;"

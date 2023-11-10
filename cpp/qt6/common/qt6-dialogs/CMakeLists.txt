@@ -24,6 +24,9 @@ qt_add_resources(QT6DIALOGS_RESOURCES qt6dialogs.qrc)
 qt_add_library(qt6-dialogs STATIC
 	${QT6DIALOGS_RESOURCES}
 	controls/Event.h
+	controls/FormGroupBox.h
+	controls/IPConfigGroupBox.cpp
+	controls/IPConfigGroupBox.h
 	controls/PropertyInfoBox.h
 	controls/PropertyControls.h
 	controls/PropertyControls.cpp
@@ -37,8 +40,6 @@ qt_add_library(qt6-dialogs STATIC
 	controls/props/PropFloatControl.h
 	controls/props/PropCategoryControl.h
 	controls/PropertyTreeWidget.h
-    controls/IPConfigGroupBox.cpp
-	controls/IPConfigGroupBox.h
 
 	DeviceSelectionDialog.h
 	DeviceSelectionDialog.cpp

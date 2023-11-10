@@ -23,22 +23,22 @@ protected:
 	void customEvent(QEvent* event) override;
 
 private slots:
-	void OnOK();
-	void OnUpdateButton();
+	void onOK();
+	void onUpdateButton();
 	void onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous);
 
 
 private:
 	void createUI();
 	void enumerateDevices();
-	void selectPreviousItem(QVariant itemData);
+	bool selectPreviousItem(QVariant itemData);
 
 	std::function<bool(const ic4::DeviceInfo&)> _filter_func;
 
-	ic4::Grabber* _pgrabber;
+	ic4::Grabber* _grabber;
 	ic4::DeviceEnum _enumerator;
 	QTreeWidget* _cameraTree;
-	QPushButton* _OKButton;
+	QPushButton* _okButton;
 
 	QScrollArea* _rightScroll;
 	FormGroupBox* _itfInfoGroup;
