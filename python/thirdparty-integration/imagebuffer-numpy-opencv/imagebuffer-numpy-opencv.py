@@ -1,33 +1,6 @@
 
 import ic4
 import cv2
-import time
-
-
-class DisplayCv2Listener(ic4.QueueSinkListener):
-
-    def sink_connected(self, sink: ic4.QueueSink, image_type: ic4.ImageType, min_buffers_required: int) -> bool:
-        return True
-
-    def frames_queued(self, sink: ic4.QueueSink):
-        # Do not throw from callback function, capture and log errors instead
-        try:
-            buffer = sink.pop_output_buffer()
-
-            np = buffer.numpy_wrap()
-
-            # cv2.blur(np, (75, 75), np)
-
-
-
-        except ic4.IC4Exception as ex:
-            print(f"Error trying to request ChunkExposuretime: {ex.code} ({ex.message})")
-        finally:
-            pass
-
-    def sink_disconnected(self, sink: ic4.QueueSink):
-        pass
-
 
 def example_imagebuffer_numpy_opencv():
     device_list = ic4.DeviceEnum.devices()
