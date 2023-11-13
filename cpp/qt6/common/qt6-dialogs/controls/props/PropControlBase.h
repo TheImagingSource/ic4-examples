@@ -61,9 +61,9 @@ namespace ic4::ui
 		{
 			auto filters = filter.toLower().split(QRegularExpression(R"([(,|\|)])"));
 
-			auto prop_display_name = QString::fromStdString(prop_.getDisplayName()).toLower();
-			auto prop_name = QString::fromStdString(prop_.getName()).toLower();
-			auto prop_vis = prop_.getVisibility();
+			auto prop_display_name = QString::fromStdString(prop_.displayName()).toLower();
+			auto prop_name = QString::fromStdString(prop_.name()).toLower();
+			auto prop_vis = prop_.visibility();
 
 			if (prop_vis > visibility)
 				return false;

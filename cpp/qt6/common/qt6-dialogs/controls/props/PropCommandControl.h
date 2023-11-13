@@ -14,7 +14,7 @@ namespace ic4::ui
 		PropCommandControl(ic4::PropCommand prop, QWidget* parent, ic4::Grabber* grabber)
 			: PropControlBase(prop, parent, grabber)
 		{
-			std::string text = prop_.getDisplayName();
+			std::string text = prop_.displayName();
 
 			button_ = new QPushButton(QString::fromStdString(text), this);
 

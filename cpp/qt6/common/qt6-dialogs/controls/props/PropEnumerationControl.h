@@ -27,19 +27,19 @@ namespace ic4::ui
 				combo_->setEnabled(!(prop_.isReadOnly() || shoudDisplayAsLocked()));
 				combo_->clear();
 
-				auto selected_entry = prop_.getSelectedEntry();
+				auto selected_entry = prop_.selectedEntry();
 				bool selected_found = false;
 
-				for (auto&& entry : prop_.getEntries())
+				for (auto&& entry : prop_.entries())
 				{
 					try
 					{
-						auto val = entry.getIntValue();
+						auto val = entry.intValue();
 
 						if (!entry.isAvailable())
 							continue;
 
-						QString name = QString::fromStdString(entry.getDisplayName());
+						QString name = QString::fromStdString(entry.displayName());
 
 						combo_->addItem(name, val);
 
@@ -51,7 +51,7 @@ namespace ic4::ui
 					}
 					catch (const ic4::IC4Exception iex)
 					{
-						qDebug() << "Error " << prop_.getName().c_str() << " in update_all " << iex.what();
+						qDebug() << "Error " << prop_.name().c_str() << " in update_all " << iex.what();
 					}
 				}
 
@@ -67,10 +67,10 @@ namespace ic4::ui
 				edit_->blockSignals(true);
 
 				ic4::Error err;
-				auto selected_entry = prop_.getSelectedEntry(err);
+				auto selected_entry = prop_.selectedEntry(err);
 				if (err.isSuccess())
 				{
-					edit_->setText(QString::fromStdString(selected_entry.getDisplayName()));
+					edit_->setText(QString::fromStdString(selected_entry.displayName()));
 				}
 				else
 				{

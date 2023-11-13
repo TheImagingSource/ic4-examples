@@ -275,7 +275,7 @@ static QStringList buildInterfaceIPAddressList(const ic4::PropertyMap& map)
 	if (err.isError())
 		return {};
 
-	int64_t max = selector.getMaximum(ic4::Error::Ignore());
+	int64_t max = selector.maximum(ic4::Error::Ignore());
 	QStringList result;
 
 	for (int64_t i = 0; i <= max; ++i)

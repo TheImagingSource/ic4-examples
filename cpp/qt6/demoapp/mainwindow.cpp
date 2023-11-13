@@ -96,7 +96,7 @@ MainWindow::MainWindow(QWidget* parent)
 
 		try
 		{
-			_videowriter.getPropertyMap().deSerialize(_codecconfigfile, err);
+			_videowriter.propertyMap().deSerialize(_codecconfigfile, err);
 		}
 		catch (const ic4::IC4Exception& ex)
 		{
@@ -475,7 +475,7 @@ void MainWindow::onStartCaptureVideo()
 		try
 		{
 			fps = _devicePropertyMap.getValueDouble(ic4::PropId::AcquisitionFrameRate);
-			ic4::ImageType imgtype = _queuesink->getOutputImageType();
+			ic4::ImageType imgtype = _queuesink->outputImageType();
 			_videowriter.beginFile(fileName, imgtype, fps);
 
 			_capturetovideo = true;
@@ -515,10 +515,10 @@ void MainWindow::onStopCaptureVideo()
 
 void MainWindow::onCodecProperties()
 {
-	PropertyDialog cDlg(_videowriter.getPropertyMap(), this, tr("Codec Settings"));
+	PropertyDialog cDlg(_videowriter.propertyMap(), this, tr("Codec Settings"));
 	if (cDlg.exec() == 1)
 	{
-		_videowriter.getPropertyMap().serialize(_codecconfigfile);
+		_videowriter.propertyMap().serialize(_codecconfigfile);
 	}
 }
 

@@ -164,7 +164,7 @@ static void print_interface( std::string id )
     
     print( "Interface Properties:\n" );
     auto map = dev->interfacePropertyMap();
-    for( auto&& property : map.getAll() )
+    for( auto&& property : map.all() )
     {
         print_property( 1, property );
     }
@@ -229,19 +229,19 @@ static void    print_property( int offset, const ic4::Property& property )
 {
     using namespace ic4_helper;
 
-    auto prop_type = property.getType();
-    print( offset + 0, "{:24} - Type: {}, DisplayName: {}\n", property.getName(), toString( prop_type ), property.getDisplayName() );
-    print( offset + 1, "Description: {}\n", property.getDescription() );
-    print( offset + 1, "Tooltip: {}\n", property.getTooltip() );
+    auto prop_type = property.type();
+    print( offset + 0, "{:24} - Type: {}, DisplayName: {}\n", property.name(), toString( prop_type ), property.displayName() );
+    print( offset + 1, "Description: {}\n", property.description() );
+    print( offset + 1, "Tooltip: {}\n", property.tooltip() );
     print( offset + 3, "\n" );
-    print( offset + 1, "Visibility: {}, Available: {}, Locked: {}, ReadOnly: {}\n", toString( property.getVisibility() ), property.isAvailable(), property.isLocked(), property.isReadOnly() );
+    print( offset + 1, "Visibility: {}, Available: {}, Locked: {}, ReadOnly: {}\n", toString( property.visibility() ), property.isAvailable(), property.isLocked(), property.isReadOnly() );
 
     if( property.isSelector() )
     {
         print( offset + 1, "Selected properties:\n" );
-        for( auto&& selected : property.getSelectedProperties() )
+        for( auto&& selected : property.selectedProperties() )
         {
-            print( offset + 2, "{}\n", selected.getName() );
+            print( offset + 2, "{}\n", selected.name() );
         }
     }
 
@@ -250,31 +250,31 @@ static void    print_property( int offset, const ic4::Property& property )
     case ic4::PropType::Integer:
     {
         ic4::PropInteger prop = property.asInteger();
-        auto inc_mode = prop.getIncrementMode();
-        auto rep = prop.getRepresentation();
+        auto inc_mode = prop.incrementMode();
+        auto rep = prop.representation();
 
-        print( offset + 1, "Representation: '{}', Unit: '{}', IncrementMode: '{}'\n", toString( rep ), prop.getUnit(), toString( inc_mode ) );
+        print( offset + 1, "Representation: '{}', Unit: '{}', IncrementMode: '{}'\n", toString( rep ), prop.unit(), toString( inc_mode ) );
 
         if( prop.isAvailable() )
         {
             if( !prop.isReadOnly() ) {
                 print( offset + 1, "Min: {}, Max: {}\n",
-                    fetch_PropertyMethod_value( prop, &ic4::PropInteger::getMinimum, rep ),
-                    fetch_PropertyMethod_value( prop, &ic4::PropInteger::getMaximum, rep )
+                    fetch_PropertyMethod_value( prop, &ic4::PropInteger::minimum, rep ),
+                    fetch_PropertyMethod_value( prop, &ic4::PropInteger::maximum, rep )
                 );
             }
             if( inc_mode == ic4::PropIncrementMode::Increment ) {
                 if( !prop.isReadOnly() )
                 {
                     print( offset + 1, "Inc: {}\n",
-                        fetch_PropertyMethod_value( prop, &ic4::PropInteger::getIncrement, rep )
+                        fetch_PropertyMethod_value( prop, &ic4::PropInteger::increment, rep )
                     );
                 }
             }
             else if( inc_mode == ic4::PropIncrementMode::ValueSet )
             {
                 ic4::Error err;
-                std::vector<int64_t> vvset = prop.getValidValueSet(err);
+                std::vector<int64_t> vvset = prop.validValueSet(err);
                 if( err.isError() ) {
                     print( offset + 1, "Failed to fetch ValidValueSet\n" );
                 }
@@ -296,29 +296,29 @@ static void    print_property( int offset, const ic4::Property& property )
     case ic4::PropType::Float:
     {
         ic4::PropFloat prop = property.asFloat();
-        auto inc_mode = prop.getIncrementMode();
+        auto inc_mode = prop.incrementMode();
 
         print( offset + 1, "Representation: '{}', Unit: '{}', IncrementMode: '{}', DisplayNotation: {}, DisplayPrecision: {}\n",
-            toString( prop.getRepresentation() ), prop.getUnit(), toString( inc_mode ), toString( prop.getDisplayNotation() ), prop.getDisplayPrecision() );
+            toString( prop.representation() ), prop.unit(), toString( inc_mode ), toString( prop.displayNotation() ), prop.displayPrecision() );
 
         if( prop.isAvailable() )
         {
             if( !prop.isReadOnly() ) {
                 print( offset + 1, "Min: {}, Max: {}\n",
-                    fetch_PropertyMethod_value<double>( prop, &ic4::PropFloat::getMinimum ),
-                    fetch_PropertyMethod_value<double>( prop, &ic4::PropFloat::getMaximum )
+                    fetch_PropertyMethod_value<double>( prop, &ic4::PropFloat::minimum ),
+                    fetch_PropertyMethod_value<double>( prop, &ic4::PropFloat::maximum )
                 );
             }
 
             if( inc_mode == ic4::PropIncrementMode::Increment ) {
                 print( offset + 1, "Inc: {}\n",
-                    fetch_PropertyMethod_value<double>( prop, &ic4::PropFloat::getIncrement )
+                    fetch_PropertyMethod_value<double>( prop, &ic4::PropFloat::increment )
                 );
             }
             else if( inc_mode == ic4::PropIncrementMode::ValueSet )
             {
                 ic4::Error err;
-                std::vector<double> vvset = prop.getValidValueSet(err);
+                std::vector<double> vvset = prop.validValueSet(err);
                 if( err.isError() ) {
                     print( offset + 1, "Failed to fetch ValidValueSet\n" );
                 }
@@ -342,7 +342,7 @@ static void    print_property( int offset, const ic4::Property& property )
     {
         auto prop = property.asEnumeration();
         print( offset + 1, "EnumEntries:\n" );
-        for( auto&& entry : prop.getEntries( ic4::Error::Ignore() ) )
+        for( auto&& entry : prop.entries( ic4::Error::Ignore() ) )
         {
             auto prop_enum_entry = entry.asEnumEntry();
 
@@ -353,7 +353,7 @@ static void    print_property( int offset, const ic4::Property& property )
         if( prop.isAvailable() )
         {
             ic4::Error err;
-            auto selected_entry = prop.getSelectedEntry( err );
+            auto selected_entry = prop.selectedEntry( err );
             if( err ) {
                 print( offset + 1, "Value: {}, SelectedEntry.Name: '{}'\n", "err", "err" );
             }
@@ -361,7 +361,7 @@ static void    print_property( int offset, const ic4::Property& property )
             {
                 print( offset + 1, "Value: {}, SelectedEntry.Name: '{}'\n",
                     fetch_PropertyMethod_value<int64_t>( prop, &ic4::PropEnumeration::getIntValue ),
-                    selected_entry.getName()
+                    selected_entry.name()
                 );
             }
         }
@@ -385,7 +385,7 @@ static void    print_property( int offset, const ic4::Property& property )
         if( prop.isAvailable() ) {
             print( offset + 1, "Value: '{}', MaxLength: {}\n",
                 fetch_PropertyMethod_value<std::string>( prop, &ic4::PropString::getValue ),
-                fetch_PropertyMethod_value<uint64_t>( prop, &ic4::PropString::getMaxLength )
+                fetch_PropertyMethod_value<uint64_t>( prop, &ic4::PropString::maxLength )
             );
         }
         break;
@@ -399,9 +399,9 @@ static void    print_property( int offset, const ic4::Property& property )
     {
         auto prop = property.asCategory();
         print( offset + 1, "Features:\n" );
-        for( auto&& feature : prop.getFeatures( ic4::Error::Ignore() ) )
+        for( auto&& feature : prop.features( ic4::Error::Ignore() ) )
         {
-            print( offset + 2, "{}\n", feature.getName() );
+            print( offset + 2, "{}\n", feature.name() );
         }
         break;
     }
@@ -410,7 +410,7 @@ static void    print_property( int offset, const ic4::Property& property )
         ic4::PropRegister prop = property.asRegister();
 
         print( offset + 1, "Size: {}\n", 
-            fetch_PropertyMethod_value<uint64_t>( prop, &ic4::PropRegister::getSize )
+            fetch_PropertyMethod_value<uint64_t>( prop, &ic4::PropRegister::size )
         );
         if( prop.isAvailable() ) {
             ic4::Error err;
@@ -444,7 +444,7 @@ static void    print_property( int offset, const ic4::Property& property )
         ic4::PropEnumEntry prop = property.asEnumEntry();
 
         if( prop.isAvailable() ) {
-            print( offset + 1, "IntValue: {}\n", fetch_PropertyMethod_value<int64_t>( prop, &ic4::PropEnumEntry::getIntValue ) );
+            print( offset + 1, "IntValue: {}\n", fetch_PropertyMethod_value<int64_t>( prop, &ic4::PropEnumEntry::intValue ) );
         }
         print( "\n" );
         break;
@@ -480,7 +480,7 @@ static void print_or_set_PropertyMap_entries( ic4::PropertyMap& map, const std::
 {
     if( lst.empty() )
     {
-        for( auto&& property : map.getAll() )
+        for( auto&& property : map.all() )
         {
             print_property( 0, property );
         }

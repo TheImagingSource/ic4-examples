@@ -26,8 +26,8 @@ public:
 
 	void update(ic4::Property prop)
 	{
-		auto name = prop.getName();
-		auto desc = prop.getDescription();
+		auto name = prop.name();
+		auto desc = prop.description();
 
 		ic4::Error err;
 
@@ -53,7 +53,7 @@ public:
 			text += QString("Access: Readable, Writable\n\n");
 		}
 
-		switch (prop.getType())
+		switch (prop.type())
 		{
 			case ic4::PropType::Category:
 				text += QString("Type: Category\n\n");
@@ -133,7 +133,7 @@ public:
 		{
 			try
 			{
-				text += QString("Maximum Length: %1\n\n").arg(stringProp.getMaxLength());
+				text += QString("Maximum Length: %1\n\n").arg(stringProp.maxLength());
 			}
 			catch (...) {}
 		}
@@ -149,8 +149,8 @@ public:
 	{
 		auto text = QString("Type: Integer\n\n");
 
-		auto rep = prop.getRepresentation();
-		auto unit = prop.getUnit(ic4::Error::Ignore());
+		auto rep = prop.representation();
+		auto unit = prop.unit(ic4::Error::Ignore());
 		if (!unit.empty())
 		{
 			text += QString("Unit: %1\n\n").arg(unit.c_str());
@@ -170,19 +170,19 @@ public:
 		{
 			ic4::Error err;
 
-			auto minimum = prop.getMinimum(err);
+			auto minimum = prop.minimum(err);
 			if (err.isSuccess())
 			{
 				text += QString("Minimum: %1\n\n").arg(minimum);
 			}
 
-			auto maximum = prop.getMaximum(err);
+			auto maximum = prop.maximum(err);
 			if (err.isSuccess())
 			{
 				text += QString("Maximum: %1\n\n").arg(maximum);
 			}
 
-			auto increment = prop.getIncrement(err);
+			auto increment = prop.increment(err);
 			if (err.isSuccess())
 			{
 				text += QString("Increment: %1\n\n").arg(increment);
@@ -201,10 +201,10 @@ public:
 	{
 		auto text = QString("Type: Float\n\n");
 
-		auto rep = prop.getRepresentation(ic4::Error::Ignore());
-		auto notation = prop.getDisplayNotation(ic4::Error::Ignore());
-		auto precision = prop.getDisplayPrecision(ic4::Error::Ignore());
-		auto unit = prop.getUnit(ic4::Error::Ignore());
+		auto rep = prop.representation(ic4::Error::Ignore());
+		auto notation = prop.displayNotation(ic4::Error::Ignore());
+		auto precision = prop.displayPrecision(ic4::Error::Ignore());
+		auto unit = prop.unit(ic4::Error::Ignore());
 		if (!unit.empty())
 		{
 			text += QString("Unit: %1\n\n").arg(unit.c_str()) ;
@@ -224,19 +224,19 @@ public:
 		{
 			ic4::Error err;
 
-			auto minimum = prop.getMinimum(err);
+			auto minimum = prop.minimum(err);
 			if (err.isSuccess())
 			{
 				text += QString("Minimum: %1\n\n").arg(minimum);
 			}
 
-			auto maximum = prop.getMaximum(err);
+			auto maximum = prop.maximum(err);
 			if (err.isSuccess())
 			{
 				text += QString("Maximum: %1\n\n").arg(maximum);
 			}
 
-			auto increment = prop.getIncrement(err);
+			auto increment = prop.increment(err);
 			if (err.isSuccess())
 			{
 				text += QString("Increment: %1\n\n").arg(increment);
@@ -262,7 +262,7 @@ public:
 		}
 
 		text += "Possible Values: ";
-		auto entries = prop.getEntries(err);
+		auto entries = prop.entries(err);
 		if (err.isSuccess())
 		{
 			bool first = true;
@@ -272,7 +272,7 @@ public:
 					text += ", ";
 				else
 					first = false;
-				text += entry.getName(ic4::Error::Ignore());
+				text += entry.name(ic4::Error::Ignore());
 			}
 			text += "\n\n";
 		}

@@ -65,15 +65,15 @@ namespace ic4::ui
 			if (!children.empty())
 				return;
 
-			if (prop.getType(ic4::Error::Ignore()) == ic4::PropType::Category)
+			if (prop.type(ic4::Error::Ignore()) == ic4::PropType::Category)
 			{
 				int index = 0;
-				for (auto&& feature : prop.asCategory().getFeatures())
+				for (auto&& feature : prop.asCategory().features())
 				{
-					auto child_name = QString::fromStdString(feature.getName());
-					auto child_display_name = QString::fromStdString(feature.getDisplayName());
+					auto child_name = QString::fromStdString(feature.name());
+					auto child_display_name = QString::fromStdString(feature.displayName());
 
-					auto prop_type = feature.getType(ic4::Error::Ignore());
+					auto prop_type = feature.type(ic4::Error::Ignore());
 
 					switch (prop_type)
 					{
@@ -151,8 +151,8 @@ namespace ic4::ui
 		{
 			// Add extra layer to make sure root element has a parent
 			// QSortFilterProxyModel::filterAcceptsRow works with parent index
-			auto root_name = root.getName(ic4::Error::Ignore());
-			auto root_display_name = root.getDisplayName(ic4::Error::Ignore());
+			auto root_name = root.name(ic4::Error::Ignore());
+			auto root_display_name = root.displayName(ic4::Error::Ignore());
 			tree_root_.children.push_back(std::make_unique<PropertyTreeNode>(&tree_root_, root, ic4::PropType::Category, 0, QString::fromStdString(root_name), QString::fromStdString(root_display_name)));
 			prop_root_ = tree_root_.children.front().get();
 		}
@@ -247,8 +247,8 @@ namespace ic4::ui
 				return {};
 			case Qt::ToolTipRole:
 			{
-				auto tt = tree->prop.getTooltip();
-				auto desc = tree->prop.getDescription();
+				auto tt = tree->prop.tooltip();
+				auto desc = tree->prop.description();
 
 				if (!tt.empty()) return QString::fromStdString(tt);
 				if (!desc.empty()) return QString::fromStdString(desc);
@@ -388,7 +388,7 @@ namespace ic4::ui
 			if (!child.prop.isAvailable())
 				return false;
 
-			if (child.prop.getVisibility() > visibility_)
+			if (child.prop.visibility() > visibility_)
 				return false;
 
 			if (!filter_regex_.match(child.display_name).hasMatch() && !filter_regex_.match(child.prop_name).hasMatch())

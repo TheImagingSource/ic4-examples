@@ -13,7 +13,7 @@
 
 QWidget* ic4::ui::create_prop_control(const ic4::Property& prop, QWidget* parent, ic4::Grabber* grabber)
 {
-	switch (prop.getType())
+	switch (prop.type())
 	{
 	case ic4::PropType::Integer:
 		return new ic4::ui::PropIntControl(prop.asInteger(), parent, grabber);

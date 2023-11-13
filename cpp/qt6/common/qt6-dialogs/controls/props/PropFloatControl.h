@@ -142,18 +142,18 @@ namespace ic4::ui
 			bool has_increment = false;
 			try
 			{
-				min_ = prop_.getMinimum();
-				max_ = prop_.getMaximum();
-				has_increment = prop_.getIncrementMode() == ic4::PropIncrementMode::Increment;
+				min_ = prop_.minimum();
+				max_ = prop_.maximum();
+				has_increment = prop_.incrementMode() == ic4::PropIncrementMode::Increment;
 				if (has_increment)
 				{
-					inc =  prop_.getIncrement();
+					inc =  prop_.increment();
 				}
 				val = prop_.getValue();
 			}
 			catch (const ic4::IC4Exception iex)
 			{
-				qDebug() << "Error " << prop_.getName().c_str() << " in update_all() " << iex.what();
+				qDebug() << "Error " << prop_.name().c_str() << " in update_all() " << iex.what();
 				if (slider_)
 					slider_->setEnabled(false);
 				if (spin_)
@@ -216,9 +216,9 @@ namespace ic4::ui
 		{
 			bool is_readonly = prop.isReadOnly();
 
-			auto notation = prop.getDisplayNotation();
-			auto precision = prop.getDisplayPrecision();
-			representation_ = prop.getRepresentation();
+			auto notation = prop.displayNotation();
+			auto precision = prop.displayPrecision();
+			representation_ = prop.representation();
 
 			switch (representation_)
 			{
@@ -250,7 +250,7 @@ namespace ic4::ui
 				});
 
 				spin_->setMinimumWidth(120);
-				spin_->setSuffix(QString(" %1").arg(prop_.getUnit().c_str()));
+				spin_->setSuffix(QString(" %1").arg(prop_.unit().c_str()));
 			}
 
 			update_all();

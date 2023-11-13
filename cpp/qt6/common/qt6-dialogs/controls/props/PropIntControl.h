@@ -155,19 +155,19 @@ namespace ic4::ui
 		void update_all() override
 		{
 			ic4::Error err;
-			min_ = prop_.getMinimum(err);
+			min_ = prop_.minimum(err);
 			if( err.isError() )
 			{
 				return show_error();
 			}
 
-			max_ = prop_.getMaximum(err);
+			max_ = prop_.maximum(err);
 			if (err.isError())
 			{
 				return show_error();
 			}
 
-			inc_ = prop_.getIncrement(err);
+			inc_ = prop_.increment(err);
 			if (err.isError())
 			{
 				return show_error();
@@ -230,7 +230,7 @@ namespace ic4::ui
 		{
 			bool is_readonly = prop.isReadOnly();
 
-			representation_ = prop.getRepresentation();
+			representation_ = prop.representation();
 
 			switch (representation_)
 			{
@@ -279,7 +279,7 @@ namespace ic4::ui
 				spin_->setKeyboardTracking(false);
 				spin_->value_changed += [this](auto* /* sender */, auto v) { set_value_unchecked(v); };
 				spin_->setMinimumWidth(120);
-				spin_->setSuffix(QString("%1").arg(prop_.getUnit().c_str()));
+				spin_->setSuffix(QString("%1").arg(prop_.unit().c_str()));
 			}
 
 			update_all();

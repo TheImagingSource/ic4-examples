@@ -112,7 +112,7 @@ int main()
 
 	// Query the sink's output image type
 	// The image type is required when starting the video recording
-	auto image_type = sink->getOutputImageType(err);
+	auto image_type = sink->outputImageType(err);
 	if (err.isError())
 	{
 		std::cerr << "Failed to query sink output frame type: " << err.message() << std::endl;

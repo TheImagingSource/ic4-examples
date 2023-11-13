@@ -47,11 +47,11 @@ namespace ic4::ui
 			uint64_t max_length = (uint64_t)-1;
 			try
 			{
-				max_length = prop.getMaxLength();
+				max_length = prop.maxLength();
 			}
 			catch (const ic4::IC4Exception iex)
 			{
-				qDebug() << "Error " << prop.getName().c_str() << " in " << iex.what();
+				qDebug() << "Error " << prop.name().c_str() << " in " << iex.what();
 			}
 
 
@@ -91,7 +91,7 @@ namespace ic4::ui
 			}
 			catch (const ic4::IC4Exception iex)
 			{
-				qDebug() << "Error " << prop_.getName().c_str() << " in update_value() " << iex.what();
+				qDebug() << "Error " << prop_.name().c_str() << " in update_value() " << iex.what();
 				edit_->setText("<Error>");
 			}
 
