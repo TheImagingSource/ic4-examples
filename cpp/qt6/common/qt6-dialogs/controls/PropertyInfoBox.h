@@ -150,8 +150,8 @@ public:
 		auto text = QString("Type: Integer\n\n");
 
 		auto rep = prop.getRepresentation();
-		auto unit = prop.getUnit();
-		if (unit != "")
+		auto unit = prop.getUnit(ic4::Error::Ignore());
+		if (!unit.empty())
 		{
 			text += QString("Unit: %1\n\n").arg(unit.c_str());
 		}
@@ -176,7 +176,7 @@ public:
 				text += QString("Minimum: %1\n\n").arg(minimum);
 			}
 
-			auto maximum = prop.getMinimum(err);
+			auto maximum = prop.getMaximum(err);
 			if (err.isSuccess())
 			{
 				text += QString("Maximum: %1\n\n").arg(maximum);
@@ -185,7 +185,7 @@ public:
 			auto increment = prop.getIncrement(err);
 			if (err.isSuccess())
 			{
-				text += QString("Maximum: %1\n\n").arg(increment);
+				text += QString("Increment: %1\n\n").arg(increment);
 			}
 		}
 
@@ -204,8 +204,8 @@ public:
 		auto rep = prop.getRepresentation(ic4::Error::Ignore());
 		auto notation = prop.getDisplayNotation(ic4::Error::Ignore());
 		auto precision = prop.getDisplayPrecision(ic4::Error::Ignore());
-		auto unit = prop.getUnit();
-		if (unit != "")
+		auto unit = prop.getUnit(ic4::Error::Ignore());
+		if (!unit.empty())
 		{
 			text += QString("Unit: %1\n\n").arg(unit.c_str()) ;
 		}
@@ -230,7 +230,7 @@ public:
 				text += QString("Minimum: %1\n\n").arg(minimum);
 			}
 
-			auto maximum = prop.getMinimum(err);
+			auto maximum = prop.getMaximum(err);
 			if (err.isSuccess())
 			{
 				text += QString("Maximum: %1\n\n").arg(maximum);
@@ -239,7 +239,7 @@ public:
 			auto increment = prop.getIncrement(err);
 			if (err.isSuccess())
 			{
-				text += QString("Maximum: %1\n\n").arg(increment);
+				text += QString("Increment: %1\n\n").arg(increment);
 			}
 		}
 
