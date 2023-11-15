@@ -594,7 +594,8 @@ static void save_image( std::string id, std::string filename, int count, int tim
         if( filename.find_first_of( '{' ) != std::string::npos
             && filename.find_first_of( '}' ) != std::string::npos )
         {
-            actual_filename = fmt::vformat( filename, fmt::make_format_args( idx++ ) );
+            actual_filename = fmt::vformat( filename, fmt::make_format_args( idx ) );
+            idx++;
         }
         if( image_type == "bmp" ) {
             ic4::imageBufferSaveAsBitmap( *image, actual_filename, {} );
