@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33815.320
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DialogApp", "DialogApp\DialogApp.csproj", "{7660E270-CCCF-4BB6-BC1C-0FCBB2961884}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7660E270-CCCF-4BB6-BC1C-0FCBB2961884}.Debug|x64.ActiveCfg = Debug|x64
+		{7660E270-CCCF-4BB6-BC1C-0FCBB2961884}.Debug|x64.Build.0 = Debug|x64
+		{7660E270-CCCF-4BB6-BC1C-0FCBB2961884}.Release|x64.ActiveCfg = Release|x64
+		{7660E270-CCCF-4BB6-BC1C-0FCBB2961884}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {681CC4C8-DC3B-4BF1-BA63-9CBA303C996C}
+	EndGlobalSection
+EndGlobal
