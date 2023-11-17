@@ -33,19 +33,6 @@
             btnDeviceProperties = new Button();
             SuspendLayout();
             // 
-            // display1
-            // 
-            display1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            display1.Location = new Point(12, 12);
-            display1.Name = "display1";
-            display1.RenderHeight = 480;
-            display1.RenderLeft = 0;
-            display1.RenderPosition = ic4.DisplayRenderPosition.StretchTopLeft;
-            display1.RenderTop = 0;
-            display1.RenderWidth = 640;
-            display1.Size = new Size(816, 649);
-            display1.TabIndex = 0;
-            // 
             // btnSelectDevice
             // 
             btnSelectDevice.Anchor = AnchorStyles.Top | AnchorStyles.Right;
@@ -68,6 +55,19 @@
             btnDeviceProperties.UseVisualStyleBackColor = true;
             btnDeviceProperties.Click += btnDeviceProperties_Click;
             // 
+            // display1
+            // 
+            display1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            display1.Location = new Point(12, 12);
+            display1.Name = "display1";
+            display1.RenderHeight = 480;
+            display1.RenderLeft = 0;
+            display1.RenderPosition = ic4.DisplayRenderPosition.StretchTopLeft;
+            display1.RenderTop = 0;
+            display1.RenderWidth = 640;
+            display1.Size = new Size(816, 649);
+            display1.TabIndex = 0;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
@@ -84,8 +84,8 @@
 
         #endregion
 
-        private ic4.WinForms.Display display1;
         private Button btnSelectDevice;
         private Button btnDeviceProperties;
+        private ic4.WinForms.Display display1;
     }
 }
