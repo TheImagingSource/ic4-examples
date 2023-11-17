@@ -1,8 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.34112.143
-MinimumVisualStudioVersion = 10.0.40219.1
+# Visual Studio 17
+VisualStudioVersion = 17.0
+MinimumVisualStudioVersion = 15.0
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DialogApp-framework45", "DialogApp-framework45\DialogApp-framework45.csproj", "{F1360545-F941-425E-8B09-ECEE16901451}"
 EndProject
 Global
