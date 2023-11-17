@@ -1,4 +1,4 @@
-namespace DialogApp
+namespace DialogApp_net6
 {
     public partial class Form1 : Form
     {
@@ -33,7 +33,7 @@ namespace DialogApp
             // DeviceLost event is executed on a thread owned by the Grabber object.
             // Need to use Invoke to do UI operations.
             Invoke(
-                () => MessageBox.Show(this, $"Device Lost: {grabber.DeviceInfo.ModelName}", "DialogApp", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                () => MessageBox.Show(this, $"Device Lost: {grabber.DeviceInfo.ModelName}", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error)
             );
         }
 

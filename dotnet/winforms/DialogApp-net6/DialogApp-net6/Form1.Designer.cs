@@ -1,4 +1,4 @@
-﻿namespace DialogApp
+﻿namespace DialogApp_net6
 {
     partial class Form1
     {
@@ -43,15 +43,15 @@
             display1.RenderPosition = ic4.DisplayRenderPosition.StretchTopLeft;
             display1.RenderTop = 0;
             display1.RenderWidth = 640;
-            display1.Size = new Size(841, 649);
+            display1.Size = new Size(816, 649);
             display1.TabIndex = 0;
             // 
             // btnSelectDevice
             // 
             btnSelectDevice.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnSelectDevice.Location = new Point(859, 12);
+            btnSelectDevice.Location = new Point(834, 12);
             btnSelectDevice.Name = "btnSelectDevice";
-            btnSelectDevice.Size = new Size(159, 29);
+            btnSelectDevice.Size = new Size(160, 29);
             btnSelectDevice.TabIndex = 1;
             btnSelectDevice.Text = "Select Device...";
             btnSelectDevice.UseVisualStyleBackColor = true;
@@ -60,9 +60,9 @@
             // btnDeviceProperties
             // 
             btnDeviceProperties.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnDeviceProperties.Location = new Point(859, 47);
+            btnDeviceProperties.Location = new Point(834, 47);
             btnDeviceProperties.Name = "btnDeviceProperties";
-            btnDeviceProperties.Size = new Size(159, 29);
+            btnDeviceProperties.Size = new Size(160, 29);
             btnDeviceProperties.TabIndex = 2;
             btnDeviceProperties.Text = "Device Properties...";
             btnDeviceProperties.UseVisualStyleBackColor = true;
@@ -72,7 +72,7 @@
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1030, 673);
+            ClientSize = new Size(1006, 673);
             Controls.Add(btnDeviceProperties);
             Controls.Add(btnSelectDevice);
             Controls.Add(display1);
