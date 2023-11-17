@@ -188,7 +188,7 @@ template<class TMethod>
 auto fetch_PropertyMethod_value( ic4::PropInteger& prop, TMethod method_address, ic4::PropIntRepresentation int_rep ) -> std::string
 {
     ic4::Error err;
-    int64_t v = !(prop.*method_address)(err);
+    int64_t v = (prop.*method_address)(err);
     if( err.isError() ) {
         if( err.code() == ic4::ErrorCode::GenICamNotImplemented ) {
             return "n/a";
