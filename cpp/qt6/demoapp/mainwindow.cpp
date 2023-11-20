@@ -38,10 +38,7 @@
 
 MainWindow::MainWindow(QWidget* parent)
 	: QMainWindow(parent)
-	, _shootPhoto(false)
 	, _videowriter(ic4::VideoWriterType::MP4_H264)
-	, _capturetovideo(false)
-	, _videocapturepause(false)
 {
 	createUI();
 

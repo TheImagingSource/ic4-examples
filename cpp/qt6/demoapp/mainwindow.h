@@ -46,32 +46,31 @@ private:
 	std::string _devicefile;    // File name of device state xml
 	std::string _codecconfigfile;    // File name of device state xml
 	std::mutex _snapphotomutex;
-	bool _shootPhoto;
-	std::atomic<bool> _capturetovideo;
-	std::atomic<bool> _videocapturepause;
-	QWidget* _window;
-	QGridLayout* mainLayout;
-	QWidget* _VideoWidget;
-	QAction* _DeviceSelectAct;
-	QAction* _DevicePropertiesAct;
-	QAction* _TriggerModeAct;
-	QAction* _StartLiveAct;
-	QAction* _ShootPhotoAct;
-	QAction* _recordstartact;
-	QAction* _recordpauseact;
-	QAction* _recordstopact;
-	QAction* _codecpropertyact;
+	bool _shootPhoto = false;
+	std::atomic<bool> _capturetovideo = false;
+	std::atomic<bool> _videocapturepause = false;
+	QWidget* _window = nullptr;
+	QGridLayout* mainLayout = nullptr;
+	QWidget* _VideoWidget = nullptr;
+	QAction* _DeviceSelectAct = nullptr;
+	QAction* _DevicePropertiesAct = nullptr;
+	QAction* _TriggerModeAct = nullptr;
+	QAction* _StartLiveAct = nullptr;
+	QAction* _ShootPhotoAct = nullptr;
+	QAction* _recordstartact = nullptr;
+	QAction* _recordpauseact = nullptr;
+	QAction* _recordstopact = nullptr;
+	QAction* _codecpropertyact = nullptr;
+	QLabel* _sbCameralabel = nullptr;
 
-	QLabel* _sbCameralabel;
 	ic4::PropertyMap _devicePropertyMap;
 	ic4::Grabber _grabber;
 	std::shared_ptr<ic4::Display> _display;
 	std::shared_ptr<ic4::QueueSink> _queuesink;
 	ic4::VideoWriter _videowriter;
 
-	virtual bool sinkConnected(ic4::QueueSink& sink, const ic4::ImageType& imageType, size_t  	min_buffers_required);
-
-	virtual void framesQueued(ic4::QueueSink& sink);
+    bool sinkConnected( ic4::QueueSink& sink, const ic4::ImageType& imageType, size_t min_buffers_required ) final;
+    void framesQueued( ic4::QueueSink& sink ) final;
 };
 
 #endif // MAINWINDOW_H
