@@ -3,20 +3,13 @@ project(demoapp)
 
 set( CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL" )
 
-find_package(ic4)
+find_package(ic4 REQUIRED)
 
 # This path probably will not be valid on your system.
 # If cmake complains about not able to find Qt6, point it into your Qt6 installation directory.
 list(APPEND CMAKE_PREFIX_PATH "P:/lib/Qt6/6.6.0/msvc2019_64/lib/cmake")
 
-find_package(Qt6 COMPONENTS Widgets Core)
-if (Qt6Widgets_FOUND)
-    if (Qt6Widgets_VERSION VERSION_LESS 6.0)
-        message(FATAL_ERROR "Minimum supported Qt6 version is 6.0" ${Qt6_DIR})
-    endif()
-else()
-    message(SEND_ERROR "The Qt6Widgets library could not be found!")
-endif( Qt6Widgets_FOUND)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 
 if( NOT TARGET qt6-dialogs )
 add_subdirectory(../common/qt6-dialogs ${CMAKE_BINARY_DIR}/demoapp-qt6-dialogs)
