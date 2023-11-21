@@ -525,8 +525,8 @@ void DeviceSelectionDlg::onOK()
 	{
 		try
 		{
-			_grabber->deviceClose();
-			_grabber->deviceOpen(itemData.device);
+			_grabber->deviceClose(ic4::Error::Throw());
+			_grabber->deviceOpen(itemData.device, ic4::Error::Throw());
 			accept();
 		}
 		catch (ic4::IC4Exception ex)
