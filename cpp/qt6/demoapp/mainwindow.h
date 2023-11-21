@@ -33,6 +33,8 @@ private:
 	void onStopCaptureVideo();
 	void onCodecProperties();
 	void onDeviceLost();
+	void onExportDeviceSettings();
+	void onImportDeviceSettings();
 
 	void updateControls();
 	void updateCameraLabel();
@@ -49,9 +51,10 @@ private:
 	bool _shootPhoto = false;
 	std::atomic<bool> _capturetovideo = false;
 	std::atomic<bool> _videocapturepause = false;
-	QWidget* _window = nullptr;
+
 	QGridLayout* mainLayout = nullptr;
 	QWidget* _VideoWidget = nullptr;
+
 	QAction* _DeviceSelectAct = nullptr;
 	QAction* _DevicePropertiesAct = nullptr;
 	QAction* _TriggerModeAct = nullptr;
@@ -61,6 +64,9 @@ private:
 	QAction* _recordpauseact = nullptr;
 	QAction* _recordstopact = nullptr;
 	QAction* _codecpropertyact = nullptr;
+	QAction* _exportDeviceSettingsAct = nullptr;
+	QAction* _importDeviceSettingsAct = nullptr;
+
 	QLabel* _sbCameralabel = nullptr;
 
 	ic4::PropertyMap _devicePropertyMap;

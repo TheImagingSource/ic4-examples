@@ -183,8 +183,16 @@ void MainWindow::createUI()
 	_codecpropertyact->setStatusTip(tr("Configure the video codec"));
 	connect(_codecpropertyact, &QAction::triggered, this, &MainWindow::onCodecProperties);
 
+	_exportDeviceSettingsAct = new QAction(tr("&Export Device Settings..."), this);
+	_exportDeviceSettingsAct->setStatusTip(tr("Export the current device settings as a json file"));
+	connect(_exportDeviceSettingsAct, &QAction::triggered, this, &MainWindow::onExportDeviceSettings);
+
+	_importDeviceSettingsAct = new QAction(tr("&Import Device Settings..."), this);
+	_importDeviceSettingsAct->setStatusTip(tr("Open a device with settings from a json file"));
+	connect(_importDeviceSettingsAct, &QAction::triggered, this, &MainWindow::onImportDeviceSettings);
+
 	// Exit Program
-	auto exitAct = new QAction(tr("&Exit"), this);
+	auto exitAct = new QAction(tr("E&xit"), this);
 	exitAct->setShortcuts(QKeySequence::Close);
 	exitAct->setStatusTip(tr("Exit program"));
 	connect(exitAct, &QAction::triggered, this, &QWidget::close);
@@ -200,6 +208,9 @@ void MainWindow::createUI()
 	deviceMenu->addAction(_DevicePropertiesAct);
 	deviceMenu->addAction(_TriggerModeAct);
 	deviceMenu->addAction(_StartLiveAct);
+	deviceMenu->addSeparator();
+	deviceMenu->addAction(_exportDeviceSettingsAct);
+	deviceMenu->addAction(_importDeviceSettingsAct);
 	////////////////////////////////////////////////////////////////////////////
 	// Create the Capture Menu
 	auto captureMenu = menuBar()->addMenu(tr("&Capture"));
@@ -263,6 +274,7 @@ void MainWindow::customEvent(QEvent* event)
 void MainWindow::updateControls()
 {
 	_DevicePropertiesAct->setEnabled(_grabber.isDeviceValid());
+	_exportDeviceSettingsAct->setEnabled(_grabber.isDeviceValid());
 	_StartLiveAct->setEnabled(_grabber.isDeviceValid());
 	_StartLiveAct->setChecked(_grabber.isStreaming());
 	_ShootPhotoAct->setEnabled(_grabber.isStreaming());
@@ -445,14 +457,14 @@ void MainWindow::savePhoto(const ic4::ImageBuffer& imagebuffer)
 
 		if (err.isError())
 		{
-			QMessageBox::warning(this, {}, err.message().c_str());
+			QMessageBox::critical(this, {}, err.message().c_str());
 		}
 	}
 }
 
 void MainWindow::onStartCaptureVideo()
 {
-	const QStringList filters({ "MP4(*.mp4)" });
+	const QStringList filters({ "MP4 Video Files (*.mp4)" });
 
 	QFileDialog dialog(this, tr("Capture Video"));
 	dialog.setNameFilters(filters);
@@ -516,6 +528,74 @@ void MainWindow::onCodecProperties()
 	if (cDlg.exec() == 1)
 	{
 		_videowriter.propertyMap().serialize(_codecconfigfile);
+	}
+}
+
+void MainWindow::onExportDeviceSettings()
+{
+	const QStringList filters({ "Device Settings Files (*.json)" });
+
+	QFileDialog dialog(this, tr("Export Device Settings"));
+	dialog.setNameFilters(filters);
+	dialog.setFileMode(QFileDialog::AnyFile);
+	dialog.setAcceptMode(QFileDialog::AcceptSave);
+	dialog.setDirectory(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
+
+	if (dialog.exec())
+	{
+#ifdef WIN32
+		auto fileName = dialog.selectedFiles()[0].toStdWString();
+#else
+		auto fileName = dialog.selectedFiles()[0].toStdString();
+#endif
+
+		ic4::Error err;
+		if (!_grabber.deviceSaveState(fileName, err))
+		{
+			QMessageBox::critical(this, {}, err.message().c_str());
+		}
+	}
+}
+
+void MainWindow::onImportDeviceSettings()
+{
+	const QStringList filters({ "Device Settings Files (*.json)", "All Files (*.*)"});
+
+	QFileDialog dialog(this, tr("Import Device Settings"));
+	dialog.setNameFilters(filters);
+	dialog.setFileMode(QFileDialog::AnyFile);
+	dialog.setAcceptMode(QFileDialog::AcceptOpen);
+	dialog.setDirectory(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
+
+	if (dialog.exec())
+	{
+#ifdef WIN32
+		auto fileName = dialog.selectedFiles()[0].toStdWString();
+#else
+		auto fileName = dialog.selectedFiles()[0].toStdString();
+#endif
+
+		// Stop stream/recording if active
+		if (_grabber.isStreaming())
+		{
+			startstopstream();
+		}
+
+		_grabber.deviceClose(ic4::Error::Ignore());
+
+		ic4::Error err;
+		if( !_grabber.deviceOpenFromState(fileName, err) )
+		{
+			QMessageBox::critical(this, {}, err.message().c_str());
+		}
+		else
+		{
+			// Remember the device's property map for later use
+			_devicePropertyMap = _grabber.devicePropertyMap(ic4::Error::Ignore());
+
+			// Restart stream
+			startstopstream();
+		}
 	}
 }
 
