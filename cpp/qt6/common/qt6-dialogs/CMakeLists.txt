@@ -3,7 +3,9 @@ project(qt6-dialogs)
 
 set( CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL" )
 
-find_package(ic4)
+if( NOT TARGET ic4::core )
+find_package( ic4 REQUIRED )
+endif()
 
 # This path probably will not be valid on your system.
 # If cmake complains about not able to find Qt6, point it into your Qt6 installation directory.
