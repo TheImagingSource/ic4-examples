@@ -183,13 +183,18 @@ void MainWindow::createUI()
 	_codecpropertyact->setStatusTip(tr("Configure the video codec"));
 	connect(_codecpropertyact, &QAction::triggered, this, &MainWindow::onCodecProperties);
 
+	// Export/Import device settings
 	_exportDeviceSettingsAct = new QAction(tr("&Export Device Settings..."), this);
 	_exportDeviceSettingsAct->setStatusTip(tr("Export the current device settings as a json file"));
 	connect(_exportDeviceSettingsAct, &QAction::triggered, this, &MainWindow::onExportDeviceSettings);
-
 	_importDeviceSettingsAct = new QAction(tr("&Import Device Settings..."), this);
 	_importDeviceSettingsAct->setStatusTip(tr("Open a device with settings from a json file"));
 	connect(_importDeviceSettingsAct, &QAction::triggered, this, &MainWindow::onImportDeviceSettings);
+
+	// Close device
+	_closeDeviceAct = new QAction(tr("&Close"), this);
+	_closeDeviceAct->setStatusTip(tr("Close the currently opened device"));
+	connect(_closeDeviceAct, &QAction::triggered, this, &MainWindow::onCloseDevice);
 
 	// Exit Program
 	auto exitAct = new QAction(tr("E&xit"), this);
@@ -211,6 +216,8 @@ void MainWindow::createUI()
 	deviceMenu->addSeparator();
 	deviceMenu->addAction(_exportDeviceSettingsAct);
 	deviceMenu->addAction(_importDeviceSettingsAct);
+	deviceMenu->addSeparator();
+	deviceMenu->addAction(_closeDeviceAct);
 	////////////////////////////////////////////////////////////////////////////
 	// Create the Capture Menu
 	auto captureMenu = menuBar()->addMenu(tr("&Capture"));
@@ -275,6 +282,7 @@ void MainWindow::updateControls()
 {
 	_DevicePropertiesAct->setEnabled(_grabber.isDeviceValid());
 	_exportDeviceSettingsAct->setEnabled(_grabber.isDeviceValid());
+	_closeDeviceAct->setEnabled(_grabber.isDeviceOpen());
 	_StartLiveAct->setEnabled(_grabber.isDeviceValid());
 	_StartLiveAct->setChecked(_grabber.isStreaming());
 	_ShootPhotoAct->setEnabled(_grabber.isStreaming());
@@ -597,6 +605,19 @@ void MainWindow::onImportDeviceSettings()
 			startstopstream();
 		}
 	}
+}
+
+void MainWindow::onCloseDevice()
+{
+	if (_grabber.isStreaming())
+	{
+		startstopstream();
+	}
+
+	_grabber.deviceClose(ic4::Error::Ignore());
+	_devicePropertyMap = {};
+
+	updateControls();
 }
 
 /// <summary>

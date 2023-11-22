@@ -35,6 +35,7 @@ private:
 	void onDeviceLost();
 	void onExportDeviceSettings();
 	void onImportDeviceSettings();
+	void onCloseDevice();
 
 	void updateControls();
 	void updateCameraLabel();
@@ -66,6 +67,7 @@ private:
 	QAction* _codecpropertyact = nullptr;
 	QAction* _exportDeviceSettingsAct = nullptr;
 	QAction* _importDeviceSettingsAct = nullptr;
+	QAction* _closeDeviceAct = nullptr;
 
 	QLabel* _sbCameralabel = nullptr;
 
