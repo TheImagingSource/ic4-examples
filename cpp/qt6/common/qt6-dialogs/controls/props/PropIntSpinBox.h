@@ -29,6 +29,9 @@ namespace ic4::ui
 			connect(this, &QAbstractSpinBox::editingFinished, this, &PropIntSpinBox::parse_new_text);
 		}
 	public:
+		mutable app::Event<int64_t> value_changed;
+		mutable app::Event<int64_t> value_step;
+	public:
 		void setMinimum(int64_t min)
 		{
 			min_ = min;
@@ -141,7 +144,7 @@ namespace ic4::ui
 			auto res = parse_text(text);
 			if (res.is_valid)
 			{
-				set_value_internal(res.value);
+				value_changed(this, res.value);
 			}
 		}
 
@@ -222,10 +225,7 @@ namespace ic4::ui
 			auto text = lineEdit()->text();
 			fixup(text);
 
-			auto old_val = val_;
-			auto new_val = std::clamp(old_val + steps * inc_, min_, max_);
-
-			set_value_internal(new_val);
+			value_step(this, steps);
 		}
 
 		void keyPressEvent(QKeyEvent* e) override
@@ -246,7 +246,5 @@ namespace ic4::ui
 
 			QAbstractSpinBox::keyPressEvent(e);
 		}
-	public:
-		mutable app::Event<int64_t> value_changed;
 	};
 }

@@ -31,7 +31,9 @@ namespace ic4::ui
 		ic4::PropIntRepresentation representation_;
 		int64_t min_;
 		int64_t max_;
+		ic4::PropIncrementMode inc_mode_;
 		int64_t inc_;
+		std::vector<int64_t> valid_value_set_;
 		int64_t val_;
 
 	private:
@@ -87,23 +89,37 @@ namespace ic4::ui
 
 		void value_step(int64_t step)
 		{
-			step *= inc_;
-
 			int64_t new_val = val_;
 
-			if (step < 0)
+			if (inc_mode_ == ic4::PropIncrementMode::ValueSet)
 			{
-				if (val_ > min_ - step)
-					new_val = val_ + step;
-				else
-					new_val = min_;
+				auto it = std::lower_bound(valid_value_set_.begin(), valid_value_set_.end(), new_val);
+
+				int64_t max_increase = std::distance(it, std::prev(valid_value_set_.end()));
+				int64_t max_decrease = std::distance(it, valid_value_set_.begin());
+				auto adjust = std::clamp(step, max_decrease, max_increase);
+
+				std::advance(it, adjust);
+				new_val = *it;
 			}
-			else if (step > 0)
+			else
 			{
-				if (val_ < max_ - step)
-					new_val = val_ + step;
-				else
-					new_val = max_;
+				step *= inc_;
+
+				if (step < 0)
+				{
+					if (val_ > min_ - step)
+						new_val = val_ + step;
+					else
+						new_val = min_;
+				}
+				else if (step > 0)
+				{
+					if (val_ < max_ - step)
+						new_val = val_ + step;
+					else
+						new_val = max_;
+				}
 			}
 
 			set_value_unchecked(new_val);
@@ -113,20 +129,39 @@ namespace ic4::ui
 		{
 			int64_t new_val = std::clamp(static_cast<int64_t>(new_pos), min_, max_);
 
-			if ((new_val - min_) % inc_)
+			if (inc_mode_ == ic4::PropIncrementMode::ValueSet)
 			{
-				auto fixed_val = min_ + (new_val - min_) / inc_ * inc_;
-
-				if (fixed_val == val_)
+				auto it = std::upper_bound(valid_value_set_.begin(), valid_value_set_.end(), new_val);
+				if (it == valid_value_set_.end())
 				{
-					if (new_val > val_)
-						new_val = val_ + inc_;
-					if (new_val < val_)
-						new_val = val_ - inc_;
+					new_val = valid_value_set_.back();
+				}
+				else if (it == valid_value_set_.begin())
+				{
+					new_val = valid_value_set_.front();
 				}
 				else
 				{
-					new_val = fixed_val;
+					new_val = *std::prev(it);
+				}
+			}
+			else
+			{
+				if ((new_val - min_) % inc_)
+				{
+					auto fixed_val = min_ + (new_val - min_) / inc_ * inc_;
+
+					if (fixed_val == val_)
+					{
+						if (new_val > val_)
+							new_val = val_ + inc_;
+						if (new_val < val_)
+							new_val = val_ - inc_;
+					}
+					else
+					{
+						new_val = fixed_val;
+					}
 				}
 			}
 
@@ -167,10 +202,34 @@ namespace ic4::ui
 				return show_error();
 			}
 
-			inc_ = prop_.increment(err);
+			inc_mode_ = prop_.incrementMode(err);
 			if (err.isError())
 			{
 				return show_error();
+			}
+
+			if (inc_mode_ == ic4::PropIncrementMode::Increment)
+			{
+				valid_value_set_.clear();
+				inc_ = prop_.increment(err);
+				if (err.isError())
+				{
+					return show_error();
+				}
+			}
+			else if (inc_mode_ == ic4::PropIncrementMode::ValueSet)
+			{
+				valid_value_set_ = prop_.validValueSet(err);
+				if (err.isError())
+				{
+					return show_error();
+				}
+				inc_ = 1;
+			}
+			else
+			{
+				valid_value_set_.clear();
+				inc_ = 1;
 			}
 
 			val_ = prop_.getValue(err);
@@ -277,7 +336,8 @@ namespace ic4::ui
 			if (spin_)
 			{
 				spin_->setKeyboardTracking(false);
-				spin_->value_changed += [this](auto* /* sender */, auto v) { set_value_unchecked(v); };
+				spin_->value_changed += [this](auto*, auto v) { set_value_unchecked(v); };
+				spin_->value_step += [this](auto*, auto s) { value_step(s); };
 				spin_->setMinimumWidth(120);
 				spin_->setSuffix(QString("%1").arg(prop_.unit().c_str()));
 			}
