@@ -382,7 +382,7 @@ void DeviceSelectionDlg::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWid
 
 	_itfInfoGroup->show();
 
-	buildStringItemIfExists(map, "InterfaceDisplayName", "Interface Name", *_itfInfoGroup->formLayout());	
+	buildStringItemIfExists(map, "InterfaceDisplayName", "Interface Name", *_itfInfoGroup->formLayout());
 
 	if (isGigEVisionInterface)
 	{
@@ -409,6 +409,18 @@ void DeviceSelectionDlg::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWid
 		}
 
 		buildStringItemIfExists(map, "MaximumTransmissionUnit", "Maximum Transmission Unit", *_itfInfoGroup->formLayout());
+	}
+
+	auto itfTLName = itemData.itf.transportLayerName(ic4::Error::Ignore());
+	if (!itfTLName.empty())
+	{
+		addStringItem("Driver Name", QString::fromStdString(itfTLName), *_itfInfoGroup->formLayout());
+	}
+
+	auto itfTLVersion = itemData.itf.transportLayerVersion(ic4::Error::Ignore());
+	if (!itfTLVersion.empty())
+	{
+		addStringItem("Driver Version", QString::fromStdString(itfTLVersion), *_itfInfoGroup->formLayout());
 	}
 
 	if (itemData.isDevice())
