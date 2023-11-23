@@ -136,36 +136,55 @@ namespace ic4::ui
 			return (int)(p + 0.5);
 		}
 
+		void show_error()
+		{
+			if (spin_)
+			{
+				spin_->blockSignals(true);
+				spin_->setEnabled(false);
+				spin_->setSpecialValueText("<Error>");
+				spin_->setValue(min_);
+				spin_->blockSignals(false);
+			}
+			if (slider_)
+			{
+				slider_->setEnabled(false);
+			}
+		}
+
 		void update_all() override
 		{
 			double inc, val;
 			bool has_increment = false;
-			try
+
+			ic4::Error err;
+			min_ = prop_.minimum(err);
+			if (err.isError())
 			{
-				min_ = prop_.minimum();
-				max_ = prop_.maximum();
-				has_increment = prop_.incrementMode() == ic4::PropIncrementMode::Increment;
-				if (has_increment)
-				{
-					inc =  prop_.increment();
-				}
-				val = prop_.getValue();
-			}
-			catch (const ic4::IC4Exception iex)
-			{
-				qDebug() << "Error " << prop_.name().c_str() << " in update_all() " << iex.what();
-				if (slider_)
-					slider_->setEnabled(false);
-				if (spin_)
-				{
-					QSignalBlocker blk(spin_);
-					spin_->setEnabled(false);
-					spin_->setSpecialValueText("<Error>");
-					spin_->setValue(min_);
-				}
-				return;
+				return show_error();
 			}
 
+			max_ = prop_.maximum(err);
+			if (err.isError())
+			{
+				return show_error();
+			}
+
+			has_increment = prop_.incrementMode() == ic4::PropIncrementMode::Increment;
+			if (has_increment)
+			{
+				inc = prop_.increment();
+				if (err.isError())
+				{
+					return show_error();
+				}
+			}
+
+			val = prop_.getValue(err);
+			if (err.isError())
+			{
+				return show_error();
+			}
 
 			bool is_locked = shoudDisplayAsLocked();
 			bool is_readonly = prop_.isReadOnly();
