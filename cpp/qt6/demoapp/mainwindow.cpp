@@ -633,6 +633,7 @@ void MainWindow::onCloseDevice()
 
 	_grabber.deviceClose(ic4::Error::Ignore());
 	_devicePropertyMap = {};
+	_display->displayBuffer(nullptr, ic4::Error::Ignore());
 
 	updateControls();
 }
