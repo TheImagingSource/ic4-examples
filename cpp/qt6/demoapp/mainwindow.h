@@ -25,6 +25,7 @@ public:
 private:
 	void onSelectDevice();
 	void onDeviceProperties();
+	void onDeviceDriverProperties();
 	void onToggleTriggerMode();
 	void startstopstream();
 	void onShootPhoto();
@@ -58,6 +59,7 @@ private:
 
 	QAction* _DeviceSelectAct = nullptr;
 	QAction* _DevicePropertiesAct = nullptr;
+    QAction* _DeviceDriverPropertiesAct = nullptr;
 	QAction* _TriggerModeAct = nullptr;
 	QAction* _StartLiveAct = nullptr;
 	QAction* _ShootPhotoAct = nullptr;

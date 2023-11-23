@@ -136,6 +136,12 @@ void MainWindow::createUI()
 	_DevicePropertiesAct->setEnabled(false);
 	connect(_DevicePropertiesAct, &QAction::triggered, this, &MainWindow::onDeviceProperties);
 
+    // Device Driver Properties
+	_DeviceDriverPropertiesAct = new QAction(tr("&Driver Properties"), this);
+	_DeviceDriverPropertiesAct->setStatusTip(tr("Show device driver property dialog"));
+	_DeviceDriverPropertiesAct->setEnabled(false);
+    connect(_DeviceDriverPropertiesAct, &QAction::triggered, this, &MainWindow::onDeviceDriverProperties);
+
 	// Trigger Mode
 	_TriggerModeAct = new QAction(selector.loadIcon(":/images/triggermode.png"), tr("&Trigger mode"), this);
 	_TriggerModeAct->setStatusTip(tr("Enable and disable trigger mode"));
@@ -211,6 +217,7 @@ void MainWindow::createUI()
 	auto deviceMenu = menuBar()->addMenu(tr("&Device"));
 	deviceMenu->addAction(_DeviceSelectAct);
 	deviceMenu->addAction(_DevicePropertiesAct);
+    deviceMenu->addAction(_DeviceDriverPropertiesAct);
 	deviceMenu->addAction(_TriggerModeAct);
 	deviceMenu->addAction(_StartLiveAct);
 	deviceMenu->addSeparator();
@@ -281,6 +288,7 @@ void MainWindow::customEvent(QEvent* event)
 void MainWindow::updateControls()
 {
 	_DevicePropertiesAct->setEnabled(_grabber.isDeviceValid());
+	_DeviceDriverPropertiesAct->setEnabled(_grabber.isDeviceValid());
 	_exportDeviceSettingsAct->setEnabled(_grabber.isDeviceValid());
 	_closeDeviceAct->setEnabled(_grabber.isDeviceOpen());
 	_StartLiveAct->setEnabled(_grabber.isDeviceValid());
@@ -364,6 +372,15 @@ void MainWindow::onDeviceProperties()
 	}
 
 	updateControls();
+}
+
+void MainWindow::onDeviceDriverProperties()
+{
+    PropertyDialog cDlg(_grabber.driverPropertyMap(), this, tr("Device Driver Properties"));
+	
+	cDlg.exec();
+
+    updateControls();
 }
 
 void MainWindow::onToggleTriggerMode()
