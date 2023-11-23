@@ -191,7 +191,7 @@ int main()
 	print_device_list();
 	print_interface_device_tree();
 
-	ic4_exit_library();
+	ic4_exit_library(),
 
 	return 0;
 }
