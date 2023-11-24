@@ -305,10 +305,6 @@ void MainWindow::updateControls()
 	{
 		ic4::Error err;
 		bool enabled = _devicePropertyMap.getValueString(ic4::PropId::TriggerMode, err) == "On";
-		if (err.isError())
-		{
-			enabled = _devicePropertyMap.getValueBool("Trigger", err);
-		}
 
 		if (err.isError())
 		{
@@ -385,9 +381,10 @@ void MainWindow::onDeviceDriverProperties()
 
 void MainWindow::onToggleTriggerMode()
 {
-	if (!_devicePropertyMap.setValue(ic4::PropId::TriggerMode, _TriggerModeAct->isChecked(), ic4::Error::Ignore()))
+	ic4::Error err;
+	if (!_devicePropertyMap.setValue(ic4::PropId::TriggerMode, _TriggerModeAct->isChecked(), err))
 	{
-		_devicePropertyMap.setValue("Trigger", _TriggerModeAct->isChecked(), ic4::Error::Ignore());
+		QMessageBox::critical(this, {}, QString::fromStdString(err.message()));
 	}
 }
 
