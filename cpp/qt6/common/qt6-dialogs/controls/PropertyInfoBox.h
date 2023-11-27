@@ -187,6 +187,42 @@ public:
 			{
 				text += QString("Increment: %1\n\n").arg(increment);
 			}
+
+			switch (prop.incrementMode(ic4::Error::Ignore()))
+			{
+			case ic4::PropIncrementMode::Increment:
+			{
+				auto increment = prop.increment(err);
+				if (err.isSuccess())
+				{
+					text += QString("Increment: %1\n\n").arg(increment);
+				}
+				else
+				{
+					text += QString("Increment: <span style='color:red'>%1</span>\n\n").arg(err.message().c_str());
+				}
+				break;
+			}
+			case ic4::PropIncrementMode::ValueSet:
+			{
+				auto valueSet = prop.validValueSet(err);
+				if (err.isSuccess())
+				{
+					QStringList lst;
+					for (auto&& v : valueSet)
+					{
+						lst.push_back(QString::number(v));
+					}
+
+					text += QString("Valid Value Set: %1\n\n").arg(lst.join(", "));
+				}
+				else
+				{
+					text += QString("Valid Value Set: <span style='color:red'>%1</span>\n\n").arg(err.message().c_str());
+				}
+				break;
+			}
+			}
 		}
 
 		return text;
@@ -236,10 +272,40 @@ public:
 				text += QString("Maximum: %1\n\n").arg(maximum);
 			}
 
-			auto increment = prop.increment(err);
-			if (err.isSuccess())
+			switch (prop.incrementMode(ic4::Error::Ignore()))
 			{
-				text += QString("Increment: %1\n\n").arg(increment);
+			case ic4::PropIncrementMode::Increment:
+			{
+				auto increment = prop.increment(err);
+				if (err.isSuccess())
+				{
+					text += QString("Increment: %1\n\n").arg(increment);
+				}
+				else
+				{
+					text += QString("Increment: <span style='color:red'>%1</span>\n\n").arg(err.message().c_str());
+				}
+				break;
+			}
+			case ic4::PropIncrementMode::ValueSet:
+			{
+				auto valueSet = prop.validValueSet(err);
+				if (err.isSuccess())
+				{
+					QStringList lst;
+					for (auto&& v : valueSet)
+					{
+						lst.push_back(QString::number(v));
+					}
+
+					text += QString("Valid Value Set: %1\n\n").arg(lst.join(", "));
+				}
+				else
+				{
+					text += QString("Valid Value Set: <span style='color:red'>%1</span>\n\n").arg(err.message().c_str());
+				}
+				break;
+			}
 			}
 		}
 
