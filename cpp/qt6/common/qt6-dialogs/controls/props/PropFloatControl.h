@@ -37,6 +37,9 @@ namespace ic4::ui
 
 		void onEditingFinished()
 		{
+			if (isReadOnly())
+				return;
+
 			auto text = lineEdit()->text();
 
 			int pos = 0;
