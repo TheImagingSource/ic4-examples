@@ -22,8 +22,6 @@ PropertyDialog::PropertyDialog(ic4::PropertyMap map, ic4::Grabber* grabber, QWid
 	, _map(map)
 	, _grabber(grabber)
 {
-	_map.serialize(oldstate, ic4::Error::Ignore());
-
 	setWindowTitle(title);
 	createUI();
 }
@@ -35,18 +33,11 @@ void PropertyDialog::createUI()
 	ic4::ui::PropertyTreeWidget::Settings treeSettings = { false, true, true };
 	auto tree = new ic4::ui::PropertyTreeWidget(_map.findCategory("Root"), _grabber, treeSettings, this);
 
-	auto buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-	connect(buttons, &QDialogButtonBox::accepted, this, &QDialog::accept);
-	connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
+	auto buttons = new QDialogButtonBox(QDialogButtonBox::Close);
+	connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::accept);
 
 	auto mainLayout = new QVBoxLayout();
 	mainLayout->addWidget(tree);
 	mainLayout->addWidget(buttons);
 	setLayout(mainLayout);
-
-	connect(this, &QDialog::rejected,
-		[this] {
-			_map.deSerialize(oldstate, ic4::Error::Ignore());
-		}
-	);
 }
