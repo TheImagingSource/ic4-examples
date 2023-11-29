@@ -27,33 +27,41 @@ namespace ic4::ui
 				combo_->setEnabled(!(prop_.isReadOnly() || shoudDisplayAsLocked()));
 				combo_->clear();
 
-				auto selected_entry = prop_.selectedEntry();
 				bool selected_found = false;
 
-				for (auto&& entry : prop_.entries())
+				ic4::Error err;
+				auto selected_entry = prop_.selectedEntry( err );
+				if (err)
 				{
-					try
+                    qDebug() << "Error " << prop_.name().c_str() << " in update_all " << err.message();
+				}
+				else
+				{
+					for (auto&& entry : prop_.entries())
 					{
-						auto val = entry.intValue();
-
-						if (!entry.isAvailable())
-							continue;
-
-						QString name = QString::fromStdString(entry.displayName());
-
-						combo_->addItem(name, val);
-
-						if (entry == selected_entry)
+						try
 						{
-							combo_->setCurrentIndex(combo_->count() - 1);
-							selected_found = true;
+							auto val = entry.intValue();
+
+							if (!entry.isAvailable())
+								continue;
+
+							QString name = QString::fromStdString(entry.displayName());
+
+							combo_->addItem(name, val);
+
+							if (entry == selected_entry)
+							{
+								combo_->setCurrentIndex(combo_->count() - 1);
+								selected_found = true;
+							}
+						}
+						catch (const ic4::IC4Exception iex)
+						{
+							qDebug() << "Error " << prop_.name().c_str() << " in update_all " << iex.what();
 						}
 					}
-					catch (const ic4::IC4Exception iex)
-					{
-						qDebug() << "Error " << prop_.name().c_str() << " in update_all " << iex.what();
-					}
-				}
+                }
 
 				if (!selected_found)
 				{
