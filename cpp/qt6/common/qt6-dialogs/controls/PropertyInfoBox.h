@@ -182,12 +182,6 @@ public:
 				text += QString("Maximum: %1\n\n").arg(maximum);
 			}
 
-			auto increment = prop.increment(err);
-			if (err.isSuccess())
-			{
-				text += QString("Increment: %1\n\n").arg(increment);
-			}
-
 			switch (prop.incrementMode(ic4::Error::Ignore()))
 			{
 			case ic4::PropIncrementMode::Increment:

@@ -23,7 +23,6 @@ private:
 
 	ic4::Grabber* _grabber = nullptr;
 	ic4::PropertyMap _map;
-	std::vector<uint8_t> oldstate;
 };
 
 
