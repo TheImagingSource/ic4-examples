@@ -25,6 +25,7 @@ qt_add_executable(demoapp
     main.cpp
     mainwindow.cpp
     events.h
+    demoapp.rc
 )
 
 target_link_libraries(demoapp
