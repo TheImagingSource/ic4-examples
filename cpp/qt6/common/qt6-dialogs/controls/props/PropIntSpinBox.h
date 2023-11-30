@@ -184,7 +184,7 @@ namespace ic4::ui
 				return QValidator::State::Intermediate;
 
 			if (res.value > max_)
-				return QValidator::State::Invalid;
+				return QValidator::State::Intermediate;
 
 			if ((res.value - min_) % inc_)
 				return QValidator::State::Intermediate;
