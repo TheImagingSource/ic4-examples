@@ -139,7 +139,11 @@ void DeviceSelectionDlg::createUI()
 
 	auto rightBox = new QFrame();
 	rightBox->setObjectName("rightBox");
-	rightBox->setStyleSheet("QFrame#rightBox { padding: 0px; }");
+	rightBox->setStyleSheet(
+		"QFrame#rightBox { padding: 0px; }\n"
+		"QLineEdit[readOnly=\"true\"] { background: palette(window) }\n"
+		"QPlainTextEdit[readOnly=\"true\"] { background: palette(window) }\n"
+	);
 
 	auto rightLayout = new QVBoxLayout();
 	rightLayout->setContentsMargins(0, 0, 0, 0);
