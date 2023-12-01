@@ -13,3 +13,4 @@ find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 
 add_subdirectory( common/qt6-dialogs )
 add_subdirectory( demoapp )
+add_subdirectory( device-manager )

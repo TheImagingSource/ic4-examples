@@ -37,11 +37,11 @@ private:
 
 	ic4::Grabber* _grabber;
 	ic4::DeviceEnum _enumerator;
-	QTreeWidget* _cameraTree;
-	QPushButton* _okButton;
+	QTreeWidget* _cameraTree = nullptr;
+	QPushButton* _okButton = nullptr;
 
-	QScrollArea* _rightScroll;
-	FormGroupBox* _itfInfoGroup;
-	FormGroupBox* _devInfoGroup;
-	IPConfigGroupBox* _ipConfigGroup;
+	QScrollArea* _rightScroll = nullptr;
+	FormGroupBox* _itfInfoGroup = nullptr;
+	FormGroupBox* _devInfoGroup = nullptr;
+	IPConfigGroupBox* _ipConfigGroup = nullptr;
 };

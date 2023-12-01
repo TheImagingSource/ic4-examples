@@ -65,7 +65,7 @@ void DeviceSelectionDlg::createUI()
 {
 	Q_INIT_RESOURCE(qt6dialogs);
 
-	this->setWindowTitle("Select Device");
+	setWindowTitle("Select Device");
 	setMinimumSize(900, 400);
 
 	auto topLayout = new QHBoxLayout();
@@ -88,7 +88,10 @@ void DeviceSelectionDlg::createUI()
 	_cameraTree->setHeaderHidden(false);
 
 	connect(_cameraTree, &QTreeWidget::currentItemChanged, this, &DeviceSelectionDlg::onCurrentItemChanged);
-	connect(_cameraTree, &QTreeWidget::itemDoubleClicked, [&](QTreeWidgetItem* item, int column) { onOK(); });
+	if (_grabber)
+	{
+		connect(_cameraTree, &QTreeWidget::itemDoubleClicked, [&](QTreeWidgetItem* item, int column) { onOK(); });
+	}
 
 	leftLayout->addWidget(_cameraTree);
 
@@ -99,14 +102,26 @@ void DeviceSelectionDlg::createUI()
 	connect(UpdateButton, &QPushButton::pressed, this, &DeviceSelectionDlg::onUpdateButton);
 	buttons->addWidget(UpdateButton);
 
-	auto cancelButton = new QPushButton(tr("Cancel"));
-	connect(cancelButton, &QPushButton::pressed, this, &QDialog::reject);
-	buttons->addWidget(cancelButton);
+	if (_grabber)
+	{
+		auto cancelButton = new QPushButton(tr("Cancel"));
+		connect(cancelButton, &QPushButton::pressed, this, &QDialog::reject);
+		buttons->addWidget(cancelButton);
 
-	_okButton = new QPushButton(tr("OK"));
-	_okButton->setDefault(true);
-	connect(_okButton, &QPushButton::pressed, this, &DeviceSelectionDlg::onOK);
-	buttons->addWidget(_okButton);
+		_okButton = new QPushButton(tr("OK"));
+		_okButton->setDefault(true);
+		connect(_okButton, &QPushButton::pressed, this, &DeviceSelectionDlg::onOK);
+		buttons->addWidget(_okButton);
+	}
+	else
+	{
+		buttons->addSpacing(150);
+
+		auto closeButton = new QPushButton(tr("Close"));
+		closeButton->setDefault(true);
+		connect(closeButton, &QPushButton::pressed, this, &QDialog::reject);
+		buttons->addWidget(closeButton);
+	}
 
 	leftLayout->addLayout(buttons);
 	topLayout->addLayout(leftLayout, 1);
@@ -331,7 +346,8 @@ void DeviceSelectionDlg::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWid
 {	
 	_rightScroll->hide();
 
-	_okButton->setEnabled(false);
+	if (_okButton)
+		_okButton->setEnabled(false);
 
 	_itfInfoGroup->hide();
 	_itfInfoGroup->clear();
@@ -356,7 +372,8 @@ void DeviceSelectionDlg::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWid
 	{
 		if (map.setValue("DeviceSelector", itemData.deviceIndex, ic4::Error::Ignore()))
 		{
-			_okButton->setEnabled(true);
+			if (_okButton)
+				_okButton->setEnabled(true);
 		}
 	}
 
@@ -514,13 +531,16 @@ void DeviceSelectionDlg::onUpdateButton()
 	{
 		if (!selectPreviousItem(previousData))
 		{
-			_okButton->setEnabled(false);
+			if (_okButton)
+				_okButton->setEnabled(false);
 		}
 	}
 	else
 	{
 		_cameraTree->setCurrentItem(nullptr);
-		_okButton->setEnabled(false);
+
+		if (_okButton)
+			_okButton->setEnabled(false);
 	}
 }
 
