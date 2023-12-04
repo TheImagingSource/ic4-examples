@@ -19,12 +19,12 @@ endif()
 
 qt_standard_project_setup()
 
-qt_add_executable(device-manager
+qt_add_executable(ic4-device-manager
     main.cpp
     device-manager.rc
 )
 
-target_link_libraries(device-manager
+target_link_libraries(ic4-device-manager
     PRIVATE
         Qt6::Widgets
         Qt6::Core
@@ -32,20 +32,20 @@ target_link_libraries(device-manager
         qt6-dialogs
 )
 
-set_target_properties(device-manager PROPERTIES
+set_target_properties(ic4-device-manager PROPERTIES
     WIN32_EXECUTABLE ON
     CXX_STANDARD 17
 )
 
-ic4_copy_runtime_to_target(device-manager)
+ic4_copy_runtime_to_target(ic4-device-manager)
 
-add_custom_command(TARGET device-manager POST_BUILD
+add_custom_command(TARGET ic4-device-manager POST_BUILD
     COMMAND "${Qt6_DIR}/../../../bin/windeployqt.exe"
         --verbose 0
         --no-compiler-runtime
         --no-translations
         --no-system-d3d-compiler
         --no-opengl-sw
-        $<TARGET_FILE:demoapp>
+        $<TARGET_FILE:ic4-device-manager>
     COMMENT "Deploying Qt..."
 )

@@ -20,7 +20,7 @@ endif()
 qt_standard_project_setup()
 qt_add_resources(DEMOAPP_RESOURCES demoapp.qrc)
 
-qt_add_executable(demoapp
+qt_add_executable(ic4-demoapp
     ${DEMOAPP_RESOURCES}
     main.cpp
     mainwindow.cpp
@@ -28,7 +28,7 @@ qt_add_executable(demoapp
     demoapp.rc
 )
 
-target_link_libraries(demoapp
+target_link_libraries(ic4-demoapp
     PRIVATE
         Qt6::Widgets
         Qt6::Core
@@ -37,20 +37,20 @@ target_link_libraries(demoapp
         shell32
 )
 
-set_target_properties(demoapp PROPERTIES
+set_target_properties(ic4-demoapp PROPERTIES
     WIN32_EXECUTABLE ON
     CXX_STANDARD 17
 )
 
-ic4_copy_runtime_to_target(demoapp)
+ic4_copy_runtime_to_target(ic4-demoapp)
 
-add_custom_command(TARGET demoapp POST_BUILD
+add_custom_command(TARGET ic4-demoapp POST_BUILD
     COMMAND "${Qt6_DIR}/../../../bin/windeployqt.exe"
         --verbose 0
         --no-compiler-runtime
         --no-translations
         --no-system-d3d-compiler
         --no-opengl-sw
-        $<TARGET_FILE:demoapp>
+        $<TARGET_FILE:ic4-demoapp>
     COMMENT "Deploying Qt..."
 )

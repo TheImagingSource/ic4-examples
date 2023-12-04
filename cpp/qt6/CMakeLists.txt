@@ -12,5 +12,5 @@ list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.6.0/msvc2019_64/")
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 
 add_subdirectory( common/qt6-dialogs )
-add_subdirectory( demoapp )
-add_subdirectory( device-manager )
+add_subdirectory( ic4-demoapp )
+add_subdirectory( ic4-device-manager )
