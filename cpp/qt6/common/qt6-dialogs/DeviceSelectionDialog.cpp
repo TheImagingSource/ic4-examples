@@ -67,6 +67,7 @@ void DeviceSelectionDlg::createUI()
 
 	setWindowTitle("Select Device");
 	setMinimumSize(900, 400);
+	setSizeGripEnabled(true);
 
 	auto topLayout = new QHBoxLayout();
 	auto leftLayout = new QVBoxLayout();
