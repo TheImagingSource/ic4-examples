@@ -62,10 +62,10 @@ namespace DeviceEvents
                 var eventLine1RisingEdgeTimestamp = grabber.DevicePropertyMap.FindInteger("EventLine1RisingEdgeTimestamp");
                 var eventLine1FallingEdgeTimestamp = grabber.DevicePropertyMap.FindInteger("EventLine1FallingEdgeTimestamp");
 
-                // Enable both Line1RisingEdge and Line1FallingEdge events notifications
-                grabber.DevicePropertyMap.SetValue("EventSelector", "EventLine1RisingEdge");
+                // Enable both Line1RisingEdge and Line1FallingEdge event notifications
+                grabber.DevicePropertyMap.SetValue("EventSelector", "Line1RisingEdge");
                 grabber.DevicePropertyMap.SetValue("EventNotification", "On");
-                grabber.DevicePropertyMap.SetValue("EventSelector", "EventLine1FallingEdge");
+                grabber.DevicePropertyMap.SetValue("EventSelector", "Line1FallingEdge");
                 grabber.DevicePropertyMap.SetValue("EventNotification", "On");
 
                 try
@@ -88,9 +88,9 @@ namespace DeviceEvents
                 finally
                 {
                     // Disable both Line1RisingEdge and Line1FallingEdge event notifications
-                    grabber.DevicePropertyMap.SetValue("EventSelector", "EventLine1RisingEdge");
+                    grabber.DevicePropertyMap.SetValue("EventSelector", "Line1RisingEdge");
                     grabber.DevicePropertyMap.SetValue("EventNotification", "Off");
-                    grabber.DevicePropertyMap.SetValue("EventSelector", "EventLine1FallingEdge");
+                    grabber.DevicePropertyMap.SetValue("EventSelector", "Line1FallingEdge");
                     grabber.DevicePropertyMap.SetValue("EventNotification", "Off");
                 }
             }
