@@ -54,5 +54,46 @@ namespace ic4_examples
 				return device_list.end();
 			}
 		}
+
+		inline std::vector<ic4::Interface>::const_iterator select_from_list(const std::vector<ic4::Interface>& interface_list)
+		{
+			if (interface_list.empty())
+			{
+				std::cout << "No interfaces found" << std::endl;
+				return interface_list.end();
+			}
+
+			std::cout << "Select interface:" << std::endl;
+
+			for (size_t i = 0; i < interface_list.size(); ++i)
+			{
+				auto display_name = interface_list[i].interfaceDisplayName();
+
+				std::cout << "[" << i << "] ";
+				std::cout << display_name << std::endl;
+			}
+
+			std::cout << "Your choice: ";
+			std::string input;
+			std::getline(std::cin, input);
+
+			try
+			{
+				size_t index = std::stoull(input);
+
+				if (index >= interface_list.size())
+				{
+					std::cout << "Invalid index" << std::endl;
+					return interface_list.end();
+				}
+
+				return std::next(interface_list.begin(), index);
+			}
+			catch (const std::exception& ex)
+			{
+				std::cout << ex.what() << std::endl;
+				return interface_list.end();
+			}
+		}
 	}
 }
