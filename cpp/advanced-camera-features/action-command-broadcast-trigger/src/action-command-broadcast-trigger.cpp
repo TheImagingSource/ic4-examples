@@ -140,6 +140,7 @@ int main()
 	}
 	catch (const ic4::IC4Exception& ex)
 	{
+		std::cerr << "An exception occurred: " << std::endl;
 		std::cerr << ex.what() << std::endl;
 		return -10;
 	}

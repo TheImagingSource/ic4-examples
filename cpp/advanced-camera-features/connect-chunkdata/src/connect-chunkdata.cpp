@@ -147,7 +147,7 @@ int main()
 	}
 	catch (const std::exception& ex)
 	{
-		std::cerr << "An exception occurred:" << std::endl;
+		std::cerr << "An exception occurred: " << std::endl;
 		std::cerr << ex.what() << std::endl;
 		return -10;
 	}
