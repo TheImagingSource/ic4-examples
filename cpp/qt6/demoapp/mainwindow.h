@@ -40,6 +40,7 @@ private:
 
 	void updateControls();
 	void updateCameraLabel();
+	void onUpdateStatisticsTimer();
 
 	void createUI();
 
@@ -71,7 +72,10 @@ private:
 	QAction* _importDeviceSettingsAct = nullptr;
 	QAction* _closeDeviceAct = nullptr;
 
-	QLabel* _sbCameralabel = nullptr;
+	QLabel* _sbStatisticsLabel = nullptr;
+	QLabel* _sbCameraLabel = nullptr;
+
+	QTimer* _updateStatisticsTimer = nullptr;
 
 	ic4::PropertyMap _devicePropertyMap;
 	ic4::Grabber _grabber;

@@ -46,6 +46,7 @@ namespace ic4::ui
 
 			notify_ = prop_.eventAddNotification([this](ic4::Property&)
 				{
+					QApplication::removePostedEvents(this, UPDATE_ALL);
 					QApplication::postEvent(this, new QEvent(UPDATE_ALL));
 				});
 

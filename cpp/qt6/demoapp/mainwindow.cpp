@@ -259,8 +259,51 @@ void MainWindow::createUI()
 	setCentralWidget(_VideoWidget);
 
 	statusBar()->showMessage(tr("Ready"));
-	_sbCameralabel = new QLabel(statusBar());
-	statusBar()->addPermanentWidget(_sbCameralabel);
+	_sbStatisticsLabel = new QLabel("");
+	statusBar()->addPermanentWidget(_sbStatisticsLabel);
+	statusBar()->addPermanentWidget(new QLabel("  "));
+	_sbCameraLabel = new QLabel(statusBar());
+	statusBar()->addPermanentWidget(_sbCameraLabel);
+
+	_updateStatisticsTimer = new QTimer(this);
+	connect(_updateStatisticsTimer, &QTimer::timeout, this, &MainWindow::onUpdateStatisticsTimer);
+	_updateStatisticsTimer->start(100);
+}
+
+void MainWindow::onUpdateStatisticsTimer()
+{
+	ic4::Error err;
+	auto stats = _grabber.streamStatistics(err);
+	if (err.isSuccess())
+	{
+		auto text = QString("Frames Delivered: %1 Dropped: %2/%3/%4/%5")
+			.arg(stats.sink_delivered)
+			.arg(stats.device_transmission_error)
+			.arg(stats.device_underrun)
+			.arg(stats.transform_underrun)
+			.arg(stats.sink_underrun);
+
+		_sbStatisticsLabel->setText(text);
+
+		auto tooltip = QString(
+			"Frames Delivered: %1\n\n"
+			"Frames Dropped:\n"
+			"  Device Transmission Error: %2\n"
+			"  Device Underrun: %3\n"
+			"  Transform Underrun: %4\n"
+			"  Sink Underrun: %5\n")
+			.arg(stats.sink_delivered)
+			.arg(stats.device_transmission_error)
+			.arg(stats.device_underrun)
+			.arg(stats.transform_underrun)
+			.arg(stats.sink_underrun);
+
+		_sbStatisticsLabel->setToolTip(tooltip);
+	}
+	else
+	{
+		qWarning().noquote() << "Failed query stream statistics:" << err.message().c_str();
+	}
 }
 
 /////////////////////////////////////////////////////////////
@@ -287,6 +330,9 @@ void MainWindow::customEvent(QEvent* event)
 /// </summary>
 void MainWindow::updateControls()
 {
+	if (!_grabber.isDeviceOpen())
+		_sbStatisticsLabel->clear();
+
 	_DevicePropertiesAct->setEnabled(_grabber.isDeviceValid());
 	_DeviceDriverPropertiesAct->setEnabled(_grabber.isDeviceValid());
 	_exportDeviceSettingsAct->setEnabled(_grabber.isDeviceValid());
@@ -326,11 +372,11 @@ void MainWindow::updateCameraLabel()
 	if (err.isSuccess())
 	{
 		auto text = deviceInfo.modelName() + " " + deviceInfo.serial();
-		_sbCameralabel->setText(text.c_str());
+		_sbCameraLabel->setText(text.c_str());
 	}
 	else
 	{
-		_sbCameralabel->setText("No Device");
+		_sbCameraLabel->setText("No Device");
 	}
 }
 
