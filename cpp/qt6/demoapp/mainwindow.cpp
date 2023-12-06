@@ -291,7 +291,7 @@ void MainWindow::onUpdateStatisticsTimer()
 			"  Device Transmission Error: %2\n"
 			"  Device Underrun: %3\n"
 			"  Transform Underrun: %4\n"
-			"  Sink Underrun: %5\n")
+			"  Sink Underrun: %5")
 			.arg(stats.sink_delivered)
 			.arg(stats.device_transmission_error)
 			.arg(stats.device_underrun)
