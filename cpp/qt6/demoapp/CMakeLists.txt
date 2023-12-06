@@ -34,23 +34,30 @@ target_link_libraries(ic4-demoapp
         Qt6::Core
         ic4::core
         qt6-dialogs
-        shell32
-)
+      )
 
-set_target_properties(ic4-demoapp PROPERTIES
+if (WIN32)
+  target_link_libraries(ic4-demoapp
+    PRIVATE
+    shell32
+  )
+
+
+  set_target_properties(ic4-demoapp PROPERTIES
     WIN32_EXECUTABLE ON
     CXX_STANDARD 17
-)
+  )
 
-ic4_copy_runtime_to_target(ic4-demoapp)
+  ic4_copy_runtime_to_target(ic4-demoapp)
 
-add_custom_command(TARGET ic4-demoapp POST_BUILD
+  add_custom_command(TARGET ic4-demoapp POST_BUILD
     COMMAND "${Qt6_DIR}/../../../bin/windeployqt.exe"
-        --verbose 0
-        --no-compiler-runtime
-        --no-translations
-        --no-system-d3d-compiler
-        --no-opengl-sw
-        $<TARGET_FILE:ic4-demoapp>
+    --verbose 0
+    --no-compiler-runtime
+    --no-translations
+    --no-system-d3d-compiler
+    --no-opengl-sw
+    $<TARGET_FILE:ic4-demoapp>
     COMMENT "Deploying Qt..."
-)
+  )
+endif()

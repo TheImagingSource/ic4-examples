@@ -5,7 +5,7 @@
 #include "ResourceSelector.h"
 
 #include <iostream>
-#include <QMessagebox>
+#include <QMessageBox>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QPushButton>

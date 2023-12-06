@@ -332,7 +332,7 @@ public:
 					text += ", ";
 				else
 					first = false;
-				text += entry.name(ic4::Error::Ignore());
+				text += QString::fromStdString(entry.name(ic4::Error::Ignore()));
 			}
 			text += "\n\n";
 		}

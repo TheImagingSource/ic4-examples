@@ -32,6 +32,8 @@ target_link_libraries(ic4-device-manager
         qt6-dialogs
 )
 
+if (WIN32)
+
 set_target_properties(ic4-device-manager PROPERTIES
     WIN32_EXECUTABLE ON
     CXX_STANDARD 17
@@ -49,3 +51,5 @@ add_custom_command(TARGET ic4-device-manager POST_BUILD
         $<TARGET_FILE:ic4-device-manager>
     COMMENT "Deploying Qt..."
 )
+
+endif ()

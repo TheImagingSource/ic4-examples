@@ -482,8 +482,10 @@ namespace ic4::ui
 			bool showInfoBox = true;
 			bool showFilter = true;
 
-			QString initialFilter;
-			ic4::PropVisibility initialVisibility;
+			QString initialFilter = "";
+			ic4::PropVisibility initialVisibility = ic4::PropVisibility::Beginner;
+
+            static Settings Default() { return {}; };
 		};
 
 	private:
@@ -626,7 +628,7 @@ namespace ic4::ui
 		}
 
 	public:
-		PropertyTreeWidget(ic4::PropCategory cat, ic4::Grabber* grabber, Settings settings = {}, QWidget* parent = nullptr)
+		PropertyTreeWidget(ic4::PropCategory cat, ic4::Grabber* grabber, Settings settings = Settings::Default(), QWidget* parent = nullptr)
 			: PropertyTreeWidget(new PropertyTreeModel(cat), grabber, settings, parent)
 		{
 		}
@@ -637,7 +639,7 @@ namespace ic4::ui
 		}
 
 	private:
-		PropertyTreeWidget(PropertyTreeModel* model, ic4::Grabber* grabber, Settings settings = {}, QWidget* parent = nullptr)
+		PropertyTreeWidget(PropertyTreeModel* model, ic4::Grabber* grabber, Settings settings = Settings::Default(), QWidget* parent = nullptr)
 			: QWidget(parent)
 			, delegate_(proxy_, grabber)
 			, branchPaintDelegate_(proxy_, this)

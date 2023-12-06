@@ -33,7 +33,7 @@ namespace ic4::ui
 				auto selected_entry = prop_.selectedEntry( err );
 				if (err)
 				{
-                    qDebug() << "Error " << prop_.name().c_str() << " in update_all " << err.message();
+                    qDebug() << "Error " << prop_.name().c_str() << " in update_all " << err.message().c_str();
 				}
 				else
 				{
@@ -48,7 +48,7 @@ namespace ic4::ui
 
 							QString name = QString::fromStdString(entry.displayName());
 
-							combo_->addItem(name, val);
+							combo_->addItem(name, QVariant::fromValue(val));
 
 							if (entry == selected_entry)
 							{

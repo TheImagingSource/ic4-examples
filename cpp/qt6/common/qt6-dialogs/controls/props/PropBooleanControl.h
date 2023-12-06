@@ -51,7 +51,7 @@ namespace ic4::ui
 			}
 			else
 			{
-				qWarning() << "Error " << prop_.name().c_str() << " in update_all " << err.message();
+				qWarning() << "Error " << prop_.name().c_str() << " in update_all " << err.message().c_str();
 			}
 
 			check_->blockSignals(false);
