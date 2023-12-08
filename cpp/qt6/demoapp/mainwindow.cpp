@@ -272,6 +272,9 @@ void MainWindow::createUI()
 
 void MainWindow::onUpdateStatisticsTimer()
 {
+	if (!_grabber.isDeviceValid())
+		return;
+
 	ic4::Error err;
 	auto stats = _grabber.streamStatistics(err);
 	if (err.isSuccess())
