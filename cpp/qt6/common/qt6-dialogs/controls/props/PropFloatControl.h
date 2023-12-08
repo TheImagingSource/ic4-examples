@@ -268,7 +268,7 @@ namespace ic4::ui
 
 				// TODO
 				connect( spin_, QOverload<double>::of(&FormattingDoubleSpinBox::valueChanged), [this](double val) {
-					set_value_unchecked(val);
+					set_value_unchecked(std::clamp(val, min_, max_));
 				});
 
 				spin_->setMinimumWidth(120);
