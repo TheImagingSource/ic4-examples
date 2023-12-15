@@ -1,6 +1,6 @@
-
-import ic4
+import imagingcontrol4 as ic4
 import cv2
+
 
 def example_imagebuffer_numpy_opencv():
     device_list = ic4.DeviceEnum.devices()
@@ -35,6 +35,7 @@ def example_imagebuffer_numpy_opencv():
         cv2.imshow("display", np)
 
     grabber.stream_stop()
+
 
 if __name__ == "__main__":
     ic4.Library.init(api_log_level=ic4.LogLevel.INFO, log_targets=ic4.LogTarget.STDERR)

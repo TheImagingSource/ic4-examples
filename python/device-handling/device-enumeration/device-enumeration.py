@@ -1,4 +1,4 @@
-import ic4
+import imagingcontrol4 as ic4
 
 
 def format_device_info(device_info: ic4.DeviceInfo) -> str:

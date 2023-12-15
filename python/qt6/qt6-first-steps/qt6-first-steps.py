@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QApplication, QWidget, QMainWindow, QLabel
 
-import ic4
+import imagingcontrol4 as ic4
 
 
 def _window_handle(wnd: QWidget) -> int:

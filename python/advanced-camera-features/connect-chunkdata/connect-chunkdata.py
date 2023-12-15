@@ -1,5 +1,5 @@
 import time
-import ic4
+import imagingcontrol4 as ic4
 
 
 def example_connect_chunkdata():

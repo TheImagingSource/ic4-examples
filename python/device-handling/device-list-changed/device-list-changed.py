@@ -1,4 +1,4 @@
-import ic4
+import imagingcontrol4 as ic4
 
 
 def handle_device_list_changed(device_enum: ic4.DeviceEnum):

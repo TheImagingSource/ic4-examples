@@ -2,7 +2,7 @@ from threading import Timer, Condition, Lock, Event
 from typing import Optional
 from time import time
 
-import ic4
+import imagingcontrol4 as ic4
 
 
 class RealWorld:

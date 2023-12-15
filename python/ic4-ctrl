@@ -10,11 +10,11 @@ import sys
 
 import textwrap
 import argparse
-import ic4 as ic4
+import imagingcontrol4 as ic4
 
 # constants for output formatting
-BOLD = '\033[1m'
-END = '\033[0m'
+BOLD = "\033[1m"
+END = "\033[0m"
 
 
 class ImageType(Enum):
@@ -22,6 +22,7 @@ class ImageType(Enum):
     Helper enum for easier argparse generation.
     Contains supported image types.
     """
+
     BMP = "bmp"
     JPEG = "jpeg"
     PNG = "png"
@@ -36,6 +37,7 @@ class VideoType(Enum):
     Helper enum for easier argparse generation.
     Contains supported image types.
     """
+
     H264 = "h264"
     H265 = "h265"
 
@@ -55,7 +57,6 @@ def list_devices():
         print(f"{'Model':20}\t{'Serial':8}\tIdentifier")
 
     for d in dev_list:
-
         print(f"{d.model_name:20}\t{d.serial:8}\t{d.unique_name}")
 
 
@@ -68,11 +69,8 @@ def list_properties(dev: ic4.DeviceInfo):
     grabber.device_open(dev)
 
     for p in grabber.device_property_map.all:
-
         print(f"{BOLD}{p.name:<16}{END} - {p.type} - {p.visibility}")
-        print(textwrap.fill(f"{p.description}", 80,
-                            initial_indent="\t",
-                            subsequent_indent="\t"))
+        print(textwrap.fill(f"{p.description}", 80, initial_indent="\t", subsequent_indent="\t"))
         print("")
         print(f"\tAvailable: {p.is_available} Locked: {p.is_locked} Readonly: {p.is_readonly}")
         print(f"\tAffects others: {p.is_selector}")
@@ -111,7 +109,14 @@ def list_properties(dev: ic4.DeviceInfo):
             for entry in e:
                 print(f"\t{entry.value} - {entry.name}")
 
-        if isinstance(p, ic4.PropInteger) or isinstance(p, ic4.PropBoolean) or isinstance(p, ic4.PropFloat) or isinstance(p, ic4.PropEnumeration) or isinstance(p, ic4.PropString) or isinstance(p, ic4.PropRegister):
+        if (
+            isinstance(p, ic4.PropInteger)
+            or isinstance(p, ic4.PropBoolean)
+            or isinstance(p, ic4.PropFloat)
+            or isinstance(p, ic4.PropEnumeration)
+            or isinstance(p, ic4.PropString)
+            or isinstance(p, ic4.PropRegister)
+        ):
             try:
                 value = p.value
             except ic4.IC4Exception as e:
@@ -136,17 +141,15 @@ def set_properties(dev: ic4.DeviceInfo, new_props: list[str]):
     props = grabber.device_property_map
 
     for p in new_props:
-
         name, value = p.split("=")
 
         props.set_value(name, value)
         print(name, value)
 
 
-def save_video(dev: ic4.DeviceInfo,
-               duration_s: int = 10,
-               file_name: str = "video",
-               video_type: VideoType = VideoType.H264):
+def save_video(
+    dev: ic4.DeviceInfo, duration_s: int = 10, file_name: str = "video", video_type: VideoType = VideoType.H264
+):
     """
     Save video to file.
 
@@ -164,7 +167,6 @@ def save_video(dev: ic4.DeviceInfo,
     writer = ic4.VideoWriter(ic4.VideoWriterType.MP4_H264)
 
     class Listener(ic4.QueueSinkListener):
-
         def __init__(self):
             pass
 
@@ -192,11 +194,13 @@ def save_video(dev: ic4.DeviceInfo,
     time.sleep(duration_s)
 
 
-def save_image(dev: ic4.DeviceInfo,
-               n_images: int,
-               store_dir: str = os.getcwd(),
-               file_name: str = "image-{C}",
-               file_type: ImageType = ImageType.BMP):
+def save_image(
+    dev: ic4.DeviceInfo,
+    n_images: int,
+    store_dir: str = os.getcwd(),
+    file_name: str = "image-{C}",
+    file_type: ImageType = ImageType.BMP,
+):
     """
     Save video to file.
 
@@ -214,7 +218,6 @@ def save_image(dev: ic4.DeviceInfo,
     grabber.stream_setup(sink)
 
     def save(f: ic4.ImageBuffer, f_name: str):
-
         # error via exception
         if file_type == ImageType.BMP:
             f.save_as_bmp(f"{store_dir}/{f_name}.{file_type}")
@@ -276,64 +279,54 @@ def live_stream(dev: ic4.DeviceInfo):
 
 
 def main() -> int:
-
     arguments = argparse.ArgumentParser()
 
-    subs = arguments.add_subparsers(dest='command')
+    subs = arguments.add_subparsers(dest="command")
     subs.add_parser("list", help="List devices")
 
     # args for listing/saving properties
 
     props = subs.add_parser("properties", help="List properties of device")
 
-    props.add_argument("--json", "-j", help="Print properties serialized",
-                       action="store_true")
+    props.add_argument("--json", "-j", help="Print properties serialized", action="store_true")
 
-    props.add_argument("--serial", "-s", help="Serial of the camera",
-                       required=True)
+    props.add_argument("--serial", "-s", help="Serial of the camera", required=True)
     # args for setting properties
 
     setter = subs.add_parser("set", help="Set properties of device")
 
-    setter.add_argument("--properties", "-p", nargs="+", required=True, help="List of properties to be set. (e.g. -p a=1 b=2)")
+    setter.add_argument(
+        "--properties", "-p", nargs="+", required=True, help="List of properties to be set. (e.g. -p a=1 b=2)"
+    )
 
-    setter.add_argument("--serial", "-s", help="Serial of the camera",
-                        required=True)
+    setter.add_argument("--serial", "-s", help="Serial of the camera", required=True)
 
     # args for saving images
 
     image = subs.add_parser("image", help="Save image from device")
-    image.add_argument("--count", "-c", help="Number of images to save. Default=1",
-                       default=1, action="store")
-    image.add_argument("--path", help="Directory in which to save images. Default=<current dir>",
-                       default=os.getcwd())
-    image.add_argument("--name", help="Filename of saved images",
-                       default="image-{C}")
-    image.add_argument("--type", help="Image types",
-                       type=ImageType, choices=list(ImageType), default=ImageType.BMP)
+    image.add_argument("--count", "-c", help="Number of images to save. Default=1", default=1, action="store")
+    image.add_argument("--path", help="Directory in which to save images. Default=<current dir>", default=os.getcwd())
+    image.add_argument("--name", help="Filename of saved images", default="image-{C}")
+    image.add_argument("--type", help="Image types", type=ImageType, choices=list(ImageType), default=ImageType.BMP)
 
-    image.add_argument("--serial", "-s", help="Serial of the camera",
-                       required=True)
+    image.add_argument("--serial", "-s", help="Serial of the camera", required=True)
 
     # args for saving video
 
     video = subs.add_parser("video", help="Save video from device")
-    video.add_argument("--time", "-t", help="Time period that shall be saved in seconds. Default=10s",
-                       default=10, action="store")
-    video.add_argument("--name", help="Filename of saved videos",
-                       default="video")
-    video.add_argument("--type", help="Video types",
-                       type=VideoType, choices=list(VideoType), default=VideoType.H264)
+    video.add_argument(
+        "--time", "-t", help="Time period that shall be saved in seconds. Default=10s", default=10, action="store"
+    )
+    video.add_argument("--name", help="Filename of saved videos", default="video")
+    video.add_argument("--type", help="Video types", type=VideoType, choices=list(VideoType), default=VideoType.H264)
 
-    video.add_argument("--serial", "-s", help="Serial of the camera",
-                       required=True)
+    video.add_argument("--serial", "-s", help="Serial of the camera", required=True)
 
     # args for live stream
 
     stream = subs.add_parser("live", help="Display live stream.")
 
-    stream.add_argument("--serial", "-s", help="Serial of the camera",
-                        required=True)
+    stream.add_argument("--serial", "-s", help="Serial of the camera", required=True)
 
     args = arguments.parse_args()
 
@@ -365,14 +358,9 @@ def main() -> int:
     elif args.command == "set":
         set_properties(d, args.properties)
     elif args.command == "image":
-        save_image(d, args.count,
-                   args.path, args.name,
-                   args.type)
+        save_image(d, args.count, args.path, args.name, args.type)
     elif args.command == "video":
-        save_video(d,
-                   args.time,
-                   args.name,
-                   args.type)
+        save_video(d, args.time, args.name, args.type)
     elif args.command == "live":
         live_stream(d)
     else:
