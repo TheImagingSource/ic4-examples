@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="ic4dotnet" Version="0.1.0.2225-test" />
+    <PackageReference Include="ic4dotnet" Version="1.0.0.2413" />
   </ItemGroup>
 
 </Project>

@@ -10,8 +10,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-	<PackageReference Include="ic4dotnet" Version="0.1.0.2322-test" />
-	<PackageReference Include="ic4dotnet.System.Windows.Forms" Version="0.1.0.2322-test" />
+	<PackageReference Include="ic4dotnet" Version="1.0.0.2413" />
+	<PackageReference Include="ic4dotnet.System.Windows.Forms" Version="1.0.0.2413" />
   </ItemGroup>
 
 </Project>

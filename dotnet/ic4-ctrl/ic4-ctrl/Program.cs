@@ -78,7 +78,7 @@ namespace ic4_ctrl
                 throw new Exception("No Interfaces are available.");
             }
 
-            var itf = list.FirstOrDefault(i => i.Name == id || i.TransportLayerName == id);
+            var itf = list.FirstOrDefault(i => i.DisplayName == id || i.TransportLayerName == id);
             if (itf != null)
             {
                 return itf;
@@ -109,7 +109,7 @@ namespace ic4_ctrl
             int index = 0;
             foreach (var device in list)
             {
-                Print(1, string.Format("{0}\t{1}\t{2}\t{3}", index, device.ModelName, device.Serial, device.Interface.TransportLayerName));
+                Print(1, string.Format("{0}\t{1}\t{2}\t{3}\n", index, device.ModelName, device.Serial, device.Interface.TransportLayerName));
                 index++;
             }
             if (!list.Any())
@@ -126,7 +126,7 @@ namespace ic4_ctrl
 
             foreach (var e in list)
             {
-                Print(1, string.Format("{0}\n",e.Name));
+                Print(1, string.Format("{0}\n",e.DisplayName));
                 Print(2, string.Format("TransportLayerName: {0}\n", e.TransportLayerName));
             }
 
@@ -160,7 +160,7 @@ namespace ic4_ctrl
                 throw new Exception("Failed to find device for id '{id}'");
             }
 
-            Print( string.Format(" Name: '{0}'", itf.Name)); ;
+            Print( string.Format(" Name: '{0}'", itf.DisplayName)); ;
             Print( string.Format(" TransportLayerName: '{0}'\n", itf.TransportLayerName));
             Print( string.Format(" TransportLayerType: '{0}'\n", itf.TransportLayerType ));
             Print( string.Format(" TransportVersion: '{0}'\n", itf.TransportLayerVersion ));
@@ -397,8 +397,8 @@ namespace ic4_ctrl
                             try
                             {
                                 var selectedEntry = prop.SelectedEntry;
-                                Print(offset + 1, string.Format("Value: {0}, SelectedEntry.Name: '{1}'\n",
-                                    FetchPropertyMethodValue<long>(prop, () => prop.Value),
+                                Print(offset + 1, string.Format("IntValue: {0}, SelectedEntry.Name: '{1}'\n",
+                                    FetchPropertyMethodValue<long>(prop, () => prop.IntValue),
                                     selectedEntry.Name)
                                 );
                             }
@@ -495,7 +495,7 @@ namespace ic4_ctrl
 
                         if (prop.IsAvailable)
                         {
-                            Print(offset + 1, string.Format("Value: {0}\n", FetchPropertyMethodValue<long>(prop, () => prop.Value)));
+                            Print(offset + 1, string.Format("IntValue: {0}\n", FetchPropertyMethodValue<long>(prop, () => prop.IntValue)));
                         }
                         Print(0, "\n");
                     }
@@ -768,9 +768,9 @@ namespace ic4_ctrl
 
         [Verb("device",
            HelpText = @"
-                List devices or a show information for a single device.\n
-                \tTo list all devices use: `ic4-ctrl device`\n
-                \tTo show only a specific device: `ic4-ctrl device \""<id>\""\n",
+                List devices or a show information for a single device.
+                To list all devices use: `ic4-ctrl device`
+                To show only a specific device: `ic4-ctrl device \""<id>\""",
            Hidden = false)]
         public class DeviceVerb : ICommand
         {
@@ -795,9 +795,9 @@ namespace ic4_ctrl
 
         [Verb("interface",
           HelpText = @"
-            List devices or a show information for a single interface.\n
-            \tTo list all interfaces: `ic4-ctrl interface`\n
-            \tTo show only a specific interface: `ic4-ctrl interface \""<id>\""\n",
+                List devices or a show information for a single interface.
+                To list all interfaces: `ic4-ctrl interface`\n
+                To show only a specific interface: `ic4-ctrl interface \""<id>\""",
           Hidden = false)]
         public class InterfaceVerb : ICommand
         {
@@ -821,10 +821,10 @@ namespace ic4_ctrl
 
         [Verb("prop",
             HelpText = @"
-                List or set property values of the specified device or interface.\n
-                \tTo list all device properties 'ic4-ctrl prop <device-id>'.\n
-                \tTo list specific device properties 'ic4-ctrl prop <device-id> ExposureAuto ExposureTime'.\n
-                \tTo set specific device properties 'ic4-ctrl prop <device-id> ExposureAuto=Off ExposureTime=0.5'.",
+                List or set property values of the specified device or interface.
+                To list all device properties 'ic4-ctrl prop <device-id>'.
+                To list specific device properties 'ic4-ctrl prop <device-id> ExposureAuto ExposureTime'.
+                To set specific device properties 'ic4-ctrl prop <device-id> ExposureAuto=Off ExposureTime=0.5'.",
             Hidden = false)]
         public class PropVerb : ICommand
         {
@@ -948,6 +948,7 @@ namespace ic4_ctrl
 
         static void Main(string[] args)
         {
+            ic4.Library.Init();
             try
             {
                 var result = Parser.Default.ParseArguments<
