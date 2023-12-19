@@ -47,12 +47,13 @@ namespace ActionCommandBroadcastTrigger
 
         static void Main(string[] args)
         {
+            ic4.Library.Init();
             // Filter interfaces for GigEVision, since Action Command broadcasts are only supported by GigEVision devices/interfaces.
             var allInterfaces = ic4.DeviceEnum.Interfaces;
             var gevInterfaces = allInterfaces.Where(i => i.TransportLayerType == ic4.TransportLayerType.GigEVision).ToList();
 
             // Let the user select a network interface.
-            var itf = PresentUserChoice(gevInterfaces, i => i.Name, "Select GigEVision interface:");
+            var itf = PresentUserChoice(gevInterfaces, i => i.DisplayName, "Select GigEVision interface:");
             if (itf == null)
                 return;
 

@@ -78,7 +78,7 @@ namespace ic4_ctrl
                 throw new Exception("No Interfaces are available.");
             }
 
-            var itf = list.FirstOrDefault(i => i.Name == id || i.TransportLayerName == id);
+            var itf = list.FirstOrDefault(i => i.DisplayName == id || i.TransportLayerName == id);
             if (itf != null)
             {
                 return itf;
@@ -126,7 +126,7 @@ namespace ic4_ctrl
 
             foreach (var e in list)
             {
-                Print(1, string.Format("{0}\n",e.Name));
+                Print(1, string.Format("{0}\n",e.DisplayName));
                 Print(2, string.Format("TransportLayerName: {0}\n", e.TransportLayerName));
             }
 
@@ -160,7 +160,7 @@ namespace ic4_ctrl
                 throw new Exception("Failed to find device for id '{id}'");
             }
 
-            Print( string.Format(" Name: '{0}'", itf.Name)); ;
+            Print( string.Format(" Name: '{0}'", itf.DisplayName)); ;
             Print( string.Format(" TransportLayerName: '{0}'\n", itf.TransportLayerName));
             Print( string.Format(" TransportLayerType: '{0}'\n", itf.TransportLayerType ));
             Print( string.Format(" TransportVersion: '{0}'\n", itf.TransportLayerVersion ));
@@ -398,7 +398,7 @@ namespace ic4_ctrl
                             {
                                 var selectedEntry = prop.SelectedEntry;
                                 Print(offset + 1, string.Format("Value: {0}, SelectedEntry.Name: '{1}'\n",
-                                    FetchPropertyMethodValue<long>(prop, () => prop.Value),
+                                    FetchPropertyMethodValue<long>(prop, () => prop.IntValue),
                                     selectedEntry.Name)
                                 );
                             }
@@ -495,7 +495,7 @@ namespace ic4_ctrl
 
                         if (prop.IsAvailable)
                         {
-                            Print(offset + 1, string.Format("Value: {0}\n", FetchPropertyMethodValue<long>(prop, () => prop.Value)));
+                            Print(offset + 1, string.Format("Value: {0}\n", FetchPropertyMethodValue<long>(prop, () => prop.IntValue)));
                         }
                         Print(0, "\n");
                     }

@@ -301,8 +301,6 @@ namespace ic4.Examples
 
                             if(intProp.IncrementMode != PropertyIncrementMode.None)
                                 text += CreateTableRow(" Increment", " " + intProp.Increment);
-                            if(intProp.HasDefault)
-                                text += CreateTableRow(" Default", " " + intProp.Default);
                         }
                     }
                     break;
@@ -348,8 +346,6 @@ namespace ic4.Examples
 
                             if (floatProp.IncrementMode != PropertyIncrementMode.None)
                                 text += CreateTableRow(" Increment", " " + floatProp.Increment);
-                            if (floatProp.HasDefault)
-                                text += CreateTableRow(" Default", " " + floatProp.Default);
                         }
                     }
                     break;

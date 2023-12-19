@@ -79,7 +79,7 @@ namespace ic4.Examples
                         break;
                     case PropertyType.Enumeration:
                         var propEnum = Property as ic4.PropEnumeration;
-                        propEnum.Value = long.Parse(value);
+                        propEnum.Value = value;
                         break;
                     case PropertyType.String:
                         var propString = Property as ic4.PropString;

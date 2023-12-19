@@ -39,9 +39,8 @@ namespace DeviceEnumeration
 
             foreach (var itf in interfaceList)
             {
-                Console.WriteLine($"Interface: {itf.Name}");
+                Console.WriteLine($"Interface: {itf.DisplayName}");
                 Console.WriteLine($"\tProvided by {itf.TransportLayerName} [TLType: {itf.TransportLayerType}]");
-
                 var deviceList = itf.Devices.ToList();
 
                 if (deviceList.Count == 0)
@@ -62,6 +61,7 @@ namespace DeviceEnumeration
 
         static void Main(string[] args)
         {
+            ic4.Library.Init();
             PrintDeviceList();
             PrintInterfaceDeviceTree();
         }

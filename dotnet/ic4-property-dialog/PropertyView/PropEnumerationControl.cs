@@ -55,7 +55,7 @@ namespace ic4.Examples
                 long val = 0;
                 try
                 {
-                    val = entry.Value;
+                    val = entry.IntValue;
                 }
                 catch
                 {
@@ -67,7 +67,7 @@ namespace ic4.Examples
 
                 comboBox1.Items.Add(new ComboBoxItem(val, entry.DisplayName)); 
 
-                if(entry.Value == selectedEntry.Value)
+                if(entry.IntValue == selectedEntry.IntValue)
                 { 
                     comboBox1.SelectedIndex = comboBox1.Items.Count-1;
                     selectedFound = true;
