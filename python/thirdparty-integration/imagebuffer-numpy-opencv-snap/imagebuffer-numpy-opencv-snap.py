@@ -2,7 +2,7 @@ import imagingcontrol4 as ic4
 import cv2
 
 
-def example_imagebuffer_numpy_opencv():
+def example_imagebuffer_numpy_opencv_snap():
     device_list = ic4.DeviceEnum.devices()
     for i, dev in enumerate(device_list):
         print(f"[{i}] {dev.model_name} ({dev.serial}) [{dev.interface.display_name}]")
@@ -41,6 +41,6 @@ if __name__ == "__main__":
     ic4.Library.init(api_log_level=ic4.LogLevel.INFO, log_targets=ic4.LogTarget.STDERR)
 
     try:
-        example_imagebuffer_numpy_opencv()
+        example_imagebuffer_numpy_opencv_snap()
     finally:
         ic4.Library.exit()
