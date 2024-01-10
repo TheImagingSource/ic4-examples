@@ -41,12 +41,13 @@ Partial Class Form1
         Me.Display1.RenderPosition = ic4.DisplayRenderPosition.StretchCenter
         Me.Display1.RenderTop = 0
         Me.Display1.RenderWidth = 640
-        Me.Display1.Size = New System.Drawing.Size(501, 354)
+        Me.Display1.Size = New System.Drawing.Size(540, 354)
         Me.Display1.TabIndex = 0
         '
         'btnDevice
         '
-        Me.btnDevice.Location = New System.Drawing.Point(533, 11)
+        Me.btnDevice.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnDevice.Location = New System.Drawing.Point(555, 11)
         Me.btnDevice.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
         Me.btnDevice.Name = "btnDevice"
         Me.btnDevice.Size = New System.Drawing.Size(69, 25)
@@ -56,8 +57,9 @@ Partial Class Form1
         '
         'btnProperties
         '
-        Me.btnProperties.Location = New System.Drawing.Point(533, 40)
-        Me.btnProperties.Margin = New System.Windows.Forms.Padding(2)
+        Me.btnProperties.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnProperties.Location = New System.Drawing.Point(555, 40)
+        Me.btnProperties.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
         Me.btnProperties.Name = "btnProperties"
         Me.btnProperties.Size = New System.Drawing.Size(69, 25)
         Me.btnProperties.TabIndex = 2
@@ -66,8 +68,9 @@ Partial Class Form1
         '
         'btnSnap
         '
-        Me.btnSnap.Location = New System.Drawing.Point(533, 69)
-        Me.btnSnap.Margin = New System.Windows.Forms.Padding(2)
+        Me.btnSnap.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnSnap.Location = New System.Drawing.Point(555, 69)
+        Me.btnSnap.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
         Me.btnSnap.Name = "btnSnap"
         Me.btnSnap.Size = New System.Drawing.Size(69, 25)
         Me.btnSnap.TabIndex = 3
@@ -78,7 +81,7 @@ Partial Class Form1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(611, 376)
+        Me.ClientSize = New System.Drawing.Size(635, 376)
         Me.Controls.Add(Me.btnSnap)
         Me.Controls.Add(Me.btnProperties)
         Me.Controls.Add(Me.btnDevice)
