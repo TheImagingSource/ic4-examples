@@ -257,13 +257,13 @@ public:
 			auto minimum = prop.minimum(err);
 			if (err.isSuccess())
 			{
-				text += QString("Minimum: %1\n\n").arg(minimum);
+				text += QString("Minimum: %1\n\n").arg(ic4::ui::PropFloatControl::textFromValue(minimum, notation, precision, locale()));
 			}
 
 			auto maximum = prop.maximum(err);
 			if (err.isSuccess())
 			{
-				text += QString("Maximum: %1\n\n").arg(maximum);
+				text += QString("Maximum: %1\n\n").arg(ic4::ui::PropFloatControl::textFromValue(maximum, notation, precision, locale()));
 			}
 
 			switch (prop.incrementMode(ic4::Error::Ignore()))
@@ -273,7 +273,7 @@ public:
 				auto increment = prop.increment(err);
 				if (err.isSuccess())
 				{
-					text += QString("Increment: %1\n\n").arg(increment);
+					text += QString("Increment: %1\n\n").arg(ic4::ui::PropFloatControl::textFromValue(increment, notation, precision, locale()));
 				}
 				else
 				{
@@ -289,7 +289,7 @@ public:
 					QStringList lst;
 					for (auto&& v : valueSet)
 					{
-						lst.push_back(QString::number(v));
+						lst.push_back(ic4::ui::PropFloatControl::textFromValue(v, notation, precision, locale()));
 					}
 
 					text += QString("Valid Value Set: %1\n\n").arg(lst.join(", "));
