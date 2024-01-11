@@ -8,6 +8,8 @@
 #include <QApplication>
 #include <QEvent>
 #include <QDebug>
+#include <QTime>
+#include <QTimer>
 
 #include <utility>
 
@@ -31,6 +33,9 @@ namespace ic4::ui
 
 		virtual void update_all() = 0;
 
+		QTime prev_update_;
+		QTimer final_update_;
+
 	public:
 
 		PropControlBase(TProperty prop, QWidget* parent, ic4::Grabber* grabber)
@@ -44,11 +49,25 @@ namespace ic4::ui
 			layout_->setContentsMargins(8, 7, 0, 7);
 			setLayout(layout_);
 
-			notify_ = prop_.eventAddNotification([this](ic4::Property&)
+			final_update_.setSingleShot(true);
+			final_update_.setInterval(100);
+			final_update_.callOnTimeout(
+				[this]()
 				{
 					QApplication::removePostedEvents(this, UPDATE_ALL);
 					QApplication::postEvent(this, new QEvent(UPDATE_ALL));
-				});
+				}
+			);
+
+			notify_ = prop_.eventAddNotification(
+				[this](ic4::Property&)
+				{
+					QApplication::removePostedEvents(this, UPDATE_ALL);
+					QApplication::postEvent(this, new QEvent(UPDATE_ALL));
+				}
+			);
+
+
 
 			//notify_ = prop_.eventAddNotification([this](ic4::Property&) { update_all(); });
 		}
@@ -179,7 +198,18 @@ namespace ic4::ui
 		{
 			if (event->type() == UPDATE_ALL)
 			{
-				update_all();
+				if (QTime::currentTime() > prev_update_.addMSecs(66))
+				{
+					update_all();
+
+					prev_update_ = QTime::currentTime();
+
+					final_update_.stop();
+				}
+				else
+				{
+					final_update_.start();
+				}
 			}
 		}
 	};
