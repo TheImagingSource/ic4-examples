@@ -133,6 +133,8 @@ void DeviceSelectionDlg::createUI()
 	_devInfoGroup->setVisible(false);
 	_ipConfigGroup = new IPConfigGroupBox(tr("IP Configuration"));
 	_ipConfigGroup->setVisible(false);
+	_switchDriverGroup = new SwitchDriverGroupBox(tr("Kernel Driver"));
+	_switchDriverGroup->setVisible(false);
 
 	_rightScroll = new QScrollArea();
 	_rightScroll->setObjectName("rightScroll");
@@ -150,6 +152,7 @@ void DeviceSelectionDlg::createUI()
 	rightLayout->setContentsMargins(0, 0, 0, 0);
 
 	rightLayout->addWidget(_itfInfoGroup, 0);
+	rightLayout->addWidget(_switchDriverGroup, 0);
 	rightLayout->addWidget(_devInfoGroup, 0);
 	rightLayout->addWidget(_ipConfigGroup, 0);
 	rightLayout->addStretch(1);
@@ -235,7 +238,9 @@ void DeviceSelectionDlg::enumerateDevices()
 			node->setText(2, strIPAddress);
 			node->setText(3, QString::fromStdString(deviceUserID));
 
-			if (!isGigEVisionInterface || map.getValueString("DeviceReachableStatus", ic4::Error::Ignore()) == "Reachable")
+			auto hasDeviceReachableStatus = map.findEnumeration("DeviceReachableStatus", ic4::Error::Ignore()).is_valid();
+
+			if (!hasDeviceReachableStatus || map.getValueString("DeviceReachableStatus", ic4::Error::Ignore()) == "Reachable")
 			{
 				auto cam = ResourceSelector::instance().loadIcon(":/images/camera_icon_usb3.png");
 				node->setIcon(0, cam);
@@ -360,6 +365,8 @@ void DeviceSelectionDlg::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWid
 	_devInfoGroup->clear();
 	_ipConfigGroup->hide();
 	_ipConfigGroup->clear();
+	_switchDriverGroup->hide();
+	_switchDriverGroup->clear();
 
 	if (current == nullptr)
 	{
@@ -371,6 +378,7 @@ void DeviceSelectionDlg::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWid
 	auto itemData = variant.value<InterfaceDeviceItemData>();
 
 	bool isGigEVisionInterface = itemData.itf.transportLayerType(ic4::Error::Ignore()) == ic4::TransportLayerType::GigEVision;
+	bool isUSB3VisionInterface = itemData.itf.transportLayerType(ic4::Error::Ignore()) == ic4::TransportLayerType::USB3Vision;
 	ic4::PropertyMap map = itemData.itfPropertyMap;
 
 	if (itemData.isDevice())
@@ -475,6 +483,15 @@ void DeviceSelectionDlg::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWid
 			}
 
 			_ipConfigGroup->show();
+		}
+		else if (isUSB3VisionInterface)
+		{
+			auto reachableStatus = map.getValueString("DeviceReachableStatus", ic4::Error::Ignore());
+			if (!reachableStatus.empty() && reachableStatus != "Reachable")
+			{
+				_switchDriverGroup->update(itemData.device);
+				_switchDriverGroup->show();
+			}
 		}
 	}
 

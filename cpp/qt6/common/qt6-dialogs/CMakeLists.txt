@@ -23,6 +23,8 @@ qt_add_library(qt6-dialogs STATIC
 	controls/IPConfigGroupBox.cpp
 	controls/IPConfigGroupBox.h
 	controls/PropertyInfoBox.h
+	controls/SwitchDriverGroupBox.cpp
+	controls/SwitchDriverGroupBox.h
 	controls/PropertyControls.h
 	controls/PropertyControls.cpp
 	controls/props/PropIntControl.h

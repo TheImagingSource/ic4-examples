@@ -1,6 +1,7 @@
 #pragma once
 
 #include "controls/IPConfigGroupBox.h"
+#include "controls/SwitchDriverGroupBox.h"
 
 #include <QDialog>
 #include <QTreeWidget>
@@ -44,4 +45,5 @@ private:
 	FormGroupBox* _itfInfoGroup = nullptr;
 	FormGroupBox* _devInfoGroup = nullptr;
 	IPConfigGroupBox* _ipConfigGroup = nullptr;
+	SwitchDriverGroupBox* _switchDriverGroup = nullptr;
 };
