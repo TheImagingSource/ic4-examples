@@ -480,6 +480,9 @@ void DeviceSelectionDlg::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWid
 			else
 			{
 				_ipConfigGroup->updateUnreachable(map);
+
+				if (_okButton)
+					_okButton->setEnabled(false);
 			}
 
 			_ipConfigGroup->show();
@@ -491,6 +494,9 @@ void DeviceSelectionDlg::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWid
 			{
 				_switchDriverGroup->update(itemData.device);
 				_switchDriverGroup->show();
+
+				if (_okButton)
+					_okButton->setEnabled(false);
 			}
 		}
 	}
@@ -568,6 +574,9 @@ void DeviceSelectionDlg::onUpdateButton()
 
 void DeviceSelectionDlg::onOK()
 {
+	if (!_okButton->isEnabled())
+		return;
+
 	auto* item = _cameraTree->currentItem();
 	if (item == nullptr)
 		return;
