@@ -91,7 +91,7 @@ namespace EventExposureEnd
              * This example shows how to receive events EventExposureEnd, which indicates that the camera has completed
              * the integration time and will start transmitting the image data.
              * 
-             * This event is useful when syncronizing real-world activities with camera operation, for example moving
+             * This event is useful when synchronizing real-world activities with camera operation, for example moving
              * something while the image is being transmitted.
              * 
              * Events are configured and received through the device property map.
