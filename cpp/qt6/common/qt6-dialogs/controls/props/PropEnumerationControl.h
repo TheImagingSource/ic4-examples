@@ -45,6 +45,8 @@ namespace ic4::ui
 
 							if (!entry.isAvailable())
 								continue;
+							if (entry.visibility() == ic4::PropVisibility::Invisible)
+								continue;
 
 							QString name = QString::fromStdString(entry.displayName());
 
