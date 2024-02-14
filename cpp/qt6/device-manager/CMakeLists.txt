@@ -17,7 +17,13 @@ if( NOT TARGET qt6-dialogs )
 add_subdirectory(../common/qt6-dialogs ${CMAKE_BINARY_DIR}/demoapp-qt6-dialogs)
 endif()
 
-qt_standard_project_setup()
+if (Qt6Core_VERSION VERSION_LESS 6.3.0)
+	set(CMAKE_AUTOMOC ON)
+	set(CMAKE_AUTORCC ON)
+	set(CMAKE_AUTOUIC ON)
+else()
+	qt_standard_project_setup()
+endif()
 
 qt_add_executable(ic4-device-manager
     main.cpp

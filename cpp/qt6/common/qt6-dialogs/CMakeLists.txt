@@ -13,7 +13,15 @@ list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.6.0/msvc2019_64/")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 
-qt_standard_project_setup()
+if (Qt6Core_VERSION VERSION_LESS 6.3.0)
+	set(CMAKE_AUTOMOC ON)
+	set(CMAKE_AUTORCC ON)
+	set(CMAKE_AUTOUIC ON)
+else()
+	qt_standard_project_setup()
+endif()
+
+#qt_standard_project_setup()
 qt_add_resources(QT6DIALOGS_RESOURCES qt6dialogs.qrc)
 
 qt_add_library(qt6-dialogs STATIC
