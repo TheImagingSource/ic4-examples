@@ -1,4 +1,3 @@
-#pragma once
 
 #include "DeviceSelectionDialog.h"
 #include "controls/PropertyControls.h"
