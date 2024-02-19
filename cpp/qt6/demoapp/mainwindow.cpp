@@ -44,7 +44,7 @@ MainWindow::MainWindow(QWidget* parent)
 
 	// Make sure the %appdata%/demoapp directory exists
 	auto appDataDirectory = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-	QDir(appDataDirectory).mkdir(".");
+	QDir(appDataDirectory).mkpath(".");
 
 	_devicefile = appDataDirectory.toStdString() + "/device.json";
 	_codecconfigfile = appDataDirectory.toStdString() + "/codecconfig.json";
