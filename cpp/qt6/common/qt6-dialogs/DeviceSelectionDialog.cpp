@@ -472,8 +472,8 @@ void DeviceSelectionDlg::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWid
 			buildStringItemIfExists(map, "GevDeviceMACAddress", "Device MAC Address", *_devInfoGroup->formLayout());
 
 			auto reachableStatus = map.getValueString("DeviceReachableStatus", ic4::Error::Ignore());
-			if (reachableStatus == "Reachable")
-			{				
+			if (reachableStatus.empty() || reachableStatus == "Reachable")
+			{
 				_ipConfigGroup->update(itemData.device);
 			}
 			else
