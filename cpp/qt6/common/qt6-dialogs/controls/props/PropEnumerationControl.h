@@ -33,37 +33,35 @@ namespace ic4::ui
 				auto selected_entry = prop_.selectedEntry( err );
 				if (err)
 				{
-                    qDebug() << "Error " << prop_.name().c_str() << " in update_all " << err.message().c_str();
+					qDebug() << "Failed to query selected entry for " << prop_.name().c_str() << ": " << err.message().c_str();
 				}
-				else
+
+				for (auto&& entry : prop_.entries())
 				{
-					for (auto&& entry : prop_.entries())
+					try
 					{
-						try
+						auto val = entry.intValue();
+
+						if (!entry.isAvailable())
+							continue;
+						if (entry.visibility() == ic4::PropVisibility::Invisible)
+							continue;
+
+						QString name = QString::fromStdString(entry.displayName());
+
+						combo_->addItem(name, QVariant::fromValue(val));
+
+						if (entry == selected_entry)
 						{
-							auto val = entry.intValue();
-
-							if (!entry.isAvailable())
-								continue;
-							if (entry.visibility() == ic4::PropVisibility::Invisible)
-								continue;
-
-							QString name = QString::fromStdString(entry.displayName());
-
-							combo_->addItem(name, QVariant::fromValue(val));
-
-							if (entry == selected_entry)
-							{
-								combo_->setCurrentIndex(combo_->count() - 1);
-								selected_found = true;
-							}
-						}
-						catch (const ic4::IC4Exception iex)
-						{
-							qDebug() << "Error " << prop_.name().c_str() << " in update_all " << iex.what();
+							combo_->setCurrentIndex(combo_->count() - 1);
+							selected_found = true;
 						}
 					}
-                }
+					catch (const ic4::IC4Exception iex)
+					{
+						qDebug() << "Error " << prop_.name().c_str() << " in update_all " << iex.what();
+					}
+				}
 
 				if (!selected_found)
 				{
