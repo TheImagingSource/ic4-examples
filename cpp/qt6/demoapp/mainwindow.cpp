@@ -60,8 +60,7 @@ MainWindow::MainWindow(QWidget* parent)
 	// Create the display for the live video
 	try
 	{
-		WId wid = _VideoWidget->winId();
-		_display = ic4::Display::create(ic4::DisplayType::Default, (ic4::WindowHandle)wid);
+		_display = _VideoWidget->asDisplay();
 		_display->setRenderPosition(ic4::DisplayRenderPosition::StretchCenter);
 	}
 	catch (const ic4::IC4Exception& ex)
@@ -254,7 +253,7 @@ void MainWindow::createUI()
 
 	////////////////////////////////////////////////////////////////////////////
 	// Create the video display Widget
-	_VideoWidget = new QWidget();
+	_VideoWidget = new ic4qt::DisplayWidget(this);
 	_VideoWidget->setMinimumSize(640, 480);
 	setCentralWidget(_VideoWidget);
 
