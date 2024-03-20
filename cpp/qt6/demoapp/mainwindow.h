@@ -12,7 +12,7 @@
 #include <atomic>
 
 #include <ic4/ic4.h> 
-#include <ic4-gui/ic4qt.h>
+#include <ic4-gui/ic4qt6.h>
 
 class MainWindow : public QMainWindow, ic4::QueueSinkListener
 {
@@ -57,7 +57,7 @@ private:
 	std::atomic<bool> _videocapturepause = false;
 
 	QGridLayout* mainLayout = nullptr;
-	ic4qt::DisplayWidget* _VideoWidget = nullptr;
+	ic4qt6::DisplayWidget* _VideoWidget = nullptr;
 
 	QAction* _DeviceSelectAct = nullptr;
 	QAction* _DevicePropertiesAct = nullptr;
