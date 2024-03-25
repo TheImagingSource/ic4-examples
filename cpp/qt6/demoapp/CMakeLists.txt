@@ -22,6 +22,7 @@ if (IC4_USED_QT_VERSION STREQUAL "Qt6")
         qt_standard_project_setup()
     endif()
 
+    qt_add_resources(DEMOAPP_RESOURCES demoapp.qrc)
 else ()
 
     find_package(Qt5 REQUIRED COMPONENTS Core Widgets ) # OpenGLWidgets is part of Widgets in qt5
@@ -29,6 +30,7 @@ else ()
 	set(CMAKE_AUTORCC ON)
 	set(CMAKE_AUTOUIC ON)
 
+    qt5_add_resources(DEMOAPP_RESOURCES demoapp.qrc)
 endif ()
 
 if( NOT TARGET qt6-dialogs )
@@ -36,7 +38,7 @@ if( NOT TARGET qt6-dialogs )
 endif()
 
 add_executable(ic4-demoapp
-    demoapp.qrc
+    ${DEMOAPP_RESOURCES}
     main.cpp
     mainwindow.cpp
     events.h

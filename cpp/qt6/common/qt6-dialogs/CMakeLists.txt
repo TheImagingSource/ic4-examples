@@ -23,16 +23,20 @@ if (IC4_USED_QT_VERSION STREQUAL "Qt6")
         qt_standard_project_setup()
     endif ()
 
+    qt_add_resources(QT6DIALOGS_RESOURCES qt6dialogs.qrc)
+
 else ()
     find_package(Qt5 REQUIRED COMPONENTS Core Widgets)
     set(CMAKE_AUTOMOC ON)
     set(CMAKE_AUTORCC ON)
     set(CMAKE_AUTOUIC ON)
+
+    qt5_add_resources(QT6DIALOGS_RESOURCES qt6dialogs.qrc)
 endif()
 
 
 add_library(qt6-dialogs STATIC
-    qt6dialogs.qrc
+    ${QT6DIALOGS_RESOURCES}
     controls/Event.h
     controls/FormGroupBox.h
     controls/IPConfigGroupBox.cpp
