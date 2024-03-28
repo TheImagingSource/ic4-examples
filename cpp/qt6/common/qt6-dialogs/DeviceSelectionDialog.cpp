@@ -201,10 +201,11 @@ void DeviceSelectionDlg::enumerateDevices()
 
 		bool isGigEVisionInterface = itf.transportLayerType(ic4::Error::Ignore()) == ic4::TransportLayerType::GigEVision;
 
-		int index = 0;
 		for (auto&& dev : filtered_itf_devices)
 		{
 			QString strIPAddress;
+
+			int index = std::distance(itf_devices.begin(), std::find(itf_devices.begin(), itf_devices.end(), dev));
 
 			if (isGigEVisionInterface)
 			{
@@ -251,8 +252,6 @@ void DeviceSelectionDlg::enumerateDevices()
 			}
 
 			itf_item->addChild(node);
-
-			index += 1;
 		}
 	}
 
