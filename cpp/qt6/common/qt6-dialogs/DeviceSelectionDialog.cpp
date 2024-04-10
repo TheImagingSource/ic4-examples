@@ -170,7 +170,9 @@ void DeviceSelectionDlg::enumerateDevices()
 {
 	_cameraTree->clear();
 
-	for (auto&& itf : ic4::DeviceEnum::enumInterfaces())
+	auto interfaces = ic4::DeviceEnum::enumInterfaces();
+
+	for (auto&& itf : interfaces)
 	{
 		auto itf_devices = itf.enumDevices();
 
@@ -253,6 +255,21 @@ void DeviceSelectionDlg::enumerateDevices()
 
 			itf_item->addChild(node);
 		}
+	}
+
+	if (interfaces.empty())
+	{
+		auto* err_item = new QTreeWidgetItem(_cameraTree);
+		err_item->setText(0, "No interfaces found.");
+		err_item->setForeground(0, QPalette().windowText());
+		err_item->setFirstColumnSpanned(true);
+		err_item->setDisabled(true);
+
+		auto* err_sub = new QTreeWidgetItem(_cameraTree);
+		err_sub->setText(0, "This is likely caused by no ic4 GenTL Producers being installed.");
+		err_sub->setForeground(0, QPalette().windowText());
+		err_sub->setFirstColumnSpanned(true);
+		err_sub->setDisabled(true);
 	}
 
 	_cameraTree->expandAll();
