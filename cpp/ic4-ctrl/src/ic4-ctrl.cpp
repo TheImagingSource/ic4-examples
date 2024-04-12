@@ -671,6 +671,21 @@ static void show_prop_page( std::string id, bool id_is_interface )
 
 #endif // WIN32
 
+static void show_version()
+{
+    auto str = ic4::get_version_info();
+
+    if (str.empty())
+    {
+        print("Unable to retrieve version information.");
+        return;
+    }
+
+    print("{}", str);
+
+}
+
+
 static void show_system_info()
 {
     auto env_var = helper::get_env_var( "GENICAM_GENTL64_PATH" );
@@ -759,6 +774,10 @@ int main( int argc, char** argv )
         "List some information for about the system."
     );
 
+    auto version_cmd = app.add_subcommand( "version",
+        "List version information about IC4."
+    );
+
     try
     {
         app.parse( argc, argv );
@@ -827,6 +846,10 @@ int main( int argc, char** argv )
         else if( system_cmd->parsed() )
         {
             show_system_info();
+        }
+        else if( version_cmd->parsed() )
+        {
+            show_version();
         }
         else
         {
