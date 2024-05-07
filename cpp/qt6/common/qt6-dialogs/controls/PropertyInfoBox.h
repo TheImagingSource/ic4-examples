@@ -21,7 +21,7 @@ public:
 
 	void clear()
 	{
-		setMarkdown("");
+		setHtml("");
 	}
 
 	void update(ic4::Property prop)
@@ -32,31 +32,31 @@ public:
 		ic4::Error err;
 
 		QString text;
-		text += QString("**%1**\n\n").arg(QString::fromStdString(name));
+		text += QString("<p style='margin-bottom:0px'><b>%1</b></p>").arg(QString::fromStdString(name));
 		if (!desc.empty())
-			text += QString("%1\n\n").arg(QString::fromStdString(desc));
-		text += QString("\n\n");
+			text += QString("<p style='margin-top:0px;margin-bottom:5px'>%1</p>").arg(QString::fromStdString(desc));
 
+		text += QString("<p style='margin-top:0px'>");
 		bool is_locked = prop.isLocked();
 		bool is_readonly = prop.isReadOnly();
 
 		if (is_readonly)
 		{
-			text += QString("Access: Read-Only\n\n");
+			text += QString("Access: Read-Only<br/>");
 		}
 		else if (is_locked)
 		{
-			text += QString("Access: Readable, Locked\n\n");
+			text += QString("Access: Readable, Locked<br/>");
 		}
 		else
 		{
-			text += QString("Access: Readable, Writable\n\n");
+			text += QString("Access: Readable, Writable<br/>");
 		}
 
 		switch (prop.type())
 		{
 			case ic4::PropType::Category:
-				text += QString("Type: Category\n\n");
+				text += QString("Type: Category<br/>");
 				break;
 			case ic4::PropType::Integer:
 				text += showIntegerInfo(prop.asInteger());
@@ -75,10 +75,12 @@ public:
 				break;
 		}
 
+		text += QString("</p>");
+
 		// disable selection
 		setTextInteractionFlags(Qt::NoTextInteraction);
 		setReadOnly(true);
-		setMarkdown(text);
+		setHtml(text);
 		setContentsMargins(8, 8, 8, 8);
 		setStyleSheet("QTextEdit {"
 			"font-size: 13px;"
@@ -113,7 +115,7 @@ public:
 	/// <returns></returns>
 	QString showStringInfo(ic4::Property prop)
 	{
-		auto text = QString("Type: String\n\n");
+		auto text = QString("Type: String<br/>");
 
 		auto stringProp = prop.asString();
 		try
@@ -122,18 +124,18 @@ public:
 			auto str = QString::fromStdString(val);
 			str.replace("@", "<span>@</span>");
 
-			text += QString("Value: %1\n\n").arg(str);
+			text += QString("Value: %1<br/>").arg(str);
 		}
 		catch (const ic4::IC4Exception& iex)
 		{
-			text += QString("Value: <span style='color:red'>%1</span>\n\n").arg(iex.what());
+			text += QString("Value: <span style='color:red'>%1</span><br/>").arg(iex.what());
 		}
 
 		if (!stringProp.isReadOnly())
 		{
 			try
 			{
-				text += QString("Maximum Length: %1\n\n").arg(stringProp.maxLength());
+				text += QString("Maximum Length: %1<br/>").arg(stringProp.maxLength());
 			}
 			catch (...) {}
 		}
@@ -147,23 +149,23 @@ public:
 	/// <returns></returns>
 	QString showIntegerInfo(ic4::PropInteger prop)
 	{
-		auto text = QString("Type: Integer\n\n");
+		auto text = QString("Type: Integer<br/>");
 
 		auto rep = prop.representation();
 		auto unit = prop.unit(ic4::Error::Ignore());
 		if (!unit.empty())
 		{
-			text += QString("Unit: %1\n\n").arg(unit.c_str());
+			text += QString("Unit: %1<br/>").arg(unit.c_str());
 		}
 
 		try
 		{
 			auto val = prop.getValue();
-			text += QString("Value: %1\n\n").arg(ic4::ui::PropIntControl::value_to_string(val, rep));
+			text += QString("Value: %1<br/>").arg(ic4::ui::PropIntControl::value_to_string(val, rep));
 		}
 		catch (const ic4::IC4Exception &iex)
 		{
-			text += QString("Value: <span style='color:red'>%1</span>\n\n").arg(iex.what());
+			text += QString("Value: <span style='color:red'>%1</span><br/>").arg(iex.what());
 		}
 
 		if (!prop.isReadOnly())
@@ -173,13 +175,13 @@ public:
 			auto minimum = prop.minimum(err);
 			if (err.isSuccess())
 			{
-				text += QString("Minimum: %1\n\n").arg(minimum);
+				text += QString("Minimum: %1<br/>").arg(minimum);
 			}
 
 			auto maximum = prop.maximum(err);
 			if (err.isSuccess())
 			{
-				text += QString("Maximum: %1\n\n").arg(maximum);
+				text += QString("Maximum: %1<br/>").arg(maximum);
 			}
 
 			switch (prop.incrementMode(ic4::Error::Ignore()))
@@ -189,11 +191,11 @@ public:
 				auto increment = prop.increment(err);
 				if (err.isSuccess())
 				{
-					text += QString("Increment: %1\n\n").arg(increment);
+					text += QString("Increment: %1<br/>").arg(increment);
 				}
 				else
 				{
-					text += QString("Increment: <span style='color:red'>%1</span>\n\n").arg(err.message().c_str());
+					text += QString("Increment: <span style='color:red'>%1</span><br/>").arg(err.message().c_str());
 				}
 				break;
 			}
@@ -208,11 +210,11 @@ public:
 						lst.push_back(QString::number(v));
 					}
 
-					text += QString("Valid Value Set: %1\n\n").arg(lst.join(", "));
+					text += QString("Valid Value Set: %1<br/>").arg(lst.join(", "));
 				}
 				else
 				{
-					text += QString("Valid Value Set: <span style='color:red'>%1</span>\n\n").arg(err.message().c_str());
+					text += QString("Valid Value Set: <span style='color:red'>%1</span><br/>").arg(err.message().c_str());
 				}
 				break;
 			}
@@ -229,7 +231,7 @@ public:
 	/// <returns></returns>
 	QString showFloatInfo(ic4::PropFloat prop)
 	{
-		auto text = QString("Type: Float\n\n");
+		auto text = QString("Type: Float<br/>");
 
 		auto rep = prop.representation(ic4::Error::Ignore());
 		auto notation = prop.displayNotation(ic4::Error::Ignore());
@@ -237,17 +239,17 @@ public:
 		auto unit = prop.unit(ic4::Error::Ignore());
 		if (!unit.empty())
 		{
-			text += QString("Unit: %1\n\n").arg(unit.c_str()) ;
+			text += QString("Unit: %1<br/>").arg(unit.c_str()) ;
 		}
 
 		try
 		{
 			auto val = prop.getValue();
-			text += QString("Value: %1\n\n").arg(ic4::ui::PropFloatControl::textFromValue(val, notation, precision, locale()));
+			text += QString("Value: %1<br/>").arg(ic4::ui::PropFloatControl::textFromValue(val, notation, precision, locale()));
 		}
 		catch (const ic4::IC4Exception& iex)
 		{
-			text += QString("Value: <span style='color:red'>%1</span>\n\n").arg(iex.what());
+			text += QString("Value: <span style='color:red'>%1</span><br/>").arg(iex.what());
 		}
 
 		if (!prop.isReadOnly())
@@ -257,13 +259,13 @@ public:
 			auto minimum = prop.minimum(err);
 			if (err.isSuccess())
 			{
-				text += QString("Minimum: %1\n\n").arg(ic4::ui::PropFloatControl::textFromValue(minimum, notation, precision, locale()));
+				text += QString("Minimum: %1<br/>").arg(ic4::ui::PropFloatControl::textFromValue(minimum, notation, precision, locale()));
 			}
 
 			auto maximum = prop.maximum(err);
 			if (err.isSuccess())
 			{
-				text += QString("Maximum: %1\n\n").arg(ic4::ui::PropFloatControl::textFromValue(maximum, notation, precision, locale()));
+				text += QString("Maximum: %1<br/>").arg(ic4::ui::PropFloatControl::textFromValue(maximum, notation, precision, locale()));
 			}
 
 			switch (prop.incrementMode(ic4::Error::Ignore()))
@@ -273,11 +275,11 @@ public:
 				auto increment = prop.increment(err);
 				if (err.isSuccess())
 				{
-					text += QString("Increment: %1\n\n").arg(ic4::ui::PropFloatControl::textFromValue(increment, notation, precision, locale()));
+					text += QString("Increment: %1<br/>").arg(ic4::ui::PropFloatControl::textFromValue(increment, notation, precision, locale()));
 				}
 				else
 				{
-					text += QString("Increment: <span style='color:red'>%1</span>\n\n").arg(err.message().c_str());
+					text += QString("Increment: <span style='color:red'>%1</span><br/>").arg(err.message().c_str());
 				}
 				break;
 			}
@@ -292,11 +294,11 @@ public:
 						lst.push_back(ic4::ui::PropFloatControl::textFromValue(v, notation, precision, locale()));
 					}
 
-					text += QString("Valid Value Set: %1\n\n").arg(lst.join(", "));
+					text += QString("Valid Value Set: %1<br/>").arg(lst.join(", "));
 				}
 				else
 				{
-					text += QString("Valid Value Set: <span style='color:red'>%1</span>\n\n").arg(err.message().c_str());
+					text += QString("Valid Value Set: <span style='color:red'>%1</span><br/>").arg(err.message().c_str());
 				}
 				break;
 			}
@@ -308,17 +310,17 @@ public:
 
 	QString showEnumerationInfo(ic4::PropEnumeration prop)
 	{
-		auto text = QString("Type: Enumeration\n\n");
+		auto text = QString("Type: Enumeration<br/>");
 
 		ic4::Error err;
 		auto val = prop.getValue(err);
 		if (err.isSuccess())
 		{
-			text += QString("Value: %1\n\n").arg(val.c_str());
+			text += QString("Value: %1<br/>").arg(val.c_str());
 		}
 		else
 		{
-			text += QString("Value: <span style='color:red'>%1</span>\n\n").arg(err.message().c_str());
+			text += QString("Value: <span style='color:red'>%1</span><br/>").arg(err.message().c_str());
 		}
 
 		text += "Possible Values: ";
@@ -334,11 +336,11 @@ public:
 					first = false;
 				text += QString::fromStdString(entry.name(ic4::Error::Ignore()));
 			}
-			text += "\n\n";
+			text += "<br/>";
 		}
 		else
 		{
-			text += QString("<span style='color:red'>%1</span>\n\n").arg(err.message().c_str());
+			text += QString("<span style='color:red'>%1</span><br/>").arg(err.message().c_str());
 		}
 
 		return text;
@@ -346,17 +348,17 @@ public:
 
 	QString showBooleanInfo(ic4::PropBoolean prop)
 	{
-		auto text = QString("Type: Boolean\n\n");
+		auto text = QString("Type: Boolean<br/>");
 
 		ic4::Error err;
 		auto val = prop.getValue(err);
 		if (err.isSuccess())
 		{
-			text += QString("Value: %1\n\n").arg(val ? "True" : "False");
+			text += QString("Value: %1<br/>").arg(val ? "True" : "False");
 		}
 		else
 		{
-			text += QString("Value: <span style='color:red'>%1</span>\n\n").arg(err.message().c_str());
+			text += QString("Value: <span style='color:red'>%1</span><br/>").arg(err.message().c_str());
 		}
 
 		return text;

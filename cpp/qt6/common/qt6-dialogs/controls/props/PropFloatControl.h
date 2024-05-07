@@ -16,6 +16,7 @@
 #include <QLineEdit>
 
 #include <algorithm>
+#include <cmath>
 
 namespace ic4::ui
 {
