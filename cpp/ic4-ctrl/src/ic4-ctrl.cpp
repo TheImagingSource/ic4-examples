@@ -642,31 +642,36 @@ static void show_live( std::string id )
     g.acquisitionStop();
 }
 
-static void show_prop_page( std::string id, bool id_is_interface )
+static void show_prop_page(std::string id, bool id_is_interface, bool show_guru)
 {
-    if( id_is_interface )
-    {
-        auto dev = find_interface( id );
-        if( !dev ) {
-            print( "Failed to find interface for id '{}'", id );
-            return;
-        }
-        auto map = dev->interfacePropertyMap();
-        ic4gui::showPropertyDialog( 0, map );
-    }
-    else
-    {
-        auto dev = find_device( id );
-        if( !dev ) {
-            print( "Failed to find device for id '{}'", id );
-            return;
-        }
-        ic4::Grabber g;
-        g.deviceOpen( *dev );
+	ic4gui::PropertyDialogOptions opt = {};
+	if (show_guru) {
+		opt.initial_visibility = ic4::PropVisibility::Guru;
+	}
 
-        auto map = g.devicePropertyMap();
-        ic4gui::showPropertyDialog( 0, map );
-    }
+	if (id_is_interface)
+	{
+		auto dev = find_interface(id);
+		if (!dev) {
+			print("Failed to find interface for id '{}'", id);
+			return;
+		}
+		auto map = dev->interfacePropertyMap();
+		ic4gui::showPropertyDialog(0, map, opt);
+	}
+	else
+	{
+		auto dev = find_device(id);
+		if (!dev) {
+			print("Failed to find device for id '{}'", id);
+			return;
+		}
+		ic4::Grabber g;
+		g.deviceOpen(*dev);
+
+		auto map = g.devicePropertyMap();
+		ic4gui::showPropertyDialog(0, map, opt);
+	}
 }
 
 #endif // WIN32
@@ -762,11 +767,14 @@ int main( int argc, char** argv )
     live_cmd->add_option( "device-id", arg_device_id,
         "Specifies the device to open. You can specify an index e.g. '0'." )->required();
 
+	bool show_default_guru = false;
     auto show_prop_page_cmd = app.add_subcommand( "show-prop", "Display the property page for the device or interface id. 'ic4-ctrl show-prop <id>'." );
     show_prop_page_cmd->add_option( "device-id", arg_device_id,
         "Specifies the device to open. You can specify an index e.g. '0'." )->required();
     show_prop_page_cmd->add_flag( "--interface", force_interface,
         "If set the <device-id> is interpreted as an interface-id." );
+	show_prop_page_cmd->add_flag("-g,--guru", show_default_guru,
+		"Start the dialog with Visibility set to ic4::PropVisibility::Guru.");
 
 #endif // WIN32
 
@@ -840,7 +848,7 @@ int main( int argc, char** argv )
         }
         else if( show_prop_page_cmd->parsed() )
         {
-            show_prop_page(arg_device_id, force_interface);
+            show_prop_page(arg_device_id, force_interface, show_default_guru);
         }
 #endif // WIN32
         else if( system_cmd->parsed() )
