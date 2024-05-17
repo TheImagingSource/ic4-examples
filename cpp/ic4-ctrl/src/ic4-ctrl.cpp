@@ -1,7 +1,7 @@
 ﻿
 #include <ic4/ic4.h>
 
-#ifdef WIN32
+#ifdef _WIN32
 
 #include <ic4-gui/ic4gui.h>
 
@@ -10,9 +10,12 @@
 #include <CLI/CLI.hpp>
 #include <fmt/core.h>
 
+#include <cstdint>
 #include <condition_variable>
+#include <memory>
 #include <mutex>
 #include <string>
+#include <stdexcept>
 
 #include "ic4_enum_to_string.h"
 #include "ic4-ctrl-helper.h"

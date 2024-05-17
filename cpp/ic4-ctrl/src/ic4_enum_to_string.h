@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ic4/ic4.h>
+
 namespace ic4_helper
 {
     inline const char* toString( ic4::PropType type ) noexcept
