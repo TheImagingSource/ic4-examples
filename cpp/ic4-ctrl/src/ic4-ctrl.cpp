@@ -14,6 +14,7 @@
 #include <condition_variable>
 #include <memory>
 #include <mutex>
+#include <set>
 #include <string>
 #include <stdexcept>
 
@@ -32,7 +33,7 @@ template<class ... Targs>
 void print( int offset, fmt::format_string<Targs...> fmt, Targs&& ... args )
 {
     for( int i = 0; i < offset; ++i ) {
-        fmt::print( "\t" );
+        fmt::print( "    " );
     }
     fmt::print( fmt, std::forward<Targs>( args )... );
 }
@@ -105,22 +106,67 @@ static auto find_interface( std::string id ) -> std::unique_ptr<ic4::Interface>
     return {};
 }
 
+static auto list_all_by_connection() -> void
+{
+	ic4::DeviceEnum devEnum;
+	auto list = devEnum.enumInterfaces();
+
+	print("Device tree:\n");
+	if (list.empty()) {
+		print(1, "No Interfaces found\n");
+	}
+	else
+	{
+		std::set<std::string> transport_layer_list;
+
+		for (auto&& e : list) {
+			transport_layer_list.insert(e.transportLayerName());
+		}
+		for (auto&& transportLayerName : transport_layer_list)
+		{
+			print(1, "TransportLayer: {}\n", transportLayerName);
+			for (size_t i = 0; i < list.size(); ++i)
+			{
+				auto& itf = list.at(i);
+				if (transportLayerName == itf.transportLayerName())
+				{
+					print(2, "{}\n", itf.interfaceDisplayName());
+
+					auto dev_list = itf.enumDevices();
+					if (dev_list.empty()) {
+						print(3, "No devices\n");
+					}
+					else
+					{
+						for (auto&& device : dev_list) {
+							print(3, "{:24} {:8}\n", device.modelName(), device.serial());
+						}
+					}
+					print("\n");
+				}
+			}
+			print("\n");
+		}
+	}
+}
 
 static auto list_devices() -> void
 {
-    ic4::DeviceEnum devEnum;
-    auto list = devEnum.enumDevices();
+	ic4::DeviceEnum devEnum;
+	auto list = devEnum.enumDevices();
 
-    print( "Device list:\n" );
-    print( "    {:24} {:8} {}\n", "ModelName", "Serial", "InterfaceName" );
-    int index = 0;
-    for( auto&& e : list ) {
-        print( "{:>3} {:24} {:8} {}\n", index, e.modelName(), e.serial(), e.getInterface().transportLayerName() );
-        index += 1;
-    }
-    if( list.empty() ) {
-        print( "    No devices found\n" );
-    }
+	print("Device list:\n");
+	if (list.empty()) {
+		print(1, "No devices found\n");
+		return;
+	}
+
+	print(1, "Index   {:24} {:8} {}\n", "ModelName", "Serial", "InterfaceName");
+	int index = 0;
+	for (auto&& e : list) {
+		print(1, "{:^5}   {:24} {:8} {}\n", index, e.modelName(), e.serial(), e.getInterface().transportLayerName());
+		index += 1;
+	}
 }
 
 static auto list_interfaces() -> void
@@ -129,13 +175,28 @@ static auto list_interfaces() -> void
     auto list = devEnum.enumInterfaces();
 
     print( "Interface list:\n" );
+	if (list.empty()) {
+		print(1, "No Interfaces found\n");
+	}
+	else
+	{
+		std::set<std::string> transport_layer_list;
 
-    for( auto&& e : list ) {
-        print( 1, "{}\n", e.interfaceDisplayName() );
-        print( 2, "TransportLayerName: {}\n", e.transportLayerName() );
-    }
-    if( list.empty() ) {
-        print( 1, "No Interfaces found\n" );
+		for (auto&& e : list) {
+			transport_layer_list.insert(e.transportLayerName());
+		}
+		for (auto&& transportLayerName : transport_layer_list)
+		{
+			print(1, "TransportLayer: {}\n", transportLayerName);
+			for (size_t i = 0; i < list.size(); ++i) {
+				auto& itf = list.at(i);
+				if (transportLayerName == itf.transportLayerName())
+				{
+					print(2, "{:^5} {}\n", i, itf.interfaceDisplayName());
+				}
+			}
+			print("\n");
+		}
     }
 }
 
@@ -146,11 +207,12 @@ static void print_device( std::string id )
         throw std::runtime_error( fmt::format( "Failed to find device for id '{}'\n", id ) );
     }
 
-    print( "ModelName: '{}'\n", dev->modelName() );
-    print( "Serial: '{}'\n", dev->serial() );
-    print( "UniqueName: '{}'\n", dev->uniqueName() );
-    print( "DeviceVersion: '{}'\n", dev->version() );
-    print( "InterfaceName: '{}'\n", dev->getInterface().transportLayerName() );
+	print("ModelName:     '{}'\n", dev->modelName());
+	print("Serial:        '{}'\n", dev->serial());
+	print("UserID:        '{}'\n", dev->userID());
+	print("UniqueName:    '{}'\n", dev->uniqueName());
+	print("DeviceVersion: '{}'\n", dev->version());
+	print("InterfaceName: '{}'\n", dev->getInterface().transportLayerName());
 }
 
 static void print_interface( std::string id )
@@ -160,17 +222,10 @@ static void print_interface( std::string id )
         throw std::runtime_error( fmt::format( "Failed to find device for id '{}'\n", id ) );
     }
 
-    print( "Name: '{}'\n", dev->interfaceDisplayName() );
-    print( "TransportLayerName: '{}'\n", dev->transportLayerName() );
-    print( "TransportLayerType: '{}'\n", ic4_helper::toString( dev->transportLayerType() ) );
+    print( "DisplayName:           '{}'\n", dev->interfaceDisplayName() );
+    print( "TransportLayerName:    '{}'\n", dev->transportLayerName() );
+    print( "TransportLayerType:    '{}'\n", ic4_helper::toString( dev->transportLayerType() ) );
     print( "TransportLayerVersion: '{}'\n", dev->transportLayerVersion() );
-    
-    print( "Interface Properties:\n" );
-    auto map = dev->interfacePropertyMap();
-    for( auto&& property : map.all() )
-    {
-        print_property( 1, property );
-    }
 }
 
 template<typename TPropType, class Tprop, class TMethod>
@@ -714,7 +769,7 @@ int main( int argc, char** argv )
     bool force_interface = false;
 
     auto list_cmd = app.add_subcommand( "list",
-        "List available devices and interfaces."
+        "List available devices and interfaces by connection."
     );
 
     auto device_cmd = app.add_subcommand( "device",
@@ -813,9 +868,7 @@ int main( int argc, char** argv )
     {
         if( list_cmd->parsed() )
         {
-            list_interfaces();
-            print( "\n" );
-            list_devices();
+			list_all_by_connection();
         }
         else if( device_cmd->parsed() )
         {
