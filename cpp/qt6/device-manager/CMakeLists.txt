@@ -3,11 +3,7 @@ cmake_minimum_required(VERSION 3.16)
 
 project(device-manager)
 
-set( CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL" )
-
-if( NOT TARGET ic4::core )
-    find_package( ic4 REQUIRED )
-endif()
+find_package( ic4 CONFIG REQUIRED )
 
 include( ../common/setup_qt.cmake )
 
@@ -20,14 +16,9 @@ add_executable(ic4-device-manager
     "device-manager.rc"
 )
 
-target_link_libraries(ic4-device-manager
-PRIVATE
-    Qt${QT_VERSION_MAJOR}::Widgets
-    Qt${QT_VERSION_MAJOR}::Core
-)
-
-# always needed
+target_link_libraries(ic4-device-manager PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Widgets  )
 target_link_libraries(ic4-device-manager PRIVATE ic4::core qt6-dialogs )
+
 set_target_properties(ic4-device-manager PROPERTIES CXX_STANDARD 17 )
 
 if (WIN32)

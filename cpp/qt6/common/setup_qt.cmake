@@ -1,6 +1,6 @@
 
 # This path probably will not be valid on your system.
-# If cmake complains about not able to find Qt, point it into your Qt installation directory.
+# If cmake complains about not being able to find Qt, point it into your Qt installation directory.
 list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.6.0/msvc2019_64/")
 list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.6.1/msvc2019_64/")
 list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.6.2/msvc2019_64/")
@@ -19,7 +19,7 @@ if(Qt6Widgets_FOUND)
         set(CMAKE_AUTORCC ON)
         set(CMAKE_AUTOUIC ON)
     else()
-        qt_standard_project_setup()
+        qt_standard_project_setup() # Added in 6.3.0
     endif()
 elseif(Qt5Widgets_FOUND)
 	set(CMAKE_AUTOMOC ON)

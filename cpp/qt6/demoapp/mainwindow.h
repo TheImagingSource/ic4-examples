@@ -12,7 +12,7 @@
 #include <atomic>
 
 #include <ic4/ic4.h> 
-#include <ic4-gui/ic4qt6.h>
+#include <ic4-interop/ic4qt6.h>
 
 class MainWindow : public QMainWindow, ic4::QueueSinkListener
 {

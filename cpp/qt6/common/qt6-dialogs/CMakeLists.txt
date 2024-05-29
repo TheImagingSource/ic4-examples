@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.16)
 
 project(qt6-dialogs)
 
-set( CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL" )
-
 find_package( ic4 CONFIG REQUIRED )
 
 include( ../setup_qt.cmake )
