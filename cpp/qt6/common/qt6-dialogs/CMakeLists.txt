@@ -4,9 +4,7 @@ project(qt6-dialogs)
 
 set( CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL" )
 
-if( NOT TARGET ic4::core )
-    find_package( ic4 REQUIRED )
-endif()
+find_package( ic4 CONFIG REQUIRED )
 
 include( ../setup_qt.cmake )
 
@@ -42,7 +40,7 @@ add_library(qt6-dialogs STATIC
 
 
 target_link_libraries(qt6-dialogs
-PRIVATE
+PUBLIC
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::Core
     ic4::core
