@@ -200,6 +200,17 @@ static auto list_interfaces() -> void
     }
 }
 
+static void list_serials()
+{
+    ic4::DeviceEnum devEnum;
+    auto list = devEnum.enumDevices();
+
+    for (auto&& d : list)
+    {
+        print("{} ", d.serial());
+    }
+}
+
 static void print_device( std::string id )
 {
     auto dev = find_device( id );
@@ -772,6 +783,10 @@ int main( int argc, char** argv )
         "List available devices and interfaces by connection."
     );
 
+    auto list_serial = app.add_subcommand( "list-serial",
+        "List only serials of available devices."
+    );
+
     auto device_cmd = app.add_subcommand( "device",
         "List devices or a show information for a single device.\n"
         "\tTo list all devices use: `ic4-ctrl device`\n"
@@ -869,6 +884,10 @@ int main( int argc, char** argv )
         if( list_cmd->parsed() )
         {
 			list_all_by_connection();
+        }
+        else if ( list_serial->parsed() )
+        {
+            list_serials();
         }
         else if( device_cmd->parsed() )
         {
