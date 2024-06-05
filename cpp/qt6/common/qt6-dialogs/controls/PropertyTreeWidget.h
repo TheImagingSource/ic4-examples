@@ -12,6 +12,7 @@
 #include <QStyledItemDelegate>
 #include <QSortFilterProxyModel>
 #include <QWidget>
+#include <QDockWidget>
 #include <QComboBox>
 #include <QLineEdit>
 #include <QTreeView>
@@ -272,6 +273,11 @@ namespace ic4::ui
 		{
 		}
 
+		void updateGrabber(ic4::Grabber* grabber)
+		{
+			grabber_ = grabber;
+		}
+
 		QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& /* option */, const QModelIndex& index) const override
 		{
 			auto source_index = proxy_.mapToSource(index);
@@ -313,9 +319,23 @@ namespace ic4::ui
 			if (tree->children.size() > 0) {
 				// This paints the left half of the category title and background
 				painter->save();
-				painter->setPen(parent_->palette().color(QPalette::Text));
+				if (CustomStyle.ItemDelegateForPaintTextColorEnabled)
+				{
+					painter->setPen(CustomStyle.ItemDelegateForPaintTextColor);
+				}
+				else
+				{
+					painter->setPen(parent_->palette().color(QPalette::Text));
+				}
 				auto r = option.rect;
-				painter->fillRect(r, QBrush(parent_->palette().color(QPalette::Mid)));
+				if (CustomStyle.ItemDelegateForPaintBackgroundColorEnabled)
+				{
+					painter->fillRect(r, QBrush(CustomStyle.ItemDelegateForPaintBackgroundColor));
+				}
+				else
+				{
+					painter->fillRect(r, QBrush(parent_->palette().color(QPalette::Mid)));
+				}
 				painter->drawText(r, option.displayAlignment, index.data().toString());
 				painter->restore();
 			}
@@ -401,7 +421,6 @@ namespace ic4::ui
 		}
 	};
 
-
 	class PropertyTreeView : public QTreeView
 	{
 		Q_OBJECT
@@ -434,12 +453,19 @@ namespace ic4::ui
 
 			if (tree->children.size() > 0)
 			{
-				painter->fillRect(rect, QWidget::palette().color(QPalette::Mid));
-				//painter->fillRect(rect, QColor(0xFFFF0000));
-
+				if (CustomStyle.PropertyTreeViewBranchBackgroundEnabled)
+				{
+					painter->fillRect(rect, CustomStyle.PropertyTreeViewBranchBackground);
+				}
+				else
+				{
+					painter->fillRect(rect, QWidget::palette().color(QPalette::Mid));
+				}
+	
 				// 
 				int offset = (rect.width() - indentation()) / 2;
-				auto c = QWidget::palette().color(QPalette::Text);
+				auto c = CustomStyle.PropertyTreeViewBranchTextColorEnabled ?
+					CustomStyle.PropertyTreeViewBranchTextColor : QWidget::palette().color(QPalette::Text);
 				int x = rect.x() + rect.width() / 2 + offset;
 				int y = rect.y() + rect.height() / 2;
 				int length = 9;
@@ -473,8 +499,11 @@ namespace ic4::ui
 
 	};
 
-	class PropertyTreeWidget : public QWidget
+	template<class T>
+	class PropertyTreeWidgetBase : public T, public app::IViewBase
 	{
+		static_assert(std::is_base_of<QWidget, T>::value, "T must be derived from QWidget");
+		
 	public:
 		struct Settings
 		{
@@ -488,7 +517,7 @@ namespace ic4::ui
             static Settings Default() { return {}; };
 		};
 
-	private:
+	protected:
 		QComboBox* visibility_combo_ = nullptr;
 		QLineEdit* filter_text_ = nullptr;
 
@@ -621,26 +650,33 @@ namespace ic4::ui
 		{
 			updateModel(new PropertyTreeModel(cat));
 		}		
-
+		void updateGrabber(ic4::Grabber* grabber)
+		{
+			ic4::Error err;
+			auto propMap = grabber->devicePropertyMap(err);
+			if (err.isSuccess())
+			{
+				auto cat = propMap.findCategory("Root", err);
+				if (err.isSuccess())
+				{
+					delegate_.updateGrabber(grabber); // !
+					updateModel(new PropertyTreeModel(cat));
+				}
+			}
+		} 
 		void setPropertyFilter(std::function<bool(const ic4::Property&)> accept_prop)
 		{
 			proxy_.filter_func(accept_prop);
 		}
 
 	public:
-		PropertyTreeWidget(ic4::PropCategory cat, ic4::Grabber* grabber, Settings settings = Settings::Default(), QWidget* parent = nullptr)
-			: PropertyTreeWidget(new PropertyTreeModel(cat), grabber, settings, parent)
+		PropertyTreeWidgetBase(ic4::PropCategory cat, ic4::Grabber* grabber, Settings settings = Settings::Default(), QWidget* parent = nullptr)
+			: PropertyTreeWidgetBase(new PropertyTreeModel(cat), grabber, settings, parent)
 		{
 		}
 
-		~PropertyTreeWidget()
-		{
-			delete source_;
-		}
-
-	private:
-		PropertyTreeWidget(PropertyTreeModel* model, ic4::Grabber* grabber, Settings settings = Settings::Default(), QWidget* parent = nullptr)
-			: QWidget(parent)
+		PropertyTreeWidgetBase(PropertyTreeModel* model, ic4::Grabber* grabber, Settings settings = Settings::Default(), QWidget* parent = nullptr)
+			: T(parent)
 			, delegate_(proxy_, grabber)
 			, branchPaintDelegate_(proxy_, this)
 			, source_(model)
@@ -663,7 +699,7 @@ namespace ic4::ui
 					"font-size: 13px;"
 					"}");
 
-				connect(visibility_combo_, QOverload<int>::of(&QComboBox::currentIndexChanged), [=](int)
+				T::connect(visibility_combo_, QOverload<int>::of(&QComboBox::currentIndexChanged), [=](int)
 					{
 						update_visibility();
 					});
@@ -675,7 +711,7 @@ namespace ic4::ui
 					"font-size: 13px;"
 					"}");
 				filter_text_->setText(settings.initialFilter);
-				connect(filter_text_, &QLineEdit::textChanged, this, [this](const QString&) { update_visibility(); });
+				T::connect(filter_text_, &QLineEdit::textChanged, this, [this](const QString&) { update_visibility(); });
 				top->addWidget(filter_text_);
 	
 				layout->addLayout(top);
@@ -683,25 +719,7 @@ namespace ic4::ui
 			}
 
 			view_ = new PropertyTreeView(proxy_);
-			view_->setStyleSheet("QTreeView::branch, QTreeView::item, QTreeView { "
-				"outline: none; "
-				"show-decoration-selected: 0;"
-				"color: palette(text);"
-				"background: palette(window);" // needs to be set,
-				// in order that dottet line is not visible?!
-				"font-size: 13px;"
-			"}"
-			"QTreeView::branch:open:adjoins-item:has-children{"
-				"background: transparent;" // needs to be transparent, 
-				//in order that QTReeView::drawBranches works?!
-				"margin : 0;"
-				" }"
-			"QTreeView::branch:closed:adjoins-item:has-children{"
-					"background: transparent;"// needs to be transparent, 
-				//in order that QTReeView::drawBranches works?!
-					"margin : 0;"
-				" }"
-			);
+			view_->setStyleSheet(CustomStyle.PropertyTreeViewStyle);
 			proxy_.setSourceModel(source_);
 			proxy_.filter(settings.initialFilter, settings.initialVisibility);
 
@@ -714,11 +732,10 @@ namespace ic4::ui
 			view_->setItemDelegateForColumn(0, &branchPaintDelegate_);
 			view_->setItemDelegateForColumn(1, &delegate_);
 
-			connect(view_, &QTreeView::clicked, this, &PropertyTreeWidget::propSelected);
-			connect(view_->selectionModel(), &QItemSelectionModel::selectionChanged, this, &PropertyTreeWidget::propSelectionChanged);
-
-			connect(&proxy_, &QSortFilterProxyModel::dataChanged, this, &PropertyTreeWidget::proxyDataChanged);
-			connect(&proxy_, &QSortFilterProxyModel::layoutChanged, this, &PropertyTreeWidget::proxyLayoutChanged);
+			T::connect(view_, &QTreeView::clicked, this, &PropertyTreeWidgetBase::propSelected);
+			T::connect(view_->selectionModel(), &QItemSelectionModel::selectionChanged, this, &PropertyTreeWidgetBase::propSelectionChanged);
+			T::connect(&proxy_, &QSortFilterProxyModel::dataChanged, this, &PropertyTreeWidgetBase::proxyDataChanged);
+			T::connect(&proxy_, &QSortFilterProxyModel::layoutChanged, this, &PropertyTreeWidgetBase::proxyLayoutChanged);
 
 			if (settings_.showInfoBox)
 			{
@@ -741,8 +758,36 @@ namespace ic4::ui
 
 			frame->setLayout(layout);
 
-			setLayout(layout);
+			if constexpr (std::is_same_v<T, QDockWidget>) 
+			{
+				T::setWidget(frame);
+			}
+			else
+			{
+				T::setLayout(layout);
+			}
+
 			update_view();
+		}
+
+		~PropertyTreeWidgetBase()
+		{
+			delete source_;
+		}
+	};
+
+	class PropertyTreeWidget : public PropertyTreeWidgetBase<QWidget>
+	{
+	public:
+		PropertyTreeWidget(ic4::PropCategory cat, ic4::Grabber* grabber, Settings settings = Settings::Default(), QWidget* parent = nullptr) :
+			PropertyTreeWidgetBase(cat, grabber, settings, parent)
+		{
+		}
+		void closeEvent(QCloseEvent* event) override
+		{
+			clearModel();
+			onClose((app::IViewBase*)this);
+			QWidget::closeEvent(event);
 		}
 	};
 }

@@ -4,25 +4,12 @@
 #include <vector>
 #include <functional>
 
+#ifndef IC4_UI_BASE
+#define IC4_UI_BASE 1
+
 namespace app
 {
-	class IViewBase
-	{
-	private:
-		void* tag_ = 0;
-	public:
-		virtual ~IViewBase() = default;
-
-		// virtual void beginInvoke(std::function<void()> func) = 0;
-
-		void setTag(void* val) {
-			tag_ = val;
-		}
-
-		void* tag() {
-			return tag_;
-		}
-	};
+	class IViewBase;
 
 	template<class... Args>
 	class Event
@@ -51,4 +38,25 @@ namespace app
 
 	template<>
 	class Event<void> {};
+
+	class IViewBase
+	{
+	private:
+		void* tag_ = 0;
+	public:
+		virtual ~IViewBase() = default;
+
+		app::Event<> onClose;
+
+		// virtual void beginInvoke(std::function<void()> func) = 0;
+
+		void setTag(void* val) {
+			tag_ = val;
+		}
+
+		void* tag() {
+			return tag_;
+		}
+	};
 }
+#endif 

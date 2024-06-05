@@ -7,6 +7,8 @@
 #include <QFormLayout>
 #include <QLabel>
 
+#include "PropertyControls.h"
+
 class FormGroupBox : public QFrame
 {
 	Q_OBJECT
@@ -22,7 +24,7 @@ public:
 		_layout->setLabelAlignment(Qt::AlignRight);
 
 		auto label = new QLabel(title);
-		label->setStyleSheet("QLabel { margin: 0px; background-color: palette(base); padding: 4px }");
+		label->setStyleSheet(ic4::ui::CustomStyle.FormGroupBoxStyle);
 
 		vbox->addWidget(label);
 		vbox->addLayout(_layout);

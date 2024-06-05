@@ -99,10 +99,10 @@ public:
 
 			while (currentBlock.isValid())
 			{
-				QTextCursor cursor(currentBlock);
+				QTextCursor textCursor(currentBlock);
 				QTextBlockFormat blockFormat = currentBlock.blockFormat();
 				blockFormat.setLineHeight(120, QTextBlockFormat::ProportionalHeight);
-				cursor.setBlockFormat(blockFormat);
+				textCursor.setBlockFormat(blockFormat);
 				currentBlock = currentBlock.next();
 			}
 		}

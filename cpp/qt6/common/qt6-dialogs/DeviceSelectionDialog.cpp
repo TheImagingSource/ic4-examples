@@ -65,8 +65,19 @@ void DeviceSelectionDlg::createUI()
 	Q_INIT_RESOURCE(qt6dialogs);
 
 	setWindowTitle("Select Device");
-	setMinimumSize(900, 400);
-	setSizeGripEnabled(true);
+
+	setMinimumSize(
+		ic4::ui::CustomStyle.DeviceSelectionDlgMinWidth, 
+		ic4::ui::CustomStyle.DeviceSelectionDlgMinHeight);
+
+	if (ic4::ui::CustomStyle.DeviceSelectionDlgResizeEnabled)
+	{
+		resize(
+			ic4::ui::CustomStyle.DeviceSelectionDlgMinWidth, 
+			ic4::ui::CustomStyle.DeviceSelectionDlgMinHeight);
+	}
+
+	setSizeGripEnabled(ic4::ui::CustomStyle.DeviceSelectionDlgSizeGripEnabled);
 
 	auto topLayout = new QHBoxLayout();
 	auto leftLayout = new QVBoxLayout();
@@ -74,7 +85,7 @@ void DeviceSelectionDlg::createUI()
 	_cameraTree = new QTreeWidget();
 	_cameraTree->setIconSize(QSize(24, 24));
 	_cameraTree->setIndentation(16);
-	_cameraTree->setStyleSheet("QTreeView::item { padding: 4px; } ");
+	_cameraTree->setStyleSheet(ic4::ui::CustomStyle.DeviceSelectionDlgCameraTreeStyle);
 	_cameraTree->setRootIsDecorated(false);
 	_cameraTree->setMinimumWidth(450);
 	_cameraTree->setItemsExpandable(false);
@@ -137,15 +148,11 @@ void DeviceSelectionDlg::createUI()
 
 	_rightScroll = new QScrollArea();
 	_rightScroll->setObjectName("rightScroll");
-	_rightScroll->setStyleSheet("QScrollArea#rightScroll { border-width: 1; border-style: solid; border-color: palette(base); }");
+	_rightScroll->setStyleSheet(ic4::ui::CustomStyle.DeviceSelectionDlgRightScrollStyle);
 
 	auto rightBox = new QFrame();
 	rightBox->setObjectName("rightBox");
-	rightBox->setStyleSheet(
-		"QFrame#rightBox { padding: 0px; }\n"
-		"QLineEdit[readOnly=\"true\"] { background: palette(window) }\n"
-		"QPlainTextEdit[readOnly=\"true\"] { background: palette(window) }\n"
-	);
+	rightBox->setStyleSheet(ic4::ui::CustomStyle.DeviceSelectionDlgRightBox);
 
 	auto rightLayout = new QVBoxLayout();
 	rightLayout->setContentsMargins(0, 0, 0, 0);

@@ -10,6 +10,7 @@
 #include "props/PropCategoryControl.h"
 
 
+ic4::ui::CustomStyleDef ic4::ui::CustomStyle;
 
 QWidget* ic4::ui::create_prop_control(const ic4::Property& prop, QWidget* parent, ic4::Grabber* grabber)
 {

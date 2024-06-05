@@ -11,14 +11,10 @@ namespace ic4::ui
 		PropCategoryControl(ic4::PropCategory cat, QWidget* parent)
 			: PropControlBase(cat, parent, nullptr)
 		{
-			this->setStyleSheet("QWidget { "
-				"background-color: palette(mid);"
-				"}");
+			this->setStyleSheet(CustomStyle.PropCategoryControlStyle);
 
 			auto label = new QLabel(this);
-			label->setStyleSheet("QLabel { "
-				"background-color: palette(mid);"
-				"}");
+			label->setStyleSheet(CustomStyle.PropCategoryControlLabelStyle);
 			label->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
 
 			layout_->addWidget(label);

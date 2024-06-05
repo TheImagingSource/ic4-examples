@@ -65,17 +65,17 @@ namespace
 			{
 				if (edit->hasAcceptableInput())
 				{
-					edit->setStyleSheet("background-color: palette(base)");
+					edit->setStyleSheet(ic4::ui::CustomStyle.IPConfigGroupBoxLineEditBackgroundDefault);
 				}
 				else
 				{
 					if (ResourceSelector::isDarkMode())
 					{
-						edit->setStyleSheet("background-color: darkred");
+						edit->setStyleSheet(ic4::ui::CustomStyle.IPConfigGroupBoxLineEditBackgroundDark);
 					}
 					else
 					{
-						edit->setStyleSheet("background-color: #FF4040");
+						edit->setStyleSheet(ic4::ui::CustomStyle.IPConfigGroupBoxLineEditBackgroundLight);
 					}
 				}
 			}
@@ -234,7 +234,7 @@ void IPConfigGroupBox::updateUnreachable(ic4::PropertyMap itfPropertyMap)
 
 	auto* frame = new QFrame();
 	frame->setObjectName("WarningFrame");
-	frame->setStyleSheet("QFrame#WarningFrame { border: 1px solid red; background-color: palette(base); color: red; padding: 4px }");
+	frame->setStyleSheet(ic4::ui::CustomStyle.IPConfigGroupBoxUnreachableFrame);
 
 	auto* iconLabel = new QLabel();
 	auto icon = style()->standardIcon(QStyle::SP_MessageBoxWarning);
