@@ -255,6 +255,12 @@ void IPConfigGroupBox::updateUnreachable(ic4::PropertyMap itfPropertyMap)
 
 	_layout->addRow(frame);
 
+	addOptionalCommand(_layout, itfPropertyMap, "IPConfigAssignFreeTemporaryIP", "Auto-Assign Temporary Address");
+	addOptionalCommand(_layout, itfPropertyMap, "IPConfigAssignFreePersistentIP", "Auto-Assign Persistent Address");
+	addOptionalCommand(_layout, itfPropertyMap, "IPConfigDHCPEnable", "Enable DHCP");
+
+	_forceButton = new QPushButton(tr("Force Temporary IP Configuration"));
+
 	_forceIPAddress = addIPEdit(_itfPropertyMap, "GevDeviceForceIPAddress", "0.0.0.0", "Force IP Address", *_layout);
 	_forceSubnetMask = addIPEdit(_itfPropertyMap, "GevDeviceForceSubnetMask", "0.0.0.0", "Force Subnet Mask", *_layout);
 	_forceDefaultGateway = addIPEdit(_itfPropertyMap, "GevDeviceForceGateway", "0.0.0.0", "Force Default Gateway", *_layout);
@@ -318,4 +324,22 @@ void IPConfigGroupBox::onForceButtonPressed()
 	}
 
 	_forceButton->setEnabled(false);
+}
+
+void IPConfigGroupBox::addOptionalCommand(QFormLayout* layout, const ic4::PropertyMap& itfPropertyMap, const char* cmdName, const QString& label)
+{
+	ic4::Error err;
+	auto cmd = itfPropertyMap.findCommand(cmdName, err);
+	if (err.isError())
+		return;
+
+	auto* cmdButton = new QPushButton(label);
+	_layout->addRow(cmdButton);
+
+	connect(cmdButton, &QPushButton::pressed,
+		[cmd]() mutable
+		{
+			cmd.execute();
+		}
+	);
 }

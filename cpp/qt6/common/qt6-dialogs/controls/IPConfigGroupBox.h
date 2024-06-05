@@ -49,4 +49,6 @@ private:
 	void onApplyButtonPressed();
 
 	void onForceButtonPressed();
+
+	void addOptionalCommand(QFormLayout* layout, const ic4::PropertyMap& itfPropertyMap, const char* cmdName, const QString& label);
 };
