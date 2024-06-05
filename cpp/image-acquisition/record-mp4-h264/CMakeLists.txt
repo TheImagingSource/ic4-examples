@@ -3,9 +3,7 @@ cmake_minimum_required(VERSION 3.8)
 
 project("record-mp4-h264")
 
-if( NOT TARGET ic4::core )
-	find_package( ic4 REQUIRED )
-endif()
+find_package( ic4 REQUIRED )
 
 add_executable( record-mp4-h264 
 	"src/record-mp4-h264.cpp"

@@ -3,9 +3,7 @@ cmake_minimum_required(VERSION 3.8)
 
 project("action-command-broadcast-trigger")
 
-if( NOT TARGET ic4::core )
-    find_package( ic4 REQUIRED )
-endif()
+find_package( ic4 REQUIRED )
 
 add_executable( action-command-broadcast-trigger 
     "src/action-command-broadcast-trigger.cpp"

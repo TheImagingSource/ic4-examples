@@ -3,9 +3,7 @@ cmake_minimum_required(VERSION 3.8)
 
 project("save-bmp-on-trigger")
 
-if( NOT TARGET ic4::core )
-	find_package( ic4 REQUIRED )
-endif()
+find_package( ic4 REQUIRED )
 
 add_executable( save-bmp-on-trigger 
 	"src/save-bmp-on-trigger.cpp"

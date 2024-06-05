@@ -3,9 +3,7 @@ cmake_minimum_required(VERSION 3.8)
 
 project("event-line1-edge")
 
-if( NOT TARGET ic4::core )
-    find_package( ic4 REQUIRED )
-endif()
+find_package( ic4 REQUIRED )
 
 add_executable( event-line1-edge "src/event-line1-edge.cpp" )
 
