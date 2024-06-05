@@ -3,9 +3,7 @@ cmake_minimum_required(VERSION 3.8)
 
 project("device-list-changed-c")
 
-if( NOT TARGET ic4::core )
 find_package( ic4 REQUIRED )
-endif()
 
 add_executable( device-list-changed-c 
 	"src/device-list-changed.c"
