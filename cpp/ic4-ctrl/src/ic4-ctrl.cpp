@@ -747,7 +747,7 @@ static void show_prop_page(std::string id, bool id_is_interface, bool show_guru)
 
 static void show_version()
 {
-    auto str = ic4::get_version_info();
+    auto str = ic4::getVersionInfo();
 
     if (str.empty())
     {

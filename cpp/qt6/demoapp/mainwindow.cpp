@@ -253,7 +253,7 @@ void MainWindow::createUI()
 
 	////////////////////////////////////////////////////////////////////////////
 	// Create the video display Widget
-	_VideoWidget = new ic4qt6::DisplayWidget(this);
+	_VideoWidget = new ic4interop::Qt::DisplayWidget(this);
 	_VideoWidget->setMinimumSize(640, 480);
 	setCentralWidget(_VideoWidget);
 
