@@ -1,12 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net6.0-windows;net45</TargetFrameworks>
-    <Platforms>x64;AnyCPU</Platforms>
+    <TargetFrameworks>net6.0;net45</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="ic4dotnet" Version="1.0.0.2413" />
+    <PackageReference Include="ic4dotnet" Version="1.1.0.2833" />
   </ItemGroup>
 
 </Project>
