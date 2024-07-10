@@ -71,6 +71,7 @@ private:
 	QAction* _codecpropertyact = nullptr;
 	QAction* _exportDeviceSettingsAct = nullptr;
 	QAction* _importDeviceSettingsAct = nullptr;
+
 	QAction* _closeDeviceAct = nullptr;
 
 	QLabel* _sbStatisticsLabel = nullptr;
@@ -86,6 +87,8 @@ private:
 
     bool sinkConnected( ic4::QueueSink& sink, const ic4::ImageType& imageType, size_t min_buffers_required ) final;
     void framesQueued( ic4::QueueSink& sink ) final;
+
+	ic4::PropVisibility _defaultVisibility = ic4::PropVisibility::Beginner;
 };
 
 #endif // MAINWINDOW_H

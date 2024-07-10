@@ -207,6 +207,44 @@ void MainWindow::createUI()
 	exitAct->setStatusTip(tr("Exit program"));
 	connect(exitAct, &QAction::triggered, this, &QWidget::close);
 
+	// Settings Menu
+	auto defaultVisibilityMenu = new QMenu(tr("Default &Visibility"), this);
+	defaultVisibilityMenu->setStatusTip(tr("Sets the default visibility"));
+	auto beginnerEntry = defaultVisibilityMenu->addAction(tr("Beginner"));
+	beginnerEntry->setCheckable(true);
+	beginnerEntry->setChecked(_defaultVisibility == ic4::PropVisibility::Beginner);
+	auto expertEntry = defaultVisibilityMenu->addAction(tr("Expert"));
+	expertEntry->setCheckable(true);
+	expertEntry->setChecked(_defaultVisibility == ic4::PropVisibility::Expert);
+	auto guruEntry = defaultVisibilityMenu->addAction(tr("Guru"));
+	guruEntry->setCheckable(true);
+	guruEntry->setChecked(_defaultVisibility == ic4::PropVisibility::Guru);
+
+	auto update_entries = [this, beginnerEntry, expertEntry, guruEntry] {
+		beginnerEntry->setChecked(_defaultVisibility == ic4::PropVisibility::Beginner);
+		expertEntry->setChecked(_defaultVisibility == ic4::PropVisibility::Expert);
+		guruEntry->setChecked(_defaultVisibility == ic4::PropVisibility::Guru);
+	};
+
+	connect(beginnerEntry, &QAction::triggered, [this, update_entries] { _defaultVisibility = ic4::PropVisibility::Beginner; update_entries(); });
+	connect(expertEntry, &QAction::triggered, [this, update_entries] { _defaultVisibility = ic4::PropVisibility::Expert; update_entries(); });
+	connect(guruEntry, &QAction::triggered, [this, update_entries] { _defaultVisibility = ic4::PropVisibility::Guru; update_entries(); });
+
+	auto deleteDeviceSettingsFile  = new QAction(tr("Delete Device Settings File"), this);
+	deleteDeviceSettingsFile->setStatusTip(tr("Deletes the current device settings file"));
+	connect(deleteDeviceSettingsFile, &QAction::triggered,
+		[this] {
+			if (!std::filesystem::is_regular_file(_devicefile)) {
+				return;
+			}
+			std::error_code ec;
+			std::filesystem::remove( _devicefile, ec );
+			if (ec) {
+				qWarning().noquote() << "Failed to delete: " << _devicefile;
+			}
+		}
+	);
+
 	////////////////////////////////////////////////////////////////////////////
 	// Create the File Menu
 	auto fileMenu = menuBar()->addMenu(tr("&File"));
@@ -232,6 +270,13 @@ void MainWindow::createUI()
 	captureMenu->addAction(_recordpauseact);
 	captureMenu->addAction(_recordstopact);
 	captureMenu->addAction(_codecpropertyact);
+
+	////////////////////////////////////////////////////////////////////////////
+	// Create the Settings Menu
+	auto settingsMenu = menuBar()->addMenu(tr("&Settings"));
+	settingsMenu->addMenu(defaultVisibilityMenu);
+	settingsMenu->addAction(deleteDeviceSettingsFile);
+	settingsMenu->menuAction()->setVisible(false);
 
 	////////////////////////////////////////////////////////////////////////////
 	// Create the Toolbar
@@ -409,7 +454,7 @@ void MainWindow::onSelectDevice()
 /// </summary>
 void MainWindow::onDeviceProperties()
 {
-	PropertyDialog cDlg(_grabber, this, tr("Device Properties"));
+	PropertyDialog cDlg(_grabber, this, tr("Device Properties"), _defaultVisibility);
 	if (cDlg.exec() == 1)
 	{
 		_grabber.deviceSaveState(_devicefile);
@@ -420,7 +465,7 @@ void MainWindow::onDeviceProperties()
 
 void MainWindow::onDeviceDriverProperties()
 {
-    PropertyDialog cDlg(_grabber.driverPropertyMap(), this, tr("Device Driver Properties"));
+    PropertyDialog cDlg(_grabber.driverPropertyMap(), this, tr("Device Driver Properties"), _defaultVisibility);
 	
 	cDlg.exec();
 
@@ -594,7 +639,7 @@ void MainWindow::onStopCaptureVideo()
 
 void MainWindow::onCodecProperties()
 {
-	PropertyDialog cDlg(_videowriter.propertyMap(), this, tr("Codec Settings"));
+	PropertyDialog cDlg(_videowriter.propertyMap(), this, tr("Codec Settings"), _defaultVisibility);
 	if (cDlg.exec() == 1)
 	{
 		_videowriter.propertyMap().serialize(_codecconfigfile);
