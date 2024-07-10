@@ -40,14 +40,15 @@ MainWindow::MainWindow(QWidget* parent)
 	: QMainWindow(parent)
 	, _videowriter(ic4::VideoWriterType::MP4_H264)
 {
-	createUI();
-
 	// Make sure the %appdata%/demoapp directory exists
 	auto appDataDirectory = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
 	QDir(appDataDirectory).mkpath(".");
 
 	_devicefile = appDataDirectory.toStdString() + "/device.json";
 	_codecconfigfile = appDataDirectory.toStdString() + "/codecconfig.json";
+	readSettingsFile(appDataDirectory);
+
+	createUI();
 
 	// Create the sink for accessing images.
 	_queuesink = ic4::QueueSink::create(*this);
@@ -276,7 +277,7 @@ void MainWindow::createUI()
 	auto settingsMenu = menuBar()->addMenu(tr("&Settings"));
 	settingsMenu->addMenu(defaultVisibilityMenu);
 	settingsMenu->addAction(deleteDeviceSettingsFile);
-	settingsMenu->menuAction()->setVisible(false);
+	settingsMenu->menuAction()->setVisible(_showSettingsMenu);
 
 	////////////////////////////////////////////////////////////////////////////
 	// Create the Toolbar
@@ -785,4 +786,34 @@ void MainWindow::framesQueued(ic4::QueueSink& sink)
 	}
 }
 
+void MainWindow::readSettingsFile(const QString& appDataDirectory)
+{
+	QFile file(appDataDirectory + "/settings.json" );
+	if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+		return;
+	}
+
+	_showSettingsMenu = true;
+
+	QString val = file.readAll();
+	file.close();
+
+	QJsonDocument d = QJsonDocument::fromJson(val.toUtf8());
+	QJsonObject json_mainwindows = d.object().value("MainWindow").toObject();
+	if (json_mainwindows.empty()) {
+		return;
+	}
+	if (auto val = json_mainwindows["Default Visibility"]; val.isDouble()) {
+		switch (val.toInt())
+		{
+		case 0:	_defaultVisibility = ic4::PropVisibility::Beginner;	break;
+		case 1:	_defaultVisibility = ic4::PropVisibility::Expert; break;
+		case 2:	_defaultVisibility = ic4::PropVisibility::Guru; break;
+		case 3:	_defaultVisibility = ic4::PropVisibility::Invisible; break;
+		default:
+			break;
+		}
+	}
+
+}
 

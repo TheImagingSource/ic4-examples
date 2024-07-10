@@ -88,7 +88,11 @@ private:
     bool sinkConnected( ic4::QueueSink& sink, const ic4::ImageType& imageType, size_t min_buffers_required ) final;
     void framesQueued( ic4::QueueSink& sink ) final;
 
+	bool _showSettingsMenu = false;
+
 	ic4::PropVisibility _defaultVisibility = ic4::PropVisibility::Beginner;
+
+	void	readSettingsFile(const QString& appDataDirectory);
 };
 
 #endif // MAINWINDOW_H
