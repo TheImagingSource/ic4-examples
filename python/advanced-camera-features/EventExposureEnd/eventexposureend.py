@@ -34,6 +34,7 @@ class RealWorld:
         try:
             if frame_id > self.current_frame_id:
                 self.current_frame_id = frame_id
+                self.scene_setup_completed = False
                 self.scene_setup_timer = Timer(
                     self.scene_setup_duration_ms / 1000.0, lambda: self.scene_setup_timer_done()
                 )
