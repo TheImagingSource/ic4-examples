@@ -33,6 +33,8 @@
 #include <QMenuBar>
 #include <QFileDialog>
 #include <QStandardPaths>
+#include <QClipboard>
+#include <QTimer>
 
 #include <string>
 
@@ -202,6 +204,11 @@ void MainWindow::createUI()
 	_closeDeviceAct->setStatusTip(tr("Close the currently opened device"));
 	connect(_closeDeviceAct, &QAction::triggered, this, &MainWindow::onCloseDevice);
 
+    // Version Dialog
+    auto versionAct = new QAction(tr("&Version"), this);
+    versionAct->setStatusTip(tr("Show installed packages"));
+    connect(versionAct, &QAction::triggered, this, &MainWindow::onShowVersion);
+
 	// Exit Program
 	auto exitAct = new QAction(tr("E&xit"), this);
 	exitAct->setShortcuts(QKeySequence::Close);
@@ -249,6 +256,7 @@ void MainWindow::createUI()
 	////////////////////////////////////////////////////////////////////////////
 	// Create the File Menu
 	auto fileMenu = menuBar()->addMenu(tr("&File"));
+    fileMenu->addAction(versionAct);
 	fileMenu->addAction(exitAct);
 	////////////////////////////////////////////////////////////////////////////
 	// Create the Device Menu
@@ -713,6 +721,53 @@ void MainWindow::onImportDeviceSettings()
 			startstopstream();
 		}
 	}
+}
+
+
+void MainWindow::onShowVersion()
+{
+    auto version_str = ic4::getVersionInfo();
+
+    QMessageBox dialog;
+
+    dialog.setWindowFlags(dialog.windowFlags() & ~Qt::WindowCloseButtonHint);
+
+    dialog.setWindowTitle("Version Info");
+
+    dialog.setIcon(QMessageBox::NoIcon);
+    dialog.setInformativeText(version_str.c_str());
+
+    auto copy_information = [&version_str] ()
+    {
+        auto board = QApplication::clipboard();
+        board->setText(version_str.c_str(), QClipboard::Clipboard);
+    };
+
+    auto button = dialog.addButton("Copy", QMessageBox::ActionRole);
+
+    // disconnect is required to prevent the copy button
+    // from closing the dialog
+    button->disconnect();
+
+    connect(button, &QPushButton::released, this, [&version_str, button] ()
+    {
+        auto board = QApplication::clipboard();
+        board->setText(version_str.c_str(), QClipboard::Clipboard);
+
+        // change the button for 1 second
+        // so that users know something happened
+        button->setText("Copied!");
+
+        QTimer::singleShot(1000, [button] ()
+        {
+            button->setText("Copy");
+        });
+
+    });
+
+    dialog.addButton("Close", QMessageBox::RejectRole);
+
+    dialog.exec();
 }
 
 void MainWindow::onCloseDevice()
