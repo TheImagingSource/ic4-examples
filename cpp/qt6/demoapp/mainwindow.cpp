@@ -35,6 +35,7 @@
 #include <QStandardPaths>
 #include <QClipboard>
 #include <QTimer>
+#include <QKeySequence>
 
 #include <filesystem>
 #include <string>
@@ -131,6 +132,7 @@ void MainWindow::createUI()
 	// Device Selection
 	_DeviceSelectAct = new QAction(selector.loadIcon(":/images/camera.png"), tr("&Select"), this);
 	_DeviceSelectAct->setStatusTip(tr("Select a video capture device"));
+    _DeviceSelectAct->setShortcut(QKeySequence::Open);
 	connect(_DeviceSelectAct, &QAction::triggered, this, &MainWindow::onSelectDevice);
 
 	// Device Properties
@@ -203,6 +205,8 @@ void MainWindow::createUI()
 	// Close device
 	_closeDeviceAct = new QAction(tr("&Close"), this);
 	_closeDeviceAct->setStatusTip(tr("Close the currently opened device"));
+    _closeDeviceAct->setShortcuts(QKeySequence::Close);
+
 	connect(_closeDeviceAct, &QAction::triggered, this, &MainWindow::onCloseDevice);
 
     // Version Dialog
@@ -212,7 +216,7 @@ void MainWindow::createUI()
 
 	// Exit Program
 	auto exitAct = new QAction(tr("E&xit"), this);
-	exitAct->setShortcuts(QKeySequence::Close);
+	exitAct->setShortcuts(QKeySequence::Quit);
 	exitAct->setStatusTip(tr("Exit program"));
 	connect(exitAct, &QAction::triggered, this, &QWidget::close);
 
