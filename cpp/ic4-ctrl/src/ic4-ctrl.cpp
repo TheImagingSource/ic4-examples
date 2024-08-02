@@ -220,7 +220,17 @@ static void print_device( std::string id )
 
 	print("ModelName:     '{}'\n", dev->modelName());
 	print("Serial:        '{}'\n", dev->serial());
-	print("UserID:        '{}'\n", dev->userID());
+
+    auto user_id = dev->userID(ic4::Error::Ignore());
+    if( !user_id.empty() )
+    {
+        print("UserID:        '{}'\n", user_id);
+    }
+    else
+    {
+        print("UserID:        '<empty>'\n");
+    }
+
 	print("UniqueName:    '{}'\n", dev->uniqueName());
 	print("DeviceVersion: '{}'\n", dev->version());
 	print("InterfaceName: '{}'\n", dev->getInterface().transportLayerName());
