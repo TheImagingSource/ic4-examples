@@ -759,7 +759,7 @@ void MainWindow::onShowVersion()
         // so that users know something happened
         button->setText("Copied!");
 
-        QTimer::singleShot(1000, [button] ()
+        QTimer::singleShot(1000, button, [button] ()
         {
             button->setText("Copy");
         });
