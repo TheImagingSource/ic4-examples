@@ -24,6 +24,7 @@
 #include <QTreeWidget>
 #include <QPushButton>
 #include <QLabel>
+#include <QShortcut>
 
 #include <vector>
 #include <memory>
@@ -711,6 +712,15 @@ namespace ic4::ui
 					"font-size: 13px;"
 					"}");
 				filter_text_->setText(settings.initialFilter);
+
+                QShortcut *sC = new QShortcut(QKeySequence::Find, this);
+
+                QObject::connect(sC,  &QShortcut::activated,
+                                 [this] ()
+                                 {
+                                     this->filter_text_->setFocus(Qt::FocusReason::ShortcutFocusReason);
+                                 });
+
 				T::connect(filter_text_, &QLineEdit::textChanged, this, [this](const QString&) { update_visibility(); });
 				top->addWidget(filter_text_);
 	
