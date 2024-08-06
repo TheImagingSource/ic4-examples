@@ -45,6 +45,9 @@ private:
 
 	void createUI();
 
+protected:
+	void changeEvent(QEvent* ev) override;
+
 private:
 	void customEvent(QEvent* event);
 	void savePhoto(const ic4::ImageBuffer& imagebuffer);

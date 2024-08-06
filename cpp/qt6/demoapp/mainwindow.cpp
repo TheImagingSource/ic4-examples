@@ -322,6 +322,30 @@ void MainWindow::createUI()
 	_updateStatisticsTimer->start(100);
 }
 
+void MainWindow::changeEvent(QEvent* ev)
+{
+	switch (ev->type())
+	{
+	case QEvent::ThemeChange:
+		{
+			// Re-configure action icons after theme change
+			ResourceSelector selector;
+			_DeviceSelectAct->setIcon(selector.loadIcon(":/images/camera.png"));
+			_DevicePropertiesAct->setIcon(selector.loadIcon(":/images/imgset.png"));
+			_TriggerModeAct->setIcon(selector.loadIcon(":/images/triggermode.png"));
+			_StartLiveAct->setIcon(selector.loadIcon(":/images/livestream.png"));
+			_ShootPhotoAct->setIcon(selector.loadIcon(":/images/photo.png"));
+			_recordstartact->setIcon(selector.loadIcon(":/images/recordstart.png"));
+			_recordpauseact->setIcon(selector.loadIcon(":/images/recordpause.png"));
+			_recordstopact->setIcon(selector.loadIcon(":/images/recordstop.png"));
+			_codecpropertyact->setIcon(selector.loadIcon(":/images/gear.png"));
+			break;
+		}
+	default:
+		break;
+	}
+}
+
 void MainWindow::onUpdateStatisticsTimer()
 {
 	if (!_grabber.isDeviceValid())
