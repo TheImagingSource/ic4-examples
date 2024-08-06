@@ -37,7 +37,6 @@ private:
 	void onDeviceLost();
 	void onExportDeviceSettings();
 	void onImportDeviceSettings();
-    void onShowVersion();
 	void onCloseDevice();
 
 	void updateControls();

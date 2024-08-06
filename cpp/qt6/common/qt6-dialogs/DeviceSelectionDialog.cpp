@@ -18,6 +18,7 @@
 #include <QtAlgorithms>
 #include <QScrollArea>
 #include <QScrollBar>
+#include <QTimer>
 
 const QEvent::Type EVENT_DEVICE_LIST_CHANGED = static_cast<QEvent::Type>(QEvent::User + 3);
 const Qt::ItemDataRole ROLE_ITEM_DATA = static_cast<Qt::ItemDataRole>(Qt::UserRole + 1);
@@ -109,6 +110,11 @@ void DeviceSelectionDlg::createUI()
 	QHBoxLayout* buttons = new QHBoxLayout();
 
 	//////////////////////////////////////////////////////////
+
+	auto systemInfoButton = new QPushButton(tr("System Info"));
+	connect(systemInfoButton, &QPushButton::pressed, this, &DeviceSelectionDlg::onSystemInfoButton);
+	buttons->addWidget(systemInfoButton);
+
 	auto UpdateButton = new QPushButton(tr("Update"));
 	connect(UpdateButton, &QPushButton::pressed, this, &DeviceSelectionDlg::onUpdateButton);
 	buttons->addWidget(UpdateButton);
@@ -563,6 +569,102 @@ bool DeviceSelectionDlg::selectPreviousItem(QVariant itemVariant)
 	}
 
 	return false;
+}
+
+static QString buildSystemInfoString()
+{
+	QString text;
+	text += "<pre>";
+	text += QString::fromStdString(ic4::getVersionInfo(ic4::VersionInfoFlags::Default, ic4::Error::Ignore()));
+	text += "\n\n";
+
+	ic4::Error err;
+	auto interfaceList = ic4::DeviceEnum::enumInterfaces(err);
+	if (!err)
+	{
+		text += "Detected Interfaces/Devices:\n";
+
+		for (auto&& itf : interfaceList)
+		{
+			text += "    " + QString::fromStdString(itf.interfaceDisplayName(ic4::Error::Ignore())) + "\n";
+
+			auto deviceList = itf.enumDevices(err);
+			if (!err)
+			{
+				if (deviceList.empty())
+				{
+					text += "        (No devices found)\n";
+				}
+				else
+				{
+					for (auto&& dev : deviceList)
+					{
+						text += "        " + QString::fromStdString(dev.modelName(ic4::Error::Ignore()))
+							+ " (" + QString::fromStdString(dev.serial(ic4::Error::Ignore())) + ", "
+							+ QString::fromStdString(dev.version(ic4::Error::Ignore())) + ")\n";
+					}
+				}
+			}
+			else
+			{
+				text += "        (Failed to enumerate devices: " + QString::fromStdString(err.message()) + ")\n";
+			}
+
+			text += "\n";
+		}
+	}
+	else
+	{
+		text += "    (Failed to enumerate device interfaces: " + QString::fromStdString(err.message()) + ")\n";
+	}
+
+	text += "</pre>";
+
+	return text;
+}
+
+void DeviceSelectionDlg::onSystemInfoButton()
+{
+	QDialog infoDlg(this);
+	infoDlg.setWindowTitle("System Info");
+	infoDlg.setMinimumSize(640, 320);
+	QVBoxLayout infoLayout;
+
+	QTextEdit infoEdit;
+	infoEdit.setReadOnly(true);
+	infoEdit.setHtml(buildSystemInfoString());
+	infoLayout.addWidget(&infoEdit);
+
+	QHBoxLayout buttonsLayout;
+
+	QPushButton copyButton(tr("Copy to Clipboard"));
+	connect(&copyButton, &QPushButton::released, this,
+		[&infoEdit, &copyButton]()
+		{
+			auto prev = infoEdit.textCursor();
+			infoEdit.selectAll();
+			infoEdit.copy();
+			infoEdit.setTextCursor(prev);
+
+			// change the button for 1 second
+			// so that users know something happened
+			copyButton.setText(tr("Copied!"));
+
+			QTimer::singleShot(1000, &copyButton, [&copyButton]()
+			{
+				copyButton.setText(tr("Copy to Clipboard"));
+			});
+		});
+	buttonsLayout.addWidget(&copyButton);
+
+	QPushButton closeButton(tr("Close"));
+	connect(&closeButton, &QPushButton::pressed, &infoDlg, &QDialog::close);
+	buttonsLayout.addWidget(&closeButton);
+
+	infoLayout.addLayout(&buttonsLayout);
+
+	infoDlg.setLayout(&infoLayout);
+	infoDlg.exec();
 }
 
 void DeviceSelectionDlg::onUpdateButton()
