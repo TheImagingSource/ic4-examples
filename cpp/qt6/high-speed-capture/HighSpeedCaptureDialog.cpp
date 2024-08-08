@@ -245,16 +245,21 @@ void HighSpeedCaptureDialog::onStartStop()
 		// Stop the device
 		_grabber.acquisitionStop();
 
+		// Make sure we don't close the window while the cleanup thread runs
+		_cleanup_active = true;
+
 		// Collect and process remaining delivered buffers on background thread to keep UI responsive
 		QtConcurrent::run(
 			[this]()
 			{
 				auto buffer = _sink->popOutputBuffer(ic4::Error::Ignore());
-				while (buffer != nullptr)
+				while (buffer != nullptr && !_cancel_cleanup)
 				{
 					processBuffer(buffer);
 					buffer = _sink->popOutputBuffer(ic4::Error::Ignore());
 				}
+
+				_cleanup_active = false;
 			}
 		).then(this, // Get back to the main thread to update UI
 			[this]()
@@ -295,6 +300,16 @@ void HighSpeedCaptureDialog::customEvent(QEvent* event)
 
 void HighSpeedCaptureDialog::closeEvent(QCloseEvent* event)
 {
+	// Cancel and wait for possible cleanup thread
+	_cancel_cleanup = true;
+	while (_cleanup_active)
+	{
+		QThread::usleep(1);
+	}
+
+	// Make sure the stream is stopped so that framesQueued is no longer running
+	_grabber.streamStop();
+
 	saveSettings();
 	event->accept();
 }
@@ -323,7 +338,7 @@ void HighSpeedCaptureDialog::framesQueued(ic4::QueueSink& sink)
 {
 	auto buffer = sink.popOutputBuffer();
 
-	processBuffer(buffer);	
+	processBuffer(buffer);
 }
 
 void HighSpeedCaptureDialog::processBuffer(std::shared_ptr<ic4::ImageBuffer> buffer)

@@ -49,6 +49,9 @@ private:
 	std::atomic<int64_t> _num_free;
 	std::atomic<int64_t> _num_filled;
 
+	std::atomic<bool> _cancel_cleanup = false;
+	std::atomic<bool> _cleanup_active = false;
+
 	QPushButton* _selectDevice = nullptr;
 	QPushButton* _deviceProperties = nullptr;
 	QLineEdit* _destinationDirectory = nullptr;
