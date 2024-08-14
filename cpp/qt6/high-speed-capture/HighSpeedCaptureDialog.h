@@ -9,6 +9,7 @@
 
 #include <cstdint>
 #include <atomic>
+#include <mutex>
 
 class HighSpeedCaptureDialog : public QDialog, public ic4::QueueSinkListener
 {
@@ -36,13 +37,12 @@ private:
 	void framesQueued(ic4::QueueSink& sink) final;
 
 private:
-	void processBuffer(std::shared_ptr<ic4::ImageBuffer> buffer);
-
-private:
 	ic4::Grabber _grabber;
 	std::shared_ptr<ic4::Display> _display;
 	std::shared_ptr<ic4::QueueSink> _sink;
 	int _frame_number;
+
+	std::mutex _frames_queued_mtx;
 
 	std::atomic<int64_t> _num_processed;
 	std::atomic<int64_t> _num_total;

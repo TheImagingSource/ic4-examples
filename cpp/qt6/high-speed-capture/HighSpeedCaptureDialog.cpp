@@ -254,10 +254,14 @@ void HighSpeedCaptureDialog::onStartStop()
 			{
 				while (!_cancel_cleanup)
 				{
-					// Wait for the sink's output queue to be emptied by repeated framesQueued invocations
-					auto qs = _sink->queueSizes();
-					if (qs.output_queue_length == 0)
-						break;
+					{
+						std::lock_guard lck(_frames_queued_mtx);
+
+						// Wait for the sink's output queue to be emptied by repeated framesQueued invocations
+						auto qs = _sink->queueSizes();
+						if (qs.output_queue_length == 0)
+							break;
+					}
 
 					QThread::usleep(1);
 				}
@@ -339,18 +343,17 @@ bool HighSpeedCaptureDialog::sinkConnected(ic4::QueueSink& sink, const ic4::Imag
 
 void HighSpeedCaptureDialog::framesQueued(ic4::QueueSink& sink)
 {
-	auto buffer = sink.popOutputBuffer();
+	std::lock_guard lck(_frames_queued_mtx);
 
-	processBuffer(buffer);
-}
+	{
+		auto buffer = sink.popOutputBuffer();
 
-void HighSpeedCaptureDialog::processBuffer(std::shared_ptr<ic4::ImageBuffer> buffer)
-{
-	auto filePath = QString("%1/image_%2.png").arg(_destinationDirectory->text()).arg(_frame_number++);
+		auto filePath = QString("%1/image_%2.png").arg(_destinationDirectory->text()).arg(_frame_number++);
 
-	ic4::imageBufferSaveAsPng(*buffer, filePath.toStdString());
+		ic4::imageBufferSaveAsPng(*buffer, filePath.toStdString());
 
-	_num_processed += 1;
+		_num_processed += 1;
+	}
 
 	auto queueSizes = _sink->queueSizes();
 	_num_free = queueSizes.free_queue_length;
