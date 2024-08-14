@@ -252,11 +252,14 @@ void HighSpeedCaptureDialog::onStartStop()
 		QtConcurrent::run(
 			[this]()
 			{
-				auto buffer = _sink->popOutputBuffer(ic4::Error::Ignore());
-				while (buffer != nullptr && !_cancel_cleanup)
+				while (!_cancel_cleanup)
 				{
-					processBuffer(buffer);
-					buffer = _sink->popOutputBuffer(ic4::Error::Ignore());
+					// Wait for the sink's output queue to be emptied by repeated framesQueued invocations
+					auto qs = _sink->queueSizes();
+					if (qs.output_queue_length == 0)
+						break;
+
+					QThread::usleep(1);
 				}
 
 				_cleanup_active = false;
