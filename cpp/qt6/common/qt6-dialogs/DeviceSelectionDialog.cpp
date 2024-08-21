@@ -19,6 +19,8 @@
 #include <QScrollArea>
 #include <QScrollBar>
 #include <QTimer>
+#include <QShortcut>
+
 
 const QEvent::Type EVENT_DEVICE_LIST_CHANGED = static_cast<QEvent::Type>(QEvent::User + 3);
 const Qt::ItemDataRole ROLE_ITEM_DATA = static_cast<Qt::ItemDataRole>(Qt::UserRole + 1);
@@ -115,8 +117,10 @@ void DeviceSelectionDlg::createUI()
 	connect(systemInfoButton, &QPushButton::pressed, this, &DeviceSelectionDlg::onSystemInfoButton);
 	buttons->addWidget(systemInfoButton);
 
-	auto UpdateButton = new QPushButton(tr("Update"));
+	auto UpdateButton = new QPushButton(tr("Update (F5)"));
 	connect(UpdateButton, &QPushButton::pressed, this, &DeviceSelectionDlg::onUpdateButton);
+    UpdateButton->setShortcut(QKeySequence::Refresh);
+
 	buttons->addWidget(UpdateButton);
 
 	if (_grabber)
