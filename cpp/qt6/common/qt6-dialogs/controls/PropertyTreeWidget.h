@@ -712,6 +712,7 @@ namespace ic4::ui
 					"font-size: 13px;"
 					"}");
 				filter_text_->setText(settings.initialFilter);
+                filter_text_->setPlaceholderText("Search Properties (Ctrl-F)");
                 filter_text_->setClearButtonEnabled(true);
 
                 QShortcut *sC = new QShortcut(QKeySequence::Find, this);
