@@ -92,6 +92,7 @@ private:
     void framesQueued( ic4::QueueSink& sink ) final;
 
 	bool _showSettingsMenu = false;
+	bool _start_stream_on_open = true;
 
 	ic4::PropVisibility _defaultVisibility = ic4::PropVisibility::Beginner;
 

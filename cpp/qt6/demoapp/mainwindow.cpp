@@ -106,7 +106,9 @@ MainWindow::MainWindow(QWidget* parent)
 		}
 	}
 
-	startstopstream();
+	if (_start_stream_on_open) {
+		startstopstream();
+	}
 
 	updateControls();
 }
@@ -253,6 +255,12 @@ void MainWindow::createUI()
 		}
 	);
 
+	auto start_stream_on_open = new QAction(tr("Start stream on open"), this);
+	start_stream_on_open->setCheckable(true);
+	start_stream_on_open->setChecked(_start_stream_on_open);
+	connect(start_stream_on_open, &QAction::triggered, [this, start_stream_on_open] { _start_stream_on_open = !_start_stream_on_open; start_stream_on_open->setChecked(_start_stream_on_open); });
+
+
 	////////////////////////////////////////////////////////////////////////////
 	// Create the File Menu
 	auto fileMenu = menuBar()->addMenu(tr("&File"));
@@ -284,6 +292,7 @@ void MainWindow::createUI()
 	auto settingsMenu = menuBar()->addMenu(tr("&Settings"));
 	settingsMenu->addMenu(defaultVisibilityMenu);
 	settingsMenu->addAction(deleteDeviceSettingsFile);
+	settingsMenu->addAction(start_stream_on_open);
 	settingsMenu->menuAction()->setVisible(_showSettingsMenu);
 
 	////////////////////////////////////////////////////////////////////////////
@@ -476,7 +485,10 @@ void MainWindow::onSelectDevice()
 		_devicePropertyMap = _grabber.devicePropertyMap(ic4::Error::Ignore());
 
 		updateCameraLabel();
-		startstopstream();
+		if (_start_stream_on_open)
+		{
+			startstopstream();
+		}
 	}
 	updateControls();
 }
@@ -844,6 +856,9 @@ void MainWindow::readSettingsFile(const QString& appDataDirectory)
 		default:
 			break;
 		}
+	}
+	if (auto val = json_mainwindows["Start stream on open"]; val.isBool()) {
+		_start_stream_on_open = val.toBool(_start_stream_on_open);
 	}
 
 }
