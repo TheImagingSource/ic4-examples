@@ -753,7 +753,8 @@ void MainWindow::onImportDeviceSettings()
 			_devicePropertyMap = _grabber.devicePropertyMap(ic4::Error::Ignore());
 
 			// Restart stream
-			startstopstream();
+			if (this->_start_stream_on_open)
+				startstopstream();
 		}
 	}
 }
