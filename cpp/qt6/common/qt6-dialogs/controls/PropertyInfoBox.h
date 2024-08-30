@@ -26,35 +26,37 @@ public:
 
 	void update(ic4::Property prop)
 	{
-		auto name = prop.name();
-		auto desc = prop.description();
-
-		ic4::Error err;
-
-		QString text;
-		text += QString("<p style='margin-bottom:0px'><b>%1</b></p>").arg(QString::fromStdString(name));
-		if (!desc.empty())
-			text += QString("<p style='margin-top:0px;margin-bottom:5px'>%1</p>").arg(QString::fromStdString(desc));
-
-		text += QString("<p style='margin-top:0px'>");
-		bool is_locked = prop.isLocked();
-		bool is_readonly = prop.isReadOnly();
-
-		if (is_readonly)
+		try
 		{
-			text += QString("Access: Read-Only<br/>");
-		}
-		else if (is_locked)
-		{
-			text += QString("Access: Readable, Locked<br/>");
-		}
-		else
-		{
-			text += QString("Access: Readable, Writable<br/>");
-		}
+			auto name = prop.name();
+			auto desc = prop.description();
 
-		switch (prop.type())
-		{
+			ic4::Error err;
+
+			QString text;
+			text += QString("<p style='margin-bottom:0px'><b>%1</b></p>").arg(QString::fromStdString(name));
+			if (!desc.empty())
+				text += QString("<p style='margin-top:0px;margin-bottom:5px'>%1</p>").arg(QString::fromStdString(desc));
+
+			text += QString("<p style='margin-top:0px'>");
+			bool is_locked = prop.isLocked();
+			bool is_readonly = prop.isReadOnly();
+
+			if (is_readonly)
+			{
+				text += QString("Access: Read-Only<br/>");
+			}
+			else if (is_locked)
+			{
+				text += QString("Access: Readable, Locked<br/>");
+			}
+			else
+			{
+				text += QString("Access: Readable, Writable<br/>");
+			}
+
+			switch (prop.type())
+			{
 			case ic4::PropType::Category:
 				text += QString("Type: Category<br/>");
 				break;
@@ -73,14 +75,19 @@ public:
 			case ic4::PropType::Boolean:
 				text += showBooleanInfo(prop.asBoolean());
 				break;
-		}
+			}
 
-		text += QString("</p>");
+			text += QString("</p>");
+			setHtml(text);
+		}
+		catch (ic4::IC4Exception& ex)
+		{
+			setText(ex.what());
+		}
 
 		// disable selection
 		setTextInteractionFlags(Qt::NoTextInteraction);
 		setReadOnly(true);
-		setHtml(text);
 		setContentsMargins(8, 8, 8, 8);
 		setStyleSheet("QTextEdit {"
 			"font-size: 13px;"

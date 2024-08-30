@@ -13,16 +13,26 @@ class PropertyDialog : public QDialog
 	Q_OBJECT
 
 public:
-	PropertyDialog(ic4::PropertyMap map, QWidget* parent, const QString& title = {}, ic4::PropVisibility startupVisibility = ic4::PropVisibility::Beginner);
-	PropertyDialog(ic4::Grabber& grabber, QWidget* parent, const QString& title = {}, ic4::PropVisibility startupVisibility = ic4::PropVisibility::Beginner);
+	PropertyDialog(ic4::PropertyMap map, QWidget* parent, const QString& title = {});
+	PropertyDialog(ic4::Grabber& grabber, QWidget* parent, const QString& title = {});
+
+public:
+	void updateGrabber(ic4::Grabber& grabber);
+	void updatePropertyMap(ic4::PropertyMap map);
+
+public:
+	void setPropVisibility(ic4::PropVisibility visibility);
+	void setFilterText(const QString& text);
 
 private:
-	PropertyDialog(ic4::PropertyMap map, ic4::Grabber* grabber, QWidget* parent, const QString& title, ic4::PropVisibility startupVisibility);
+	PropertyDialog(ic4::PropertyMap map, ic4::Grabber* grabber, QWidget* parent, const QString& title);
 
-	void createUI(ic4::PropVisibility startupVisibility);
+	void createUI();
 
 	ic4::Grabber* _grabber = nullptr;
 	ic4::PropertyMap _map;
+
+	ic4::ui::PropertyTreeWidget* _tree = nullptr;
 };
 
 

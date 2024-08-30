@@ -14,6 +14,8 @@
 #include <ic4/ic4.h> 
 #include <ic4-interop/interop-Qt.h>
 
+#include "PropertyDialog.h"
+
 class MainWindow : public QMainWindow, ic4::QueueSinkListener
 {
 	Q_OBJECT
@@ -46,6 +48,7 @@ private:
 	void createUI();
 
 protected:
+	void closeEvent(QCloseEvent* ev) override;
 	void changeEvent(QEvent* ev) override;
 
 private:
@@ -87,6 +90,8 @@ private:
 	std::shared_ptr<ic4::Display> _display;
 	std::shared_ptr<ic4::QueueSink> _queuesink;
 	ic4::VideoWriter _videowriter;
+
+	PropertyDialog* _propertyDialog = nullptr;
 
     bool sinkConnected( ic4::QueueSink& sink, const ic4::ImageType& imageType, size_t min_buffers_required ) final;
     void framesQueued( ic4::QueueSink& sink ) final;

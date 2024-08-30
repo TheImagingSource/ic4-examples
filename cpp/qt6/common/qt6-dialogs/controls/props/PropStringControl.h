@@ -91,7 +91,7 @@ namespace ic4::ui
 			}
 			catch (const ic4::IC4Exception iex)
 			{
-				qDebug() << "Error " << prop_.name().c_str() << " in update_value() " << iex.what();
+				qDebug() << "Error " << prop_.name(ic4::Error::Ignore()).c_str() << " in update_value() " << iex.what();
 				edit_->setText("<Error>");
 			}
 
@@ -105,7 +105,7 @@ namespace ic4::ui
 
 			edit_->blockSignals(true);
 
-			bool is_readonly = prop_.isReadOnly();
+			bool is_readonly = prop_.isReadOnly(ic4::Error::Ignore());
 			bool is_locked = shoudDisplayAsLocked();
 
 			edit_->setSelection(0, 0);

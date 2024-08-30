@@ -24,7 +24,7 @@ namespace ic4::ui
 			if (combo_)
 			{
 				combo_->blockSignals(true);
-				combo_->setEnabled(!(prop_.isReadOnly() || shoudDisplayAsLocked()));
+				combo_->setEnabled(!(prop_.isReadOnly(ic4::Error::Ignore()) || shoudDisplayAsLocked()));
 				combo_->clear();
 
 				bool selected_found = false;
@@ -33,10 +33,10 @@ namespace ic4::ui
 				auto selected_entry = prop_.selectedEntry( err );
 				if (err)
 				{
-					qDebug() << "Failed to query selected entry for " << prop_.name().c_str() << ": " << err.message().c_str();
+					qDebug() << "Failed to query selected entry for " << prop_.name(ic4::Error::Ignore()).c_str() << ": " << err.message().c_str();
 				}
 
-				for (auto&& entry : prop_.entries())
+				for (auto&& entry : prop_.entries(ic4::Error::Ignore()))
 				{
 					try
 					{
@@ -59,7 +59,7 @@ namespace ic4::ui
 					}
 					catch (const ic4::IC4Exception iex)
 					{
-						qDebug() << "Error " << prop_.name().c_str() << " in update_all " << iex.what();
+						qDebug() << "Error " << prop_.name(ic4::Error::Ignore()).c_str() << " in update_all " << iex.what();
 					}
 				}
 

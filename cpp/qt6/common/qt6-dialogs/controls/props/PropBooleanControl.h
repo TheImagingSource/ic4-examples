@@ -40,7 +40,7 @@ namespace ic4::ui
 
 		void update_all() override
 		{
-			check_->setEnabled(!shoudDisplayAsLocked() && !prop_.isReadOnly());
+			check_->setEnabled(!shoudDisplayAsLocked() && !prop_.isReadOnly(ic4::Error::Ignore()));
 			check_->blockSignals(true);
 
 			ic4::Error err;
@@ -51,7 +51,7 @@ namespace ic4::ui
 			}
 			else
 			{
-				qWarning() << "Error " << prop_.name().c_str() << " in update_all " << err.message().c_str();
+				qWarning() << "Error " << prop_.name(ic4::Error::Ignore()).c_str() << " in update_all " << err.message().c_str();
 			}
 
 			check_->blockSignals(false);

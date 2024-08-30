@@ -59,7 +59,7 @@ namespace ic4::ui
 		~PropertyTreeNode()
 		{
 			if (notification_token)
-				prop.eventRemoveNotification(notification_token);
+				prop.eventRemoveNotification(notification_token, ic4::Error::Ignore());
 		}
 
 		void populate()
@@ -785,6 +785,18 @@ namespace ic4::ui
 		~PropertyTreeWidgetBase()
 		{
 			delete source_;
+		}
+
+	public:
+		void setPropVisibility(ic4::PropVisibility visibility)
+		{
+			visibility_combo_->setCurrentIndex(static_cast<int>(visibility));
+			update_visibility();
+		}
+		void setFilterText(const QString& filterText)
+		{
+			filter_text_->setText(filterText);
+			update_visibility();
 		}
 	};
 

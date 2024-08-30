@@ -20,7 +20,6 @@
 #include "events.h"
 
 #include "DeviceSelectionDialog.h"
-#include "PropertyDialog.h"
 #include "ResourceSelector.h"
 
 #include <QApplication>
@@ -331,6 +330,14 @@ void MainWindow::createUI()
 	_updateStatisticsTimer->start(100);
 }
 
+void MainWindow::closeEvent(QCloseEvent* ev)
+{
+	if (_grabber.isDeviceValid())
+	{
+		_grabber.deviceSaveState(_devicefile);
+	}
+}
+
 void MainWindow::changeEvent(QEvent* ev)
 {
 	switch (ev->type())
@@ -476,9 +483,9 @@ void MainWindow::onSelectDevice()
 	DeviceSelectionDlg cDlg(this, &_grabber);
 	if (cDlg.exec() == 1)
 	{
-		if (_grabber.isDeviceValid())
+		if (_propertyDialog != nullptr)
 		{
-			_grabber.deviceSaveState(_devicefile);
+			_propertyDialog->updateGrabber(_grabber);
 		}
 
 		// Remember the device's property map for later use
@@ -498,18 +505,19 @@ void MainWindow::onSelectDevice()
 /// </summary>
 void MainWindow::onDeviceProperties()
 {
-	PropertyDialog cDlg(_grabber, this, tr("Device Properties"), _defaultVisibility);
-	if (cDlg.exec() == 1)
+	if (_propertyDialog == nullptr)
 	{
-		_grabber.deviceSaveState(_devicefile);
+		_propertyDialog = new PropertyDialog(_grabber, this, tr("Device Properties"));
+		_propertyDialog->setPropVisibility(_defaultVisibility);
 	}
 
-	updateControls();
+	_propertyDialog->show();
 }
 
 void MainWindow::onDeviceDriverProperties()
 {
-    PropertyDialog cDlg(_grabber.driverPropertyMap(), this, tr("Device Driver Properties"), _defaultVisibility);
+    PropertyDialog cDlg(_grabber.driverPropertyMap(), this, tr("Device Driver Properties"));
+	cDlg.setPropVisibility(_defaultVisibility);
 	
 	cDlg.exec();
 
@@ -589,30 +597,35 @@ void MainWindow::savePhoto(const ic4::ImageBuffer& imagebuffer)
 		"TIFF (*.tif)"
 	});
 
+	static auto savePictureDirectory = QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
+
 	QFileDialog dialog(this, tr("Save photo"));
 	dialog.setNameFilters(filters);
 	dialog.setFileMode(QFileDialog::AnyFile);
 	dialog.setAcceptMode(QFileDialog::AcceptSave);
-	dialog.setDirectory(QStandardPaths::writableLocation(QStandardPaths::PicturesLocation));
+	dialog.setDirectory(savePictureDirectory);
 
 	if (dialog.exec())
 	{
-#ifdef WIN32
-		auto fileName = dialog.selectedFiles()[0].toStdWString();
-#else
-		auto fileName = dialog.selectedFiles()[0].toStdString();
-#endif
 		auto selectedFilter = dialog.selectedNameFilter();
+
+		auto fullPath = dialog.selectedFiles()[0];
+		savePictureDirectory = QFileInfo(fullPath).absolutePath();
+#ifdef WIN32
+		auto platformFileName = fullPath.toStdWString();
+#else
+		auto platformFileName = fullPath.toStdString();
+#endif
 
 		ic4::Error err;
 		if (selectedFilter == filters[0])
-			ic4::imageBufferSaveAsBitmap(imagebuffer, fileName, {}, err);
+			ic4::imageBufferSaveAsBitmap(imagebuffer, platformFileName, {}, err);
 		else if (selectedFilter == filters[1])
-			ic4::imageBufferSaveAsJpeg(imagebuffer, fileName, {}, err);
+			ic4::imageBufferSaveAsJpeg(imagebuffer, platformFileName, {}, err);
 		else if (selectedFilter == filters[2])
-			ic4::imageBufferSaveAsPng(imagebuffer, fileName, {}, err);
+			ic4::imageBufferSaveAsPng(imagebuffer, platformFileName, {}, err);
 		else
-			ic4::imageBufferSaveAsTiff(imagebuffer, fileName, {}, err);
+			ic4::imageBufferSaveAsTiff(imagebuffer, platformFileName, {}, err);
 
 		if (err.isError())
 		{
@@ -625,18 +638,22 @@ void MainWindow::onStartCaptureVideo()
 {
 	const QStringList filters({ "MP4 Video Files (*.mp4)" });
 
+	static auto saveVideoDirectory = QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
+
 	QFileDialog dialog(this, tr("Capture Video"));
 	dialog.setNameFilters(filters);
 	dialog.setFileMode(QFileDialog::AnyFile);
 	dialog.setAcceptMode(QFileDialog::AcceptSave);
-	dialog.setDirectory(QStandardPaths::writableLocation(QStandardPaths::MoviesLocation));
+	dialog.setDirectory(saveVideoDirectory);
 
 	if (dialog.exec())
 	{
+		auto fullPath = dialog.selectedFiles()[0];
+		saveVideoDirectory = QFileInfo(fullPath).absolutePath();
 #ifdef WIN32
-		auto fileName = dialog.selectedFiles()[0].toStdWString();
+		auto platformFileName = fullPath.toStdWString();
 #else
-		auto fileName = dialog.selectedFiles()[0].toStdString();
+		auto platformFileName = fullPath.toStdString();
 #endif
 
 		double fps = 25.0;
@@ -644,7 +661,7 @@ void MainWindow::onStartCaptureVideo()
 		{
 			fps = _devicePropertyMap.getValueDouble(ic4::PropId::AcquisitionFrameRate);
 			ic4::ImageType imgtype = _queuesink->outputImageType();
-			_videowriter.beginFile(fileName, imgtype, fps);
+			_videowriter.beginFile(platformFileName, imgtype, fps);
 
 			_capturetovideo = true;
 			_videocapturepause = _recordpauseact->isChecked();
@@ -683,7 +700,8 @@ void MainWindow::onStopCaptureVideo()
 
 void MainWindow::onCodecProperties()
 {
-	PropertyDialog cDlg(_videowriter.propertyMap(), this, tr("Codec Settings"), _defaultVisibility);
+	PropertyDialog cDlg(_videowriter.propertyMap(), this, tr("Codec Settings"));
+	cDlg.setPropVisibility(_defaultVisibility);
 	if (cDlg.exec() == 1)
 	{
 		_videowriter.propertyMap().serialize(_codecconfigfile);
