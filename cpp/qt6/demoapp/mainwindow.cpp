@@ -641,6 +641,12 @@ void MainWindow::savePhoto(const ic4::ImageBuffer& imagebuffer)
 
 void MainWindow::onStartCaptureVideo()
 {
+	if (_capturetovideo)
+	{
+		onStopCaptureVideo();
+		return;
+	}
+
 	const QStringList filters({ "MP4 Video Files (*.mp4)" });
 
 	static auto saveVideoDirectory = QStandardPaths::writableLocation(QStandardPaths::MoviesLocation);
