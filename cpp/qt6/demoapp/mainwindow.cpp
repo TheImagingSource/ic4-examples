@@ -495,7 +495,8 @@ void MainWindow::onDeviceOpened()
 	// Remember the device's property map for later use
 	_devicePropertyMap = _grabber.devicePropertyMap(ic4::Error::Ignore());
 
-	_devicePropertyMap[ic4::PropId::TriggerMode].eventAddNotification([this](ic4::Property&) { updateTriggerControl(); });
+	auto triggerMode = _devicePropertyMap.find(ic4::PropId::TriggerMode, ic4::Error::Ignore());
+	triggerMode.eventAddNotification([this](ic4::Property&) { updateTriggerControl(); }, ic4::Error::Ignore());
 
 	updateCameraLabel();
 	if (_start_stream_on_open)
@@ -642,7 +643,7 @@ void MainWindow::onStartCaptureVideo()
 {
 	const QStringList filters({ "MP4 Video Files (*.mp4)" });
 
-	static auto saveVideoDirectory = QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
+	static auto saveVideoDirectory = QStandardPaths::writableLocation(QStandardPaths::MoviesLocation);
 
 	QFileDialog dialog(this, tr("Capture Video"));
 	dialog.setNameFilters(filters);
@@ -786,6 +787,11 @@ void MainWindow::onCloseDevice()
 	if (_grabber.isStreaming())
 	{
 		startstopstream();
+	}
+
+	if (_capturetovideo)
+	{
+		_videowriter.finishFile(ic4::Error::Ignore());
 	}
 
 	_grabber.deviceClose(ic4::Error::Ignore());
