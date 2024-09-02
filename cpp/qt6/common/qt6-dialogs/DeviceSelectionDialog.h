@@ -13,12 +13,12 @@
 #include <ic4/ic4.h>
 
 
-class DeviceSelectionDlg : public QDialog
+class DeviceSelectionDialog : public QDialog
 {
 	Q_OBJECT
 
 public:
-	DeviceSelectionDlg(QWidget* parent, ic4::Grabber* pgrabber, std::function<bool(const ic4::DeviceInfo&)> filter = nullptr);
+	DeviceSelectionDialog(QWidget* parent, ic4::Grabber* pgrabber, std::function<bool(const ic4::DeviceInfo&)> filter = nullptr);
 
 protected:
 	void customEvent(QEvent* event) override;

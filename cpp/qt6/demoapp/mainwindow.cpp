@@ -477,7 +477,7 @@ void MainWindow::updateCameraLabel()
 /// </summary>
 void MainWindow::onSelectDevice()
 {	
-	DeviceSelectionDlg cDlg(this, &_grabber);
+	DeviceSelectionDialog cDlg(this, &_grabber);
 	if (cDlg.exec() == 1)
 	{
 		if (_propertyDialog != nullptr)

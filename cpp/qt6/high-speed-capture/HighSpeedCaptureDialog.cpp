@@ -184,7 +184,7 @@ void HighSpeedCaptureDialog::onSelectDevice()
 {
 	_grabber.streamStop();
 
-	DeviceSelectionDlg dlg(this, &_grabber);
+	DeviceSelectionDialog dlg(this, &_grabber);
 	dlg.exec();
 
 	if (_grabber.isDeviceValid())

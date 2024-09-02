@@ -25,7 +25,7 @@
 const QEvent::Type EVENT_DEVICE_LIST_CHANGED = static_cast<QEvent::Type>(QEvent::User + 3);
 const Qt::ItemDataRole ROLE_ITEM_DATA = static_cast<Qt::ItemDataRole>(Qt::UserRole + 1);
 
-DeviceSelectionDlg::DeviceSelectionDlg(QWidget* parent, ic4::Grabber* pgrabber, std::function<bool(const ic4::DeviceInfo&)> filter)
+DeviceSelectionDialog::DeviceSelectionDialog(QWidget* parent, ic4::Grabber* pgrabber, std::function<bool(const ic4::DeviceInfo&)> filter)
 	: QDialog(parent)
 	, _filter_func(filter)
 	, _grabber(pgrabber)
@@ -41,7 +41,7 @@ DeviceSelectionDlg::DeviceSelectionDlg(QWidget* parent, ic4::Grabber* pgrabber, 
 	);
 }
 
-void DeviceSelectionDlg::customEvent(QEvent* event)
+void DeviceSelectionDialog::customEvent(QEvent* event)
 {
 	if (event->type() == EVENT_DEVICE_LIST_CHANGED)
 	{
@@ -63,7 +63,7 @@ struct InterfaceDeviceItemData
 };
 Q_DECLARE_METATYPE(InterfaceDeviceItemData)
 
-void DeviceSelectionDlg::createUI()
+void DeviceSelectionDialog::createUI()
 {
 	Q_INIT_RESOURCE(qt6dialogs);
 
@@ -101,7 +101,7 @@ void DeviceSelectionDlg::createUI()
 	_cameraTree->setColumnWidth(3, 80);
 	_cameraTree->setHeaderHidden(false);
 
-	connect(_cameraTree, &QTreeWidget::currentItemChanged, this, &DeviceSelectionDlg::onCurrentItemChanged);
+	connect(_cameraTree, &QTreeWidget::currentItemChanged, this, &DeviceSelectionDialog::onCurrentItemChanged);
 	if (_grabber)
 	{
 		connect(_cameraTree, &QTreeWidget::itemDoubleClicked, [&](QTreeWidgetItem* item, int column) { onOK(); });
@@ -114,11 +114,11 @@ void DeviceSelectionDlg::createUI()
 	//////////////////////////////////////////////////////////
 
 	auto systemInfoButton = new QPushButton(tr("System Info"));
-	connect(systemInfoButton, &QPushButton::pressed, this, &DeviceSelectionDlg::onSystemInfoButton);
+	connect(systemInfoButton, &QPushButton::pressed, this, &DeviceSelectionDialog::onSystemInfoButton);
 	buttons->addWidget(systemInfoButton);
 
 	auto UpdateButton = new QPushButton(tr("Update (F5)"));
-	connect(UpdateButton, &QPushButton::pressed, this, &DeviceSelectionDlg::onUpdateButton);
+	connect(UpdateButton, &QPushButton::pressed, this, &DeviceSelectionDialog::onUpdateButton);
     UpdateButton->setShortcut(QKeySequence::Refresh);
 
 	buttons->addWidget(UpdateButton);
@@ -131,7 +131,7 @@ void DeviceSelectionDlg::createUI()
 
 		_okButton = new QPushButton(tr("OK"));
 		_okButton->setDefault(true);
-		connect(_okButton, &QPushButton::pressed, this, &DeviceSelectionDlg::onOK);
+		connect(_okButton, &QPushButton::pressed, this, &DeviceSelectionDialog::onOK);
 		buttons->addWidget(_okButton);
 	}
 	else
@@ -183,7 +183,7 @@ void DeviceSelectionDlg::createUI()
 	setLayout(topLayout);
 }
 
-void DeviceSelectionDlg::enumerateDevices()
+void DeviceSelectionDialog::enumerateDevices()
 {
 	_cameraTree->clear();
 
@@ -384,7 +384,7 @@ static void synchronizeColumnWidths(std::vector<QFormLayout*> layouts)
 	}
 }
 
-void DeviceSelectionDlg::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous)
+void DeviceSelectionDialog::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous)
 {	
 	_rightScroll->hide();
 
@@ -539,7 +539,7 @@ void DeviceSelectionDlg::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWid
 	_rightScroll->show();
 }
 
-bool DeviceSelectionDlg::selectPreviousItem(QVariant itemVariant)
+bool DeviceSelectionDialog::selectPreviousItem(QVariant itemVariant)
 {
 	auto itemData = itemVariant.value<InterfaceDeviceItemData>();
 
@@ -627,7 +627,7 @@ static QString buildSystemInfoString()
 	return text;
 }
 
-void DeviceSelectionDlg::onSystemInfoButton()
+void DeviceSelectionDialog::onSystemInfoButton()
 {
 	QDialog infoDlg(this);
 	infoDlg.setWindowTitle("System Info");
@@ -671,7 +671,7 @@ void DeviceSelectionDlg::onSystemInfoButton()
 	infoDlg.exec();
 }
 
-void DeviceSelectionDlg::onUpdateButton()
+void DeviceSelectionDialog::onUpdateButton()
 {
 	QVariant previousData;
 
@@ -700,7 +700,7 @@ void DeviceSelectionDlg::onUpdateButton()
 	}
 }
 
-void DeviceSelectionDlg::onOK()
+void DeviceSelectionDialog::onOK()
 {
 	if (!_okButton->isEnabled())
 		return;
