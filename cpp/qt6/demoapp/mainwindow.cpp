@@ -83,12 +83,8 @@ MainWindow::MainWindow(QWidget* parent)
 			QMessageBox::information(this, {}, message.c_str());
 		}
 
-		// Remember the device's property map for later use
-		_devicePropertyMap = _grabber.devicePropertyMap(ic4::Error::Ignore());
-
-		updateCameraLabel();
+		onDeviceOpened();
 	}
-
 
 	if (QFileInfo::exists(_codecconfigfile.c_str()))
 	{
@@ -103,10 +99,6 @@ MainWindow::MainWindow(QWidget* parent)
 			auto message = "Loading last codec configuration failed: " + std::string(ex.what());
 			QMessageBox::information(this, {}, message.c_str());
 		}
-	}
-
-	if (_start_stream_on_open) {
-		startstopstream();
 	}
 
 	updateControls();
@@ -437,6 +429,11 @@ void MainWindow::updateControls()
 	_ShootPhotoAct->setEnabled(_grabber.isStreaming());
 	_recordstartact->setEnabled(_grabber.isStreaming());
 
+	updateTriggerControl();
+}
+
+void MainWindow::updateTriggerControl()
+{
 	if (!_grabber.isDeviceValid())
 	{
 		_TriggerModeAct->setEnabled(false);
@@ -488,16 +485,23 @@ void MainWindow::onSelectDevice()
 			_propertyDialog->updateGrabber(_grabber);
 		}
 
-		// Remember the device's property map for later use
-		_devicePropertyMap = _grabber.devicePropertyMap(ic4::Error::Ignore());
-
-		updateCameraLabel();
-		if (_start_stream_on_open)
-		{
-			startstopstream();
-		}
+		onDeviceOpened();
 	}
 	updateControls();
+}
+
+void MainWindow::onDeviceOpened()
+{
+	// Remember the device's property map for later use
+	_devicePropertyMap = _grabber.devicePropertyMap(ic4::Error::Ignore());
+
+	_devicePropertyMap[ic4::PropId::TriggerMode].eventAddNotification([this](ic4::Property&) { updateTriggerControl(); });
+
+	updateCameraLabel();
+	if (_start_stream_on_open)
+	{
+		startstopstream();
+	}
 }
 
 /// <summary>

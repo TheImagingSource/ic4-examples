@@ -41,7 +41,9 @@ private:
 	void onImportDeviceSettings();
 	void onCloseDevice();
 
+	void onDeviceOpened();
 	void updateControls();
+	void updateTriggerControl();
 	void updateCameraLabel();
 	void onUpdateStatisticsTimer();
 
