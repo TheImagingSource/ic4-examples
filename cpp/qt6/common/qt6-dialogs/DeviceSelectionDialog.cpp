@@ -215,7 +215,7 @@ void DeviceSelectionDialog::enumerateDevices()
 		auto* itf_item = new QTreeWidgetItem(_cameraTree);
 		itf_item->setText(0, QString::fromStdString(itf.interfaceDisplayName()));
 		itf_item->setForeground(0, QPalette().windowText());
-		itf_item->setData(0, ROLE_ITEM_DATA, QVariant::fromValue(InterfaceDeviceItemData{ itf, map }));
+		itf_item->setData(0, ROLE_ITEM_DATA, QVariant::fromValue(InterfaceDeviceItemData{ itf, map, {} }));
 		itf_item->setFirstColumnSpanned(true);
 
 		bool isGigEVisionInterface = itf.transportLayerType(ic4::Error::Ignore()) == ic4::TransportLayerType::GigEVision;
@@ -431,10 +431,10 @@ void DeviceSelectionDialog::onCurrentItemChanged(QTreeWidgetItem* current, QTree
 			return edit;
 		};
 
-	auto buildStringItemIfExists = [&addStringItem](const ic4::PropertyMap& map, const char* prop_item, const char* label, QFormLayout& layout) -> QLineEdit*
+	auto buildStringItemIfExists = [&addStringItem](const ic4::PropertyMap& map_tmp, const char* prop_item, const char* label, QFormLayout& layout) -> QLineEdit*
 		{
 			ic4::Error err;
-			auto value = map.getValueString(prop_item, err);
+			auto value = map_tmp.getValueString(prop_item, err);
 			if (err.isSuccess())
 			{
 				return addStringItem(label, QString::fromStdString(value), layout);
@@ -720,7 +720,7 @@ void DeviceSelectionDialog::onOK()
 			_grabber->deviceOpen(itemData.device, ic4::Error::Throw());
 			accept();
 		}
-		catch (ic4::IC4Exception ex)
+		catch (const ic4::IC4Exception& ex)
 		{
 			QMessageBox::critical(this, {}, ex.what());
 		}

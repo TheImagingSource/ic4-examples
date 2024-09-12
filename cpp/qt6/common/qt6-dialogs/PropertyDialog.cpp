@@ -19,8 +19,8 @@ PropertyDialog::PropertyDialog(ic4::Grabber& grabber, QWidget* parent, const QSt
 
 PropertyDialog::PropertyDialog(ic4::PropertyMap map, ic4::Grabber* grabber, QWidget* parent, const QString& title)
 	: QDialog(parent)
-	, _map(map)
 	, _grabber(grabber)
+	, _map(map)
 {
 	setWindowTitle(title);
 	createUI();

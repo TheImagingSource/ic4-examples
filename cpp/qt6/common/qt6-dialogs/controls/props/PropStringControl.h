@@ -49,7 +49,7 @@ namespace ic4::ui
 			{
 				max_length = prop.maxLength();
 			}
-			catch (const ic4::IC4Exception iex)
+			catch (const ic4::IC4Exception& iex)
 			{
 				qDebug() << "Error " << prop.name().c_str() << " in " << iex.what();
 			}
@@ -89,7 +89,7 @@ namespace ic4::ui
 				auto val = prop_.getValue();
 				edit_->setText(QString::fromStdString(val));
 			}
-			catch (const ic4::IC4Exception iex)
+			catch (const ic4::IC4Exception& iex)
 			{
 				qDebug() << "Error " << prop_.name(ic4::Error::Ignore()).c_str() << " in update_value() " << iex.what();
 				edit_->setText("<Error>");

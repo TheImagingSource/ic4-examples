@@ -57,7 +57,7 @@ namespace ic4::ui
 							selected_found = true;
 						}
 					}
-					catch (const ic4::IC4Exception iex)
+					catch (const ic4::IC4Exception& iex)
 					{
 						qDebug() << "Error " << prop_.name(ic4::Error::Ignore()).c_str() << " in update_all " << iex.what();
 					}
@@ -123,7 +123,7 @@ namespace ic4::ui
 
 			if (combo_)
 			{
-				connect(combo_, QOverload<int>::of(&QComboBox::currentIndexChanged), [=](int index)
+				connect(combo_, QOverload<int>::of(&QComboBox::currentIndexChanged), [this](int index)
 					{
 						PropEnumerationControl::comboIndexChanged(index);
 					});

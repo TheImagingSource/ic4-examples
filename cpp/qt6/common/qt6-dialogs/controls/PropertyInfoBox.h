@@ -75,6 +75,8 @@ public:
 			case ic4::PropType::Boolean:
 				text += showBooleanInfo(prop.asBoolean());
 				break;
+			default:
+				break;
 			}
 
 			text += QString("</p>");
@@ -225,6 +227,8 @@ public:
 				}
 				break;
 			}
+			case ic4::PropIncrementMode::None:
+				break;
 			}
 		}
 
@@ -308,6 +312,8 @@ public:
 				}
 				break;
 			}
+			case ic4::PropIncrementMode::None:
+				break;
 			}
 		}
 

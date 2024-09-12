@@ -17,6 +17,7 @@ namespace ic4::ui
 {
 	struct IPropControl
 	{
+		virtual ~IPropControl() = default;
 		virtual bool should_show(const QString& filter, ic4::PropVisibility visibility) = 0;
 	};
 

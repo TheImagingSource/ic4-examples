@@ -107,7 +107,7 @@ namespace ic4::ui
 		{
 			const_cast<PropertyTreeNode*>(this)->populate();
 
-			if (n < children.size())
+			if (n < static_cast<int>(children.size()))
 				return children[n].get();
 
 			return nullptr;
@@ -121,9 +121,9 @@ namespace ic4::ui
 			prev_available = prop.isAvailable(ic4::Error::Ignore());
 
 			notification_token = prop.eventAddNotification(
-				[this, item_changed](ic4::Property& prop)
+				[this, item_changed](ic4::Property& local_prop)
 				{
-					bool new_available = prop.isAvailable(ic4::Error::Ignore());
+					bool new_available = local_prop.isAvailable(ic4::Error::Ignore());
 					if (prev_available != new_available)
 					{
 						item_changed(this);
@@ -678,9 +678,9 @@ namespace ic4::ui
 
 		PropertyTreeWidgetBase(PropertyTreeModel* model, ic4::Grabber* grabber, Settings settings = Settings::Default(), QWidget* parent = nullptr)
 			: T(parent)
+			, source_(model)
 			, delegate_(proxy_, grabber)
 			, branchPaintDelegate_(proxy_, this)
-			, source_(model)
 			, settings_(settings)
 		{
 			auto frame = new QFrame(this);
@@ -700,7 +700,7 @@ namespace ic4::ui
 					"font-size: 13px;"
 					"}");
 
-				T::connect(visibility_combo_, QOverload<int>::of(&QComboBox::currentIndexChanged), [=](int)
+				T::connect(visibility_combo_, QOverload<int>::of(&QComboBox::currentIndexChanged), [this](int)
 					{
 						update_visibility();
 					});
