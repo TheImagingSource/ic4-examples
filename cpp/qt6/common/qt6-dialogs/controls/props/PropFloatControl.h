@@ -158,7 +158,8 @@ namespace ic4::ui
 
 		void update_all() override
 		{
-			double inc, val;
+			double inc = 1;
+            double val = 0.;
 			bool has_increment = false;
 
 			ic4::Error err;

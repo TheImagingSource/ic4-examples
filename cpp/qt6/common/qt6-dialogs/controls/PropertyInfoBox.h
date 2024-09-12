@@ -107,7 +107,7 @@ public:
 			while (currentBlock.isValid())
 			{
 				QTextCursor textCursor(currentBlock);
-				QTextBlockFormat blockFormat = currentBlock.blockFormat();
+				blockFormat = currentBlock.blockFormat();
 				blockFormat.setLineHeight(120, QTextBlockFormat::ProportionalHeight);
 				textCursor.setBlockFormat(blockFormat);
 				currentBlock = currentBlock.next();
@@ -240,7 +240,6 @@ public:
 	{
 		auto text = QString("Type: Float<br/>");
 
-		auto rep = prop.representation(ic4::Error::Ignore());
 		auto notation = prop.displayNotation(ic4::Error::Ignore());
 		auto precision = prop.displayPrecision(ic4::Error::Ignore());
 		auto unit = prop.unit(ic4::Error::Ignore());

@@ -295,7 +295,7 @@ namespace ic4::ui
 			{
 			case ic4::PropIntRepresentation::Boolean:
 				throw "not implemented";
-				check_ = new QCheckBox(this);
+				//check_ = new QCheckBox(this);
 				break;
 			case ic4::PropIntRepresentation::HexNumber:
 				spin_ = is_readonly ? nullptr : new PropIntSpinBox(this, 16);

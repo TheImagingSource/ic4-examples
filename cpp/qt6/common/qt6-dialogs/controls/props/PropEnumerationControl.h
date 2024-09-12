@@ -89,7 +89,7 @@ namespace ic4::ui
 			}
 		}
 
-		void comboIndexChanged(int index)
+		void comboIndexChanged(int /*index*/)
 		{
 			auto value = combo_->currentData().toLongLong();
 

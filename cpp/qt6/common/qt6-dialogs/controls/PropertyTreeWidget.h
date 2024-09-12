@@ -75,9 +75,9 @@ namespace ic4::ui
 					auto child_name = QString::fromStdString(feature.name());
 					auto child_display_name = QString::fromStdString(feature.displayName());
 
-					auto prop_type = feature.type(ic4::Error::Ignore());
+					auto tmp_prop_type = feature.type(ic4::Error::Ignore());
 
-					switch (prop_type)
+					switch (tmp_prop_type)
 					{
 						// only show valid properties
 					case ic4::PropType::Integer:
@@ -87,7 +87,7 @@ namespace ic4::ui
 					case ic4::PropType::Boolean:
 					case ic4::PropType::Float:
 					case ic4::PropType::Category:
-						children.push_back(std::make_unique<PropertyTreeNode>(this, feature, prop_type, index++, child_name, child_display_name));
+						children.push_back(std::make_unique<PropertyTreeNode>(this, feature, tmp_prop_type, index++, child_name, child_display_name));
 						break;
 					default:
 						break;

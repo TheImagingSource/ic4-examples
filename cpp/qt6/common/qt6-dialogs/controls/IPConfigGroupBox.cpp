@@ -30,7 +30,7 @@ namespace
 		using QValidator::QValidator;
 
 	public:
-		QValidator::State	validate(QString& input, int& pos) const override
+		QValidator::State	validate(QString& input, int& /*pos*/) const override
 		{
 			static QRegularExpression regex("^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$");
 
@@ -326,7 +326,7 @@ void IPConfigGroupBox::onForceButtonPressed()
 	_forceButton->setEnabled(false);
 }
 
-void IPConfigGroupBox::addOptionalCommand(QFormLayout* layout, const ic4::PropertyMap& itfPropertyMap, const char* cmdName, const QString& label)
+void IPConfigGroupBox::addOptionalCommand(QFormLayout* /*layout*/, const ic4::PropertyMap& itfPropertyMap, const char* cmdName, const QString& label)
 {
 	ic4::Error err;
 	auto cmd = itfPropertyMap.findCommand(cmdName, err);

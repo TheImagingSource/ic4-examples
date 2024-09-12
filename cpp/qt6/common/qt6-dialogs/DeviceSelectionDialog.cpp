@@ -104,7 +104,7 @@ void DeviceSelectionDialog::createUI()
 	connect(_cameraTree, &QTreeWidget::currentItemChanged, this, &DeviceSelectionDialog::onCurrentItemChanged);
 	if (_grabber)
 	{
-		connect(_cameraTree, &QTreeWidget::itemDoubleClicked, [&](QTreeWidgetItem* item, int column) { onOK(); });
+		connect(_cameraTree, &QTreeWidget::itemDoubleClicked, [&](QTreeWidgetItem* /*item*/, int /*column*/) { onOK(); });
 	}
 
 	leftLayout->addWidget(_cameraTree);
@@ -228,11 +228,11 @@ void DeviceSelectionDialog::enumerateDevices()
 
 			if (isGigEVisionInterface)
 			{
-				ic4::Error err;
-				if (map.setValue("DeviceSelector", index, err))
+				ic4::Error inner_err;
+				if (map.setValue("DeviceSelector", index, inner_err))
 				{
-					auto ip = map.getValueInt64("GevDeviceIPAddress", err);
-					if (err.isSuccess())
+					auto ip = map.getValueInt64("GevDeviceIPAddress", inner_err);
+					if (inner_err.isSuccess())
 					{
 						strIPAddress = QString("%1.%2.%3.%4")
 							.arg((ip >> 24) & 0xFF)
@@ -384,7 +384,7 @@ static void synchronizeColumnWidths(std::vector<QFormLayout*> layouts)
 	}
 }
 
-void DeviceSelectionDialog::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous)
+void DeviceSelectionDialog::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* /*previous*/)
 {	
 	_rightScroll->hide();
 
