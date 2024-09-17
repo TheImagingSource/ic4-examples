@@ -10,8 +10,8 @@ list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.6.1/msvc2019_64/")
 list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.6.0/msvc2019_64/")
 
 # systems like jetpack5 (ubuntu20) only offer qt5 check both since we want to test in either case
-find_package(QT NAMES Qt6 Qt5 REQUIRE COMPONENTS Core)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Widgets)
+find_package(QT NAMES Qt6 Qt5 COMPONENTS Core)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Widgets)
 
 if(Qt6Widgets_FOUND)
     if (Qt6Core_VERSION VERSION_LESS 6.3.0)
@@ -27,8 +27,10 @@ elseif(Qt5Widgets_FOUND)
 	set(CMAKE_AUTOUIC ON)
 endif()
 
-if( ${QT_VERSION} VERSION_LESS 5.15.0 ) # Version < 5.15. do not have qt_add_resources so replace it with an indirect call
-    macro(qt_add_resources)
-        qt5_add_resources(${ARGV})
-    endmacro()
-endif()    
+if( QT_FOUND )
+    if(${QT_VERSION} VERSION_LESS 5.15.0) # Version < 5.15. do not have qt_add_resources so replace it with an indirect call
+        macro(qt_add_resources)
+            qt5_add_resources(${ARGV})
+        endmacro()
+    endif()
+endif()
