@@ -10,9 +10,9 @@ All examples assume you have access to an industrial camera from [The Imaging So
 
 Make sure a [GenTL Producer](https://www.theimagingsource.com/en-us/support/download/) matching your camera is installed.
 
-All C++ examples assume that the IC4 SDK for C++ is installed. For Windows, this means installing *IC Imaging Control 4 SDK* from the [website](https://www.theimagingsource.com/en-us/support/download/). For Linux, at least the *ic4-dev* package is required.
+All C++ examples assume that the IC4 SDK for C++ is installed. For Windows, this means installing *IC Imaging Control 4 SDK* from the [website](https://www.theimagingsource.com/en-us/support/download/). For Linux, at least all debian packages from *ic4.tar.gz* should be installed.
 
-The examples require cmake (On Windows, this is provided by Visual Studio 2019 or later) and a C++ compiler supporting at least C++14.
+The examples require `cmake` (On *Windows*, this is provided by *Visual Studio 2019* or later) and a C++ compiler supporting at least C++14.
 
 # Compiling the Example Programs
 
@@ -29,8 +29,10 @@ Click *Start Debugging* and the program will be compiled and run.
 
 ## Using cmake from the Command Line
 
-First, enter a directory containing a `CMakeLists.txt` file. This can either be one of
-the top-level directories containing multiple projects, or one of the project-specific directories.
+First, enter a directory containing a `CMakeLists.txt` file. 
+This can either be one of the top-level directories 
+containing multiple projects, or one of the project-specific 
+directories.
 
 Then, create a `build` directory and change into it:
 
@@ -54,7 +56,7 @@ In the build directory, run cmake pointing to the parent directory:
 -- Build files have been written to: ~/ic4-examples/cpp/device-handling/device-enumeration/build
 ```
 
-CMake will now generate files for the default build system, e.g. a MakeFile. Run `make` to build the example program
+CMake will now generate files for the default build system, e.g. a MakeFile. Run `make` to build the example program:
 
 ```
 ~/ic4-examples/cpp/device-handling/device-enumeration/build $ make
@@ -79,13 +81,17 @@ The example programs are grouped by topic for clarity.
 
 ## Device Handling
 
-These examples show how to [enumerate devices](device-handling/device-enumeration), get device-list-changed [notifications](device-handling/device-list-changed/)
-and handling [device-lost events](device-handling/device-lost).
+These examples show how to
+- [enumerate](device-handling/device-enumeration) devices and interfaces
+- Get [device-list-changed](device-handling/device-list-changed/) notifications
+- Handle [device-lost](device-handling/device-lost) events
 
 ## Image Acquisition
 
-This section contains example programs showing how to capture and save images as [JPEG files](image-acquisition/save-jpeg-file),
-record videos as [H264-encoded MP4 files](image-acquisition/record-mp4-h264) or save [BMP files on trigger](image-acquisition/save-bmp-on-trigger).
+This section contains example programs showing how to capture and
+- Save images as [JPEG files](image-acquisition/save-jpeg-file)
+- Record videos as [H264-encoded MP4 files](image-acquisition/record-mp4-h264) 
+- Save [BMP files on trigger](image-acquisition/save-bmp-on-trigger).
 
 ## Advanced Camera Features
 
