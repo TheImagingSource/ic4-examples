@@ -27,9 +27,13 @@ The examples require *CMake* (On *Windows*, this is provided by *Visual Studio 2
 # Compiling the Example Programs
 
 Most examples are built using *CMake*. You can either manually use *CMake* to build the example programs, or use an IDE that knows how to build *CMake* projects.
-*Visual Studio* natively support *CMake*' projects from version 2019 onwards.
+
+A group of example programs can be compiled by running *CMake* in one of the parent directories containing a `CMakeLists.txt` file.
+Please note that programs depending on third-party libraries like *Qt* or *OpenCV* will not be built unless the respective libraries are found.
 
 ## Using Visual Studio
+
+*Visual Studio* natively support *CMake*' projects from version 2019 onwards.
 
 From the main menu, select *File -> Open... -> Folder...* and navigate to a directory containing a `CMakeLists.txt` file.
 
