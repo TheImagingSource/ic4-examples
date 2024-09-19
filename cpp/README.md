@@ -4,6 +4,16 @@ This directory contains a selection of example programs demonstrating the use of
 
 Most of the examples focus on a particular aspect of writing software to control a camera. Others, like [qt6/demoapp](qt6/demoapp) are small complete application programs.
 
+## Download
+
+To download all examples in a .zip file, move to the [root](/) of the repository, click the green *Code* button and select *Download ZIP*.
+
+You can also select *Open with Visual Studio* to clone the examples into a directory on your computer, or use git directly.
+
+After downloading, please make sure to keep the per-language directory structure intact so that relative file references can work.
+
+***Warning:*** Be careful when cloning/extracting to a directory with a long path name; many tools are still limited by Windows' legacy 260-character path length limit and can raise obscure error messages in case a file path exceeds it.
+
 # Prerequisites for Bulding and Testing the Example Programs
 
 All examples assume you have access to an industrial camera from [The Imaging Source](www.theimagingsource.com).
@@ -23,7 +33,7 @@ Most examples are built using *CMake*. You can either manually use *CMake* to bu
 
 From the main menu, select *File -> Open... -> Folder...* and navigate to a directory containing a `CMakeLists.txt` file.
 
-After the project was configured successfully, select the executable you want to run from *Select Startup Item...* dropdown next to the *Start Debugging* button.
+After the project was configured successfully, select the example executable you want to build and run from *Select Startup Item...* dropdown next to the *Start Debugging* button.
 
 Click *Start Debugging* and the program will be compiled and run.
 
