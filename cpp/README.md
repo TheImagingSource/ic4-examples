@@ -31,7 +31,7 @@ Most examples are built using *CMake*. You can either manually use *CMake* to bu
 A group of example programs can be compiled by running *CMake* in one of the parent directories containing a `CMakeLists.txt` file.
 Please note that programs depending on third-party libraries like *Qt* or *OpenCV* will not be built unless the respective libraries are found.
 
-## Using Visual Studio
+## Compiling the Example Programs Using Visual Studio
 
 *Visual Studio* natively support *CMake*' projects from version 2019 onwards.
 
@@ -41,7 +41,7 @@ After the project was configured successfully, select the example executable you
 
 Click *Start Debugging* and the program will be compiled and run.
 
-## Using cmake from the Command Line
+## Compiling the Example Programs Using cmake from the Command Line
 
 First, enter a directory containing a `CMakeLists.txt` file. 
 This can either be one of the top-level directories 
