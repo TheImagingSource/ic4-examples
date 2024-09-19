@@ -12,7 +12,7 @@ Make sure a [GenTL Producer](https://www.theimagingsource.com/en-us/support/down
 
 All C++ examples assume that the IC4 SDK for C++ is installed. For Windows, this means installing *IC Imaging Control 4 SDK* from the [website](https://www.theimagingsource.com/en-us/support/download/). For Linux, all debian packages from *ic4.tar.gz* should be installed.
 
-The examples require `cmake` (On *Windows*, this is provided by *Visual Studio 2019* or later) and a C++ compiler supporting at least C++14.
+The examples require *CMake* (On *Windows*, this is provided by *Visual Studio 2019* or later) and a C++ compiler supporting at least C++14.
 
 # Compiling the Example Programs
 
@@ -116,8 +116,14 @@ Several complete applications are also found here:
 
 ## Third-Party Integration
 
+This section contains programs showing how to use data captured in `ImageBuffer` objects with third-party image processing libraries:
+
+- [OpenCV](cpp/thirdparty-integration/imagebuffer-opencv-snap)
+
 ## Win32/MFC
+
+Contains a small demo application using *MFC*. This example is using traditional *.sln* and *.vcxproj* files for *Visual Studio*.
 
 ## ic4-ctrl
 
-## Common
+This is the source code for the [ic4-ctrl](cpp/ic4-ctrl) utility distributed with the *IC Imaging Control4 SDK*.
