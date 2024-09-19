@@ -6,7 +6,7 @@ Most of the examples focus on a particular aspect of writing software to control
 
 ## Download
 
-To download all examples in a .zip file, move to the [root](/) of the repository, click the green *Code* button and select *Download ZIP*.
+To download all examples in a .zip file, move to the root of the repository, click the green *Code* button and select *Download ZIP*.
 
 You can also select *Open with Visual Studio* to clone the examples into a directory on your computer, or use git directly.
 
