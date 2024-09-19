@@ -122,7 +122,7 @@ This section contains programs showing how to use data captured in `ImageBuffer`
 
 ## Win32/MFC
 
-Contains a small demo application using *MFC*. This example is using traditional *.sln* and *.vcxproj* files for *Visual Studio*.
+Contains a [small demo application](cpp/win32-mfc/demoapp) using *MFC*. This example is using traditional *.sln* and *.vcxproj* files for *Visual Studio*.
 
 ## ic4-ctrl
 
