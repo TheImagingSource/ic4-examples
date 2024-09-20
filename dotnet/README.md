@@ -64,7 +64,7 @@ Some cameras provide advanced features that can be utilized to solve specific ap
 
 This section contains programs showing how to use data captured in `ImageBuffer` objects with third-party image processing libraries:
 
-- [OpenCV](cpp/thirdparty-integration/ImageBufferOpenCVLive)
+- [OpenCV](dotnet/thirdparty-integration/ImageBufferOpenCVLive)
 
 ## Windows Forms
 
@@ -77,7 +77,7 @@ The demo application is available for both
 
 ## Visual Basic .NET
 
-This [examples](dotnet/vb.net/VB First Steps) shows how to use `ic4dotnet` using Visual Basic .NET.
+This [example](dotnet/vb.net/VB%20First%20Steps) shows how to use `ic4dotnet` using Visual Basic .NET.
 
 ## ic4-ctrl
 
