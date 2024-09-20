@@ -8,6 +8,8 @@ Most of the examples focus on a particular aspect of writing software to control
 
 To download all examples in a .zip file, move to the root of the repository, click the green *Code* button and select *Download ZIP*.
 
+You can also use git from the command line to clone the examples.
+
 After downloading, please make sure to keep the per-language directory structure intact so that relative file references can work.
 
 ***Warning:*** Be careful when cloning/extracting to a directory with a long path name; many tools are still limited by Windows' legacy 260-character path length limit and can raise obscure error messages in case a file path exceeds it.
