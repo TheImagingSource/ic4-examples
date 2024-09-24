@@ -48,18 +48,10 @@ This can either be one of the top-level directories
 containing multiple projects, or one of the project-specific 
 directories.
 
-Then, create a `build` directory and change into it:
+Specify a build directory for cmake and generate files for the build system:
 
 ```
-~/ic4-examples/cpp/device-handling/device-enumeration $ mkdir build
-~/ic4-examples/cpp/device-handling/device-enumeration $ cd build
-```
-
-In the build directory, run cmake pointing to the parent directory:
-
-```
-~/ic4-examples/cpp/device-handling/device-enumeration/build $ cmake ..
-
+~/ic4-examples/cpp/device-handling/device-enumeration $ cmake -B build/ .
 -- The C compiler identification is GNU 13.2.0
 -- The CXX compiler identification is GNU 13.2.0
 -- Detecting C compiler ABI info
@@ -70,10 +62,10 @@ In the build directory, run cmake pointing to the parent directory:
 -- Build files have been written to: ~/ic4-examples/cpp/device-handling/device-enumeration/build
 ```
 
-CMake will now generate files for the default build system, e.g. a MakeFile. Run `make` to build the example program:
+Now build the application:
 
 ```
-~/ic4-examples/cpp/device-handling/device-enumeration/build $ make
+~/ic4-examples/cpp/device-handling/device-enumeration $ cmake --build build/
 
 [ 50%] Building CXX object CMakeFiles/device-enumeration.dir/src/device-enumeration.cpp.o
 [100%] Linking CXX executable device-enumeration
@@ -83,7 +75,7 @@ CMake will now generate files for the default build system, e.g. a MakeFile. Run
 Now run the example program:
 
 ```
-~/ic4-examples/cpp/device-handling/device-enumeration/build $ ./device-enumeration.cpp
+~/ic4-examples/cpp/device-handling/device-enumeration $ ./build/device-enumeration
 ```
 
 If everything worked, the program will now show that your camera was detected!
