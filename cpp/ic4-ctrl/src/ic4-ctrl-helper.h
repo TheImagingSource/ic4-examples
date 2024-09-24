@@ -4,7 +4,7 @@
 #include <stdlib.h> // getenv, setenv
 #include <string>
 
-#if defined WIN32
+#if defined _WIN32
 #define NOMINMAX
 #include <windows.h>
 #endif
@@ -44,7 +44,7 @@ namespace helper
 
 
 
-#if defined WIN32
+#if defined _WIN32
     inline void set_env_var( std::string env_name, std::string value )
     {
         ::SetEnvironmentVariableA( env_name.c_str(), value.c_str() );

@@ -1,4 +1,4 @@
-﻿
+
 #include <ic4/ic4.h>
 
 #ifdef _WIN32
@@ -691,7 +691,7 @@ static void save_image( std::string id, std::string filename, int count, int tim
     }
 }
 
-#ifdef WIN32
+#ifdef _WIN32
 
 static void show_live( std::string id )
 {
@@ -753,7 +753,7 @@ static void show_prop_page(std::string id, bool id_is_interface, bool show_guru)
 	}
 }
 
-#endif // WIN32
+#endif // _WIN32
 
 static void show_version()
 {
@@ -844,7 +844,8 @@ int main( int argc, char** argv )
     image_cmd->add_option( "--type", image_type, "Image file type to save. [bmp,png,jpeg,tiff]" )->default_val( image_type );
     image_cmd->add_option( "device-id", arg_device_id,
         "Specifies the device to open. You can specify an index e.g. '0'." )->required();
-#ifdef WIN32
+
+#ifdef _WIN32
 
     auto live_cmd = app.add_subcommand( "live", "Display a live stream. 'ic4-ctrl live <device-id>'." );
     live_cmd->add_option( "device-id", arg_device_id,
@@ -859,7 +860,7 @@ int main( int argc, char** argv )
 	show_prop_page_cmd->add_flag("-g,--guru", show_default_guru,
 		"Start the dialog with Visibility set to ic4::PropVisibility::Guru.");
 
-#endif // WIN32
+#endif // _WIN32
 
     auto system_cmd = app.add_subcommand( "system",
         "List some information for about the system."
@@ -926,7 +927,7 @@ int main( int argc, char** argv )
         else if( image_cmd->parsed() ) {
             save_image( arg_device_id, arg_filename, count, timeout, image_type );
         }
-#ifdef WIN32
+#ifdef _WIN32
         else if( live_cmd->parsed() )
         {
             show_live(arg_device_id);
@@ -935,7 +936,7 @@ int main( int argc, char** argv )
         {
             show_prop_page(arg_device_id, force_interface, show_default_guru);
         }
-#endif // WIN32
+#endif // _WIN32
         else if( system_cmd->parsed() )
         {
             show_system_info();
