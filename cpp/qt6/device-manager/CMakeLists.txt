@@ -16,7 +16,7 @@ add_executable(ic4-device-manager
     "device-manager.rc"
 )
 
-target_link_libraries(ic4-device-manager PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Widgets  )
+target_link_libraries(ic4-device-manager PRIVATE Qt::Core Qt::Widgets  )
 target_link_libraries(ic4-device-manager PRIVATE ic4::core qt6-dialogs )
 
 set_target_properties(ic4-device-manager PROPERTIES CXX_STANDARD 17 )

@@ -23,7 +23,7 @@ add_executable(ic4-demoapp
 
 set_target_properties(ic4-demoapp PROPERTIES CXX_STANDARD 17 )
 target_link_libraries(ic4-demoapp PRIVATE ic4::core qt6-dialogs )
-target_link_libraries(ic4-demoapp PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Core )
+target_link_libraries(ic4-demoapp PRIVATE Qt::Widgets Qt::Core )
 
 target_include_directories(ic4-demoapp PRIVATE ${CMAKE_CURRENT_LIST_DIR} )
 

@@ -7,7 +7,7 @@ find_package( ic4 CONFIG REQUIRED )
 
 include( ./common/setup_qt.cmake )
 
-if(QT_FOUND)
+if(QT_VERSION)
 	add_subdirectory( common/qt6-dialogs )
 	add_subdirectory( demoapp )
 	add_subdirectory( device-manager )

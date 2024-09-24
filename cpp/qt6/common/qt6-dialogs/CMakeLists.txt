@@ -39,8 +39,8 @@ add_library(qt6-dialogs STATIC
 
 target_link_libraries(qt6-dialogs
 PUBLIC
-    Qt${QT_VERSION_MAJOR}::Widgets
-    Qt${QT_VERSION_MAJOR}::Core
+    Qt::Widgets
+    Qt::Core
     ic4::core
 )
 

@@ -7,8 +7,7 @@ find_package( ic4 CONFIG REQUIRED )
 
 include( ../common/setup_qt.cmake )
 
-
-if( ${QT_VERSION} VERSION_LESS 6.1.0)
+if( NOT Qt6_FOUND )
     if(PROJECT_IS_TOP_LEVEL)
         message( FATAL_ERROR "HighSpeedCapture depends on Qt6")
     else()
@@ -18,7 +17,7 @@ if( ${QT_VERSION} VERSION_LESS 6.1.0)
     return()
 endif()
 
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Concurrent)
+find_package(Qt6 REQUIRED COMPONENTS Concurrent)
 
 if( NOT TARGET qt6-dialogs )
     add_subdirectory(../common/qt6-dialogs ${CMAKE_BINARY_DIR}/demoapp-qt6-dialogs)
@@ -30,7 +29,7 @@ add_executable(high-speed-capture
     "main.cpp"
 )
 
-target_link_libraries(high-speed-capture PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Concurrent)
+target_link_libraries(high-speed-capture PRIVATE Qt6::Core Qt6::Widgets Qt6::Concurrent)
 target_link_libraries(high-speed-capture PRIVATE ic4::core qt6-dialogs )
 
 set_target_properties(high-speed-capture PROPERTIES CXX_STANDARD 17 )
