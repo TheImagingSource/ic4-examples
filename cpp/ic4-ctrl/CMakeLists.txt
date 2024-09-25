@@ -1,14 +1,32 @@
 
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.16)
 
 project("ic4-ctrl")
 
-if( NOT TARGET ic4::core )
-	find_package( ic4 REQUIRED )
-endif()
+find_package( ic4 REQUIRED )
 
-find_package( CLI11 REQUIRED )
-find_package( fmt REQUIRED )
+if (NOT DISABLE_FETCHCONTENT_PACKAGES)
+	include(FetchContent)
+
+	FetchContent_Declare(
+		CLI11
+		GIT_REPOSITORY https://github.com/CLIUtils/CLI11.git
+		GIT_TAG v2.4.2
+	)
+
+	FetchContent_MakeAvailable(CLI11)
+
+	FetchContent_Declare(
+		fmt
+		GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+		GIT_TAG 11.0.2
+	)
+
+	FetchContent_MakeAvailable(fmt)
+else()
+	find_package( CLI11 REQUIRED )
+	find_package( fmt REQUIRED )
+endif()
 
 add_executable( ic4-ctrl
 	"src/ic4-ctrl.cpp"
