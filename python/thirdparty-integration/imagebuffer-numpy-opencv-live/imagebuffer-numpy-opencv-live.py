@@ -1,6 +1,7 @@
 import imagingcontrol4 as ic4
 import cv2
-import time
+
+from PySide6.QtWidgets import QApplication
 
 
 class ProcessAndDisplayListener(ic4.QueueSinkListener):
@@ -41,6 +42,12 @@ class ProcessAndDisplayListener(ic4.QueueSinkListener):
 
 
 def example_imagebuffer_numpy_opencv_live():
+
+    # Create PySide6 application object
+    app = QApplication()
+    app.setApplicationDisplayName("IC4 ImageBuffer to NumPy/OpenCV with Live Display")
+    app.setStyle("fusion")
+
     # Let the select a video capture device
     device_list = ic4.DeviceEnum.devices()
     for i, dev in enumerate(device_list):
@@ -53,18 +60,13 @@ def example_imagebuffer_numpy_opencv_live():
     grabber = ic4.Grabber()
     grabber.device_open(dev_info)
 
-    # Create a floating display
-    display = ic4.FloatingDisplay()
+    # Create the main window. In this simple application, we use ic4.pyside6.DisplayWindow
+    window = ic4.pyside6.DisplayWindow()
+    window.setMinimumSize(640, 480)
+
+    # Get ic4 Display object from window
+    display = window.as_display()
     display.set_render_position(ic4.DisplayRenderPosition.STRETCH_CENTER)
-
-    # Configure an window-closed event handler that sets a flag when the window is closed
-    exit_flag: bool = False
-
-    def window_closed_handler(d: ic4.Display):
-        nonlocal exit_flag
-        exit_flag = True
-
-    display.event_add_window_closed(window_closed_handler)
 
     # Create a listener to process and display the received images
     listener = ProcessAndDisplayListener(display)
@@ -76,8 +78,8 @@ def example_imagebuffer_numpy_opencv_live():
     grabber.stream_setup(sink)
 
     # Wait for the window to be closed
-    while not exit_flag:
-        time.sleep(0.1)
+    window.show()
+    app.exec()
 
     grabber.stream_stop()
 
