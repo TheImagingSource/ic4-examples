@@ -348,9 +348,9 @@ void HighSpeedCaptureDialog::framesQueued(ic4::QueueSink& sink)
 	{
 		auto buffer = sink.popOutputBuffer();
 
-		auto filePath = QString("%1/image_%2.png").arg(_destinationDirectory->text()).arg(_frame_number++);
+		auto filePath = QString("%1/image_%2.jpeg").arg(_destinationDirectory->text()).arg(_frame_number++);
 
-		ic4::imageBufferSaveAsPng(*buffer, filePath.toStdString());
+		ic4::imageBufferSaveAsJpeg(*buffer, filePath.toStdString());
 
 		_num_processed += 1;
 	}
