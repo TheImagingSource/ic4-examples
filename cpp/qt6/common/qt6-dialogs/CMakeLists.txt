@@ -36,13 +36,8 @@ add_library(qt6-dialogs STATIC
     PropertyDialog.cpp
 )
 
-
-target_link_libraries(qt6-dialogs
-PUBLIC
-    Qt::Widgets
-    Qt::Core
-    ic4::core
-)
+target_link_libraries(qt6-dialogs PUBLIC Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Core )
+target_link_libraries(qt6-dialogs PUBLIC ic4::core )
 
 target_include_directories(qt6-dialogs INTERFACE ${CMAKE_CURRENT_SOURCE_DIR} )
 

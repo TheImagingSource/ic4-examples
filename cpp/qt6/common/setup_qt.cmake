@@ -13,7 +13,7 @@ if((NOT Qt6_FOUND) AND (NOT Qt5_FOUND) )
         list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.6.0/msvc2019_64/")
     endif()
 
-    # systems like jetpack5 (ubuntu20) only offer qt5 check both since we want to test in either case
+    # ubuntu20 only offer qt5 check first for Qt6 and then fall back to Qt5
     find_package(Qt6 QUIET COMPONENTS Core)
     if (Qt6_FOUND)
         find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
@@ -27,6 +27,7 @@ if((NOT Qt6_FOUND) AND (NOT Qt5_FOUND) )
 
         if( NOT QT_VERSION )
             set( QT_VERSION ${Qt6Core_VERSION} )
+            set( QT_VERSION_MAJOR 6 )               # This is only needed for Qt5, but to keep it consistent we define it for both
         endif()
     else()
         find_package(Qt5 REQUIRED COMPONENTS Core Widgets)
@@ -43,6 +44,7 @@ if((NOT Qt6_FOUND) AND (NOT Qt5_FOUND) )
 
         if( NOT QT_VERSION )
             set( QT_VERSION ${Qt5Core_VERSION} )
+            set( QT_VERSION_MAJOR 5 )               # This is only needed for Qt5, but to keep it consistent we define it for both
         endif()
     endif()
 
