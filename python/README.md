@@ -52,7 +52,7 @@ These examples show how to
 
 This section contains example programs showing how to capture and
 - Save images as [JPEG files](python/image-acquisition/save-jpeg-file/)
-- Save [BMP files on trigger](python/image-acquitition/save-bmp-on-trigger/)
+- Save [BMP files on trigger](python/image-acquisition/save-bmp-on-trigger/)
 
 ## Advanced Camera Features
 
