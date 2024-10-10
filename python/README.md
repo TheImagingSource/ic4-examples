@@ -48,6 +48,11 @@ These examples show how to
 - Get [device-list-changed](python/device-handling/device-list-changed/) notifications
 - Handle [device-lost](python/device-handling/device-lost) events
 
+## Image Acquisition
+
+This section contains example programs showing how to capture and
+- Save images as [JPEG files](python/image-acquisition/save-jpeg-file/)
+
 ## Advanced Camera Features
 
 Some cameras provide advanced features that can be utilized to solve specific application requirements. This section showcases
