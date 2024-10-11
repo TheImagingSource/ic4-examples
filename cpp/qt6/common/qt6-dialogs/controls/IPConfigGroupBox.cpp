@@ -337,9 +337,17 @@ void IPConfigGroupBox::addOptionalCommand(QFormLayout* /*layout*/, const ic4::Pr
 	_layout->addRow(cmdButton);
 
 	connect(cmdButton, &QPushButton::pressed,
-		[cmd]() mutable
+		[this, cmd, cmdName]() mutable
 		{
-			cmd.execute();
+			ic4::Error err;
+			if (!cmd.execute(err))
+			{
+				QMessageBox::critical(this, {},
+					QString("Failed to execute %1:\n%2")
+						.arg(cmdName)
+						.arg(err.message().c_str())
+				);
+			}
 		}
 	);
 }
