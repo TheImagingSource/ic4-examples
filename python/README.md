@@ -52,6 +52,7 @@ These examples show how to
 
 This section contains example programs showing how to capture and
 - Save images as [JPEG files](python/image-acquisition/save-jpeg-file/)
+- Record videos as [H264-encoded MP4 files](python/image-acquisition/record-mp4-h264/)
 - Save [BMP files on trigger](python/image-acquisition/save-bmp-on-trigger/)
 
 ## Advanced Camera Features
