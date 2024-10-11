@@ -61,7 +61,7 @@ Some cameras provide advanced features that can be utilized to solve specific ap
 - Triggering multiple cameras simultaneously by broadcasting an [action command](python/advanced-camera-features/actioncommand-broadcast-trigger)
 - Reading camera-provided metadata from image buffers using [chunkdata](python/advanced-camera-features/connect-chunkdata)
 - Using [EventExposureEnd](python/advanced-camera-features/EventExposureEnd) to synchronize camera operation to real-world movement
-- Get notified about I/O activity using [EventLine1*Edge](python/advance-camera-features/event-line1-edge/) events
+- Get notified about I/O activity using [EventLine1*Edge](python/advanced-camera-features/event-line1-edge/) events
 
 ## Qt6
 
