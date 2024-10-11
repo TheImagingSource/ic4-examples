@@ -48,7 +48,7 @@ def example_save_bmp_on_trigger():
 
             self.counter = self.counter + 1
 
-    # Create an instance of the listener type defined above, specifyin a partial file name
+    # Create an instance of the listener type defined above, specifying a partial file name
     path_base = "./test_image"
     listener = Listener(path_base)
 

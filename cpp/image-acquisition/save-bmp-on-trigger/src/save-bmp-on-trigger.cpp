@@ -96,7 +96,7 @@ int main()
 		return -4;
 	}
 	
-	// Create an instance of the listener type defined above, specifyin a partial file name
+	// Create an instance of the listener type defined above, specifying a partial file name
 	std::string path_base = "./test_image";
 	SaveAsBmpListener listener(path_base);
 
