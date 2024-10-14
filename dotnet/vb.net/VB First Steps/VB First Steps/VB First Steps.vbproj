@@ -144,10 +144,10 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="ic4dotnet">
-      <Version>1.1.0.2833</Version>
+      <Version>1.2.0.2954</Version>
     </PackageReference>
     <PackageReference Include="ic4dotnet.System.Windows.Forms">
-      <Version>1.1.0.2833</Version>
+      <Version>1.2.0.2954</Version>
     </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />

@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.9.1" />
-    <PackageReference Include="ic4dotnet" Version="1.1.0.2833" />
+    <PackageReference Include="ic4dotnet" Version="1.2.0.2954" />
   </ItemGroup>
 
   <ItemGroup>

@@ -35,11 +35,11 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ic4dotnet, Version=1.1.0.2833, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\ic4dotnet.1.1.0.2833\lib\net45\ic4dotnet.dll</HintPath>
+    <Reference Include="ic4dotnet, Version=1.2.0.2954, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\ic4dotnet.1.2.0.2954\lib\net45\ic4dotnet.dll</HintPath>
     </Reference>
-    <Reference Include="ic4dotnet.System.Windows.Forms, Version=1.1.0.2833, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\ic4dotnet.System.Windows.Forms.1.1.0.2833\lib\net45\ic4dotnet.System.Windows.Forms.dll</HintPath>
+    <Reference Include="ic4dotnet.System.Windows.Forms, Version=1.2.0.2954, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\ic4dotnet.System.Windows.Forms.1.2.0.2954\lib\net45\ic4dotnet.System.Windows.Forms.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -93,9 +93,9 @@
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\ic4dotnet.1.1.0.2833\build\ic4dotnet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ic4dotnet.1.1.0.2833\build\ic4dotnet.targets'))" />
-    <Error Condition="!Exists('..\packages\ic4dotnet.System.Windows.Forms.1.1.0.2833\build\ic4dotnet.System.Windows.Forms.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ic4dotnet.System.Windows.Forms.1.1.0.2833\build\ic4dotnet.System.Windows.Forms.targets'))" />
+    <Error Condition="!Exists('..\packages\ic4dotnet.1.2.0.2954\build\ic4dotnet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ic4dotnet.1.2.0.2954\build\ic4dotnet.targets'))" />
+    <Error Condition="!Exists('..\packages\ic4dotnet.System.Windows.Forms.1.2.0.2954\build\ic4dotnet.System.Windows.Forms.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ic4dotnet.System.Windows.Forms.1.2.0.2954\build\ic4dotnet.System.Windows.Forms.targets'))" />
   </Target>
-  <Import Project="..\packages\ic4dotnet.1.1.0.2833\build\ic4dotnet.targets" Condition="Exists('..\packages\ic4dotnet.1.1.0.2833\build\ic4dotnet.targets')" />
-  <Import Project="..\packages\ic4dotnet.System.Windows.Forms.1.1.0.2833\build\ic4dotnet.System.Windows.Forms.targets" Condition="Exists('..\packages\ic4dotnet.System.Windows.Forms.1.1.0.2833\build\ic4dotnet.System.Windows.Forms.targets')" />
+  <Import Project="..\packages\ic4dotnet.1.2.0.2954\build\ic4dotnet.targets" Condition="Exists('..\packages\ic4dotnet.1.2.0.2954\build\ic4dotnet.targets')" />
+  <Import Project="..\packages\ic4dotnet.System.Windows.Forms.1.2.0.2954\build\ic4dotnet.System.Windows.Forms.targets" Condition="Exists('..\packages\ic4dotnet.System.Windows.Forms.1.2.0.2954\build\ic4dotnet.System.Windows.Forms.targets')" />
 </Project>
