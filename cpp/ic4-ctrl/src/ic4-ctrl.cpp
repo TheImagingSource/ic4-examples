@@ -640,6 +640,37 @@ static void save_properties( std::string id, bool force_interface, std::string f
     }
 }
 
+static void load_properties(std::string id, bool force_interface, std::string filename)
+{
+	ic4::Error err;
+	if (force_interface)
+	{
+		auto dev = find_interface(id);
+		if (!dev) {
+			print("Failed to find interface for id '{}'", id);
+			return;
+		}
+		auto map = dev->interfacePropertyMap();
+		map.deSerialize(filename, err);
+	}
+	else
+	{
+		auto dev = find_device(id);
+		if (!dev) {
+			print("Failed to find device for id '{}'", id);
+			return;
+		}
+		ic4::Grabber g;
+		g.deviceOpen(*dev);
+
+		auto map = g.devicePropertyMap();
+		map.deSerialize(filename, err);
+	}
+	if (err) {
+		print("Failed to load file '{}' due to error: {}", filename, err.message());
+	}
+}
+
 static void save_image( std::string id, std::string filename, int count, int timeout_in_ms, std::string image_type )
 {
     auto dev = find_device( id );
@@ -825,12 +856,19 @@ int main( int argc, char** argv )
     props_cmd->add_option( "device-id", arg_device_id,
         "Specifies the device to open. You can specify an index e.g. '0'." )->required();
 
-    auto save_props_cmd = app.add_subcommand( "save-prop", 
+	std::string arg_filename;
+
+	auto save_props_cmd = app.add_subcommand( "save-prop", 
         "Save properties for the specified device 'ic4-ctrl save-prop -f <filename> <device-id>'." );
-    std::string arg_filename;
     save_props_cmd->add_option( "-f,--filename", arg_filename, "Filename to save into." )->required();
     save_props_cmd->add_option( "device-id", arg_device_id,
         "Specifies the device to open. You can specify an index e.g. '0'." )->required();
+
+	auto load_props_cmd = app.add_subcommand("load-prop",
+		"Load properties for the specified device 'ic4-ctrl load-prop -f <filename> <device-id>'.");
+	load_props_cmd->add_option("-f,--filename", arg_filename, "Filename to save into.")->required();
+	load_props_cmd->add_option("device-id", arg_device_id,
+		"Specifies the device to open. You can specify an index e.g. '0'.")->required();
 
     auto image_cmd = app.add_subcommand( "image", 
         "Save one or more images from the specified device 'ic4-ctrl image -f <filename> --count 3 --timeout 2000 --type bmp <device-id>'."
@@ -924,6 +962,10 @@ int main( int argc, char** argv )
         {
             save_properties( arg_device_id, force_interface, arg_filename );
         }
+		else if (load_props_cmd->parsed())
+		{
+			load_properties(arg_device_id, force_interface, arg_filename);
+		}
         else if( image_cmd->parsed() ) {
             save_image( arg_device_id, arg_filename, count, timeout, image_type );
         }
