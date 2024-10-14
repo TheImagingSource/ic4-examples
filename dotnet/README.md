@@ -43,28 +43,28 @@ The example programs are grouped by topic for clarity.
 ## Device Handling
 
 These examples show how to
-- [enumerate](dotnet/device-handling/DeviceEnumeration) devices and interfaces
-- Get [device-list-changed](dotnet/device-handling/DeviceListChanged/) notifications
-- Handle [device-lost](dotnet/device-handling/DeviceLost) events
+- [enumerate](/dotnet/device-handling/DeviceEnumeration) devices and interfaces
+- Get [device-list-changed](/dotnet/device-handling/DeviceListChanged/) notifications
+- Handle [device-lost](/dotnet/device-handling/DeviceLost) events
 
 ## Image Acquisition
 
 This section contains example programs showing how to capture and
 
-- Save [BMP files on trigger](dotnet/image-acquisition/SaveBmpOnTrigger).
+- Save [BMP files on trigger](/dotnet/image-acquisition/SaveBmpOnTrigger).
 
 ## Advanced Camera Features
 
 Some cameras provide advanced features that can be utilized to solve specific application requirements. This section showcases
-- Triggering multiple cameras simultaneously by broadcasting an [action command](dotnet/advanced-camera-features/ActionCommandBroadcastTrigger)
-- Using [EventExposureEnd](dotnet/advanced-camera-features/EventExposureEnd) to synchronize camera operation to real-world movement
-- Get notified about I/O activity using [EventLine1*Edge](dotnet/advanced-camera-features/EventLine1Edge) events
+- Triggering multiple cameras simultaneously by broadcasting an [action command](/dotnet/advanced-camera-features/ActionCommandBroadcastTrigger)
+- Using [EventExposureEnd](/dotnet/advanced-camera-features/EventExposureEnd) to synchronize camera operation to real-world movement
+- Get notified about I/O activity using [EventLine1*Edge](/dotnet/advanced-camera-features/EventLine1Edge) events
 
 ## Third-Party Integration
 
 This section contains programs showing how to use data captured in `ImageBuffer` objects with third-party image processing libraries:
 
-- [OpenCV](dotnet/thirdparty-integration/ImageBufferOpenCVLive)
+- [OpenCV](/dotnet/thirdparty-integration/ImageBufferOpenCVLive)
 
 ## Windows Forms
 
@@ -72,12 +72,12 @@ This section shows the Windows Forms integration of IC Imaging Control 4 using t
 
 The demo application is available for both
 
-- [.NET Framework 4.5](dotnet/winforms/framework45)
-- [.NET 6 or later](dotnet/winforms/DialogApp-net6)
+- [.NET Framework 4.5](/dotnet/winforms/framework45)
+- [.NET 6 or later](/dotnet/winforms/DialogApp-net6)
 
 ## Visual Basic .NET
 
-This [example](dotnet/vb.net/VB%20First%20Steps) shows how to use `ic4dotnet` using Visual Basic .NET.
+This [example](/dotnet/vb.net/VB%20First%20Steps) shows how to use `ic4dotnet` using Visual Basic .NET.
 
 ## ic4-ctrl
 
