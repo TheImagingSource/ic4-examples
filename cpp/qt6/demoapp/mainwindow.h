@@ -40,6 +40,7 @@ private:
 	void onExportDeviceSettings();
 	void onImportDeviceSettings();
 	void onCloseDevice();
+	void onAbout();
 
 	void onDeviceOpened();
 	void updateControls();

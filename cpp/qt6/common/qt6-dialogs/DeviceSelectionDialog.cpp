@@ -579,6 +579,16 @@ static QString buildSystemInfoString()
 {
 	QString text;
 	text += "<pre>";
+
+#ifdef IC4_QTDIALOG_APPTITLE
+	text += IC4_QTDIALOG_APPTITLE;
+	text += ":\n   ";
+	text += QString(IC4_QTDIALOG_APPNAME).replace("@APP_DISPLAY_NAME@", QApplication::applicationDisplayName());
+	text += ": ";
+	text += IC4_QTDIALOG_APPVERSION;
+	text += "\n\n";
+#endif
+
 	text += QString::fromStdString(ic4::getVersionInfo(ic4::VersionInfoFlags::Default, ic4::Error::Ignore()));
 	text += "\n\n";
 

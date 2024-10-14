@@ -39,6 +39,10 @@
 #include <filesystem>
 #include <string>
 
+#ifndef IC4_DEMOAPP_VERSION_LINE
+#define IC4_DEMOAPP_VERSION_LINE "(No version info available)"
+#endif
+
 MainWindow::MainWindow(QWidget* parent)
 	: QMainWindow(parent)
 	, _videowriter(ic4::VideoWriterType::MP4_H264)
@@ -200,6 +204,10 @@ void MainWindow::createUI()
 	_closeDeviceAct->setStatusTip(tr("Close the currently opened device"));
     _closeDeviceAct->setShortcuts(QKeySequence::Close);
 
+	auto aboutAct = new QAction(tr("&About..."), this);
+	aboutAct->setStatusTip(tr("About ic4-demoapp"));
+	connect(aboutAct, &QAction::triggered, this, &MainWindow::onAbout);
+
 	connect(_closeDeviceAct, &QAction::triggered, this, &MainWindow::onCloseDevice);
 
 	// Exit Program
@@ -285,6 +293,11 @@ void MainWindow::createUI()
 	settingsMenu->addAction(deleteDeviceSettingsFile);
 	settingsMenu->addAction(start_stream_on_open);
 	settingsMenu->menuAction()->setVisible(_showSettingsMenu);
+
+	////////////////////////////////////////////////////////////////////////////
+	// Create the Help Menu
+	auto helpMenu = menuBar()->addMenu(tr("&Help"));
+	helpMenu->addAction(aboutAct);
 
 	////////////////////////////////////////////////////////////////////////////
 	// Create the Toolbar
@@ -805,6 +818,29 @@ void MainWindow::onCloseDevice()
 	_display->displayBuffer(nullptr, ic4::Error::Ignore());
 
 	updateControls();
+}
+
+void MainWindow::onAbout()
+{
+	QMessageBox about(this);
+	about.setWindowTitle("About");
+	about.setTextFormat(Qt::RichText);
+	about.setIcon(QMessageBox::Information);
+	about.setText(
+		QString(
+			"%1"
+			"<br/><br/>"
+			"%2"
+			"<br/><br/>"
+			"The source code for %1 is available as a C++ example program:"
+			"<br/>"
+			"<a href='%3'>%3</a>"
+		)
+		.arg(QApplication::applicationDisplayName())
+		.arg(IC4_DEMOAPP_VERSION_LINE)
+		.arg("https://github.com/TheImagingSource/ic4-examples")
+	);
+	about.exec();
 }
 
 /// <summary>
