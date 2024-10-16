@@ -14,7 +14,7 @@ After downloading, please make sure to keep the per-language directory structure
 
 ## Cameras and Drivers
 
-All examples assume you have access to an industrial camera from [The Imaging Source](www.theimagingsource.com).
+All examples assume you have access to an industrial camera from [The Imaging Source](https://www.theimagingsource.com).
 
 Make sure a [GenTL Producer](https://www.theimagingsource.com/en-us/support/download/) matching your camera is installed.
 
