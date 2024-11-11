@@ -18,7 +18,7 @@ namespace DeviceLost
             Console.WriteLine("Disconnect device to produce device-lost event");
 
             Console.WriteLine("Press Enter to exit program");
-            Console.ReadKey();
+            Console.Read();
 
             return;
         }

@@ -83,7 +83,7 @@ namespace DeviceEvents
 
                     Console.WriteLine();
                     Console.WriteLine("Waiting for Line1RisingEdge and Line1FallingEdge events. Press any key to exit.");
-                    Console.ReadKey();
+                    Console.Read();
                 }
                 finally
                 {

@@ -17,7 +17,7 @@ namespace DeviceListChanged
             Console.WriteLine($"{deviceCount} devices connected initially.");
             Console.WriteLine("");
 
-            Console.ReadKey();
+            Console.Read();
 
             deviceEnum.Dispose();
 
