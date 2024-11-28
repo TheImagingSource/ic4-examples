@@ -31,7 +31,7 @@ DeviceSelectionDialog::DeviceSelectionDialog(QWidget* parent, ic4::Grabber* pgra
 	, _grabber(pgrabber)
 {
 	createUI();
-	onUpdateButton();
+	onRefreshButton();
 
 	_enumerator.eventAddDeviceListChanged(
 		[this](auto&)
@@ -45,7 +45,7 @@ void DeviceSelectionDialog::customEvent(QEvent* event)
 {
 	if (event->type() == EVENT_DEVICE_LIST_CHANGED)
 	{
-		onUpdateButton();
+		onRefreshButton();
 	}
 }
 
@@ -117,11 +117,11 @@ void DeviceSelectionDialog::createUI()
 	connect(systemInfoButton, &QPushButton::pressed, this, &DeviceSelectionDialog::onSystemInfoButton);
 	buttons->addWidget(systemInfoButton);
 
-	auto UpdateButton = new QPushButton(tr("Update (F5)"));
-	connect(UpdateButton, &QPushButton::pressed, this, &DeviceSelectionDialog::onUpdateButton);
-    UpdateButton->setShortcut(QKeySequence::Refresh);
+	auto refreshButton = new QPushButton(tr("Refresh (F5)"));
+	connect(refreshButton, &QPushButton::pressed, this, &DeviceSelectionDialog::onRefreshButton);
+    refreshButton->setShortcut(QKeySequence::Refresh);
 
-	buttons->addWidget(UpdateButton);
+	buttons->addWidget(refreshButton);
 
 	if (_grabber)
 	{
@@ -681,7 +681,7 @@ void DeviceSelectionDialog::onSystemInfoButton()
 	infoDlg.exec();
 }
 
-void DeviceSelectionDialog::onUpdateButton()
+void DeviceSelectionDialog::onRefreshButton()
 {
 	QVariant previousData;
 

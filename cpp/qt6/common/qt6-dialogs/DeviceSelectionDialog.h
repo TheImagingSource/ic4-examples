@@ -26,7 +26,7 @@ protected:
 private slots:
 	void onOK();
 	void onSystemInfoButton();
-	void onUpdateButton();
+	void onRefreshButton();
 	void onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous);
 
 
