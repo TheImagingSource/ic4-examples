@@ -110,17 +110,27 @@ class MainWindow(QMainWindow):
 
     def onFocusAuto(self):
         # Run auto focus
-        self.focus_auto.execute()
-        if not self.focus_auto.is_done:
-            self.run_auto_focus.setEnabled(False)
+        if isinstance(self.focus_auto, ic4.PropCommand):
+            self.focus_auto.execute()
+
+            if not self.focus_auto.is_done:
+                self.run_auto_focus.setEnabled(False)
+        else:
+            self.focus_auto.value = "Once"
 
     def onUpdateFocusAuto(self):
         # This function is called when the notification event for the FocusAuto feature was raised
         # If the command is completed, re-enable the button and log
-        if self.focus_auto.is_done and not self.run_auto_focus.isEnabled():
-            self.run_auto_focus.setEnabled(True)
-            val = self.grabber.device_property_map.find_integer(ic4.PropId.FOCUS).value
-            self.event_log.appendPlainText(f"FocusAuto completed (at {val})")
+
+        if isinstance(self.focus_auto, ic4.PropCommand):
+            if self.focus_auto.is_done and not self.run_auto_focus.isEnabled():
+                self.run_auto_focus.setEnabled(True)
+                val = self.grabber.device_property_map.find_integer(ic4.PropId.FOCUS).value
+                self.event_log.appendPlainText(f"FocusAuto completed (at {val})")
+        else:
+            if self.focus_auto.value != "Once":
+                val = self.grabber.device_property_map.find_integer(ic4.PropId.FOCUS).value
+                self.event_log.appendPlainText(f"FocusAuto completed (at {val})")
 
     def onIrcutChanged(self, state: Qt.CheckState):
         # Change movable IR-Cut filter state
@@ -223,8 +233,28 @@ class MainWindow(QMainWindow):
                 self.focus = None
 
             try:
-                # Get FocusAuto property
+                # Get FocusAuto property for 39G series camera
                 self.focus_auto = self.grabber.device_property_map.find_command(ic4.PropId.FOCUS_AUTO)
+                create_event_log = True
+            except:
+                self.focus_auto = None
+
+            if self.focus_auto is None:
+                try:
+                    # Get FocusAuto property for software zoom in Z series cameras
+                    self.focus_auto = self.grabber.device_property_map.find_enumeration(ic4.PropId.FOCUS_AUTO)
+                    create_event_log = True
+                except:
+                    self.focus_auto = None
+                
+            if self.focus_auto is None:
+                try:
+                    # Get FocusOnePush property for software zoom via DirectShow producer
+                    self.focus_auto = self.grabber.device_property_map.find_command("Focus_One_Push")
+                except:
+                    self.focus_auto = None
+
+            if self.focus_auto is not None:
                 # FocusAuto can indicate when it is done, so register a notification handler
                 # The notification is run on a separate thread, which should not interact with UI elements
                 # Therefore, post an event to the main thread
@@ -235,10 +265,7 @@ class MainWindow(QMainWindow):
                 self.run_auto_focus.pressed.connect(self.onFocusAuto)
 
                 # Add to layout
-                self.props_layout.addRow(QLabel("Auto-Focus"), self.run_auto_focus)                
-                create_event_log = True
-            except:
-                self.focus_auto = None
+                self.props_layout.addRow(QLabel("Auto-Focus"), self.run_auto_focus)
 
             try:
                 # Get IRCutFilterEnable property
