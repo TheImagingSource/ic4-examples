@@ -65,7 +65,10 @@ Some cameras provide advanced features that can be utilized to solve specific ap
 
 ## Qt6
 
-This section contains a simple application showing how to display live video in a Qt6/PySide6 application ([first steps](/python/qt6/qt6-first-steps)) as well as a Python implementation of [ic4-demoapp](/python/qt6/demoapp).
+This section contains
+- A simple application showing how to display live video in a Qt6/PySide6 application ([first steps](/python/qt6/qt6-first-steps))
+- A Python implementation of [ic4-demoapp](/python/qt6/demoapp)
+- An application showcasing the use of zoom and focus features ([zoom-focus-demo](/python/qt6/zoom-focus-demo))
 
 ## Third-Party Integration
 
