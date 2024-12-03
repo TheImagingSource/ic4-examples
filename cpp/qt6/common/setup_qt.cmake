@@ -4,8 +4,12 @@ if((NOT Qt6_FOUND) AND (NOT Qt5_FOUND) )
     if(WIN32)
         # This path probably will not be valid on your system.
         # If cmake complains about not being able to find Qt, point it into your Qt installation directory.
-        list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.7.3/msvc2019_64/")	# not yet released
-        list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.7.2/msvc2019_64/")	# not yet released
+        list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.8.2/msvc2022_64/")	# Not yet released
+        list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.8.1/msvc2022_64/")	# 6.8.1 - MSVC 2022 (only has msvc2022) added 2024/12/02
+        #list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.8.0/msvc2022_64/")	# 6.8.0 is not available in current installer
+        list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.7.3/msvc2022_64/")	# 6.7.3 - MSVC 2022
+        list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.7.3/msvc2019_64/")	# 6.7.3 - MSVC 2019
+        list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.7.2/msvc2019_64/")	# 
         list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.7.1/msvc2019_64/")
         list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.6.3/msvc2019_64/")
         list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.6.2/msvc2019_64/")
