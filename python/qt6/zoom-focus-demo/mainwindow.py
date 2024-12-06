@@ -80,24 +80,28 @@ class MainWindow(QMainWindow):
 
     def zoomSliderChanged(self, val):
         # The zoom slider changed: Set new value and update text
-        self.zoom.value = val
+        # This could also be self.zoom.value = val, but let's write without a property object
+        self.grabber.device_property_map.set_value(ic4.PropId.ZOOM, val)
         self.zoom_edit.setText(str(val))
 
     def zoomEditDone(self):
         # If the zoom text was changed, set new value and update slider
         val = int(self.zoom_edit.text())
+        # Only write property when the text was actually changed
         if self.zoom.value != val:
             self.zoom.value = val
             self.zoom_slider.setValue(val)
 
     def focusSliderChanged(self, val):
         # The focus slider changed: Set new value
-        self.focus.value = val
+        # This could also be self.focus.value = val, but let's write without a property object
+        self.grabber.device_property_map.set_value(ic4.PropId.FOCUS, val)
         # No need to update edit box, focus change notification will do that
 
     def focusEditDone(self):
         # If the focus text was changed, set the new value
         val = int(self.focus_edit.text())
+        # Only write property when the text was actually changed
         if self.focus.value != val:
             self.focus.value = val
             # No need to update slider, focus change notification will do that
@@ -138,12 +142,14 @@ class MainWindow(QMainWindow):
 
     def irisSliderChanged(self, val):
         # The iris slider changed: Set new value
-        self.iris.value = val
+        # This could also be self.iris.value = val, but let's write without a property object
+        self.grabber.device_property_map.set_value(ic4.PropId.IRIS, val)
         # No need to update edit box, iris change notification will do that
 
     def irisEditDone(self):
         # If the iris text was changed, set the new value
         val = int(self.iris_edit.text())
+        # Only write property when value was actually changed
         if self.iris.value != val:
             self.iris.value = val
             # No need to update slider, iris change notification will do that
@@ -161,14 +167,11 @@ class MainWindow(QMainWindow):
 
     def onIrisAutoChanged(self, state: Qt.CheckState):
         # Change iris auto state
-        if isinstance(self.iris_auto, ic4.PropEnumeration):
-            self.iris_auto.value = "Continuous" if (state == Qt.CheckState.Checked) else "Off"
-        else:
-            self.iris_auto.value = (state == Qt.CheckState.Checked)
+        self.grabber.device_property_map.set_value(ic4.PropId.IRIS_AUTO, state == Qt.CheckState.Checked)
 
     def onIrcutChanged(self, state: Qt.CheckState):
         # Change movable IR-Cut filter state
-        self.ircut.value = (state == Qt.CheckState.Checked)
+        self.grabber.device_property_map.set_value(ic4.PropId.IR_CUT_FILTER_ENABLE, state == Qt.CheckState.Checked)
 
     def onZoomMoveCompleted(self):
         # This function is called when the notification event for the ZoomMoveCompleted feature was raised
@@ -337,25 +340,25 @@ class MainWindow(QMainWindow):
 
             try:
                 # Get IrisAuto property
-                self.iris_auto = self.grabber.device_property_map.find_boolean(ic4.PropId.IRIS_AUTO)
+                iris_auto = self.grabber.device_property_map.find_boolean(ic4.PropId.IRIS_AUTO)
             except:
-                self.iris_auto = None
+                iris_auto = None
 
-            if self.iris_auto is None:
+            if iris_auto is None:
                 try:
                     # Get IrisAuto property
-                    self.iris_auto = self.grabber.device_property_map.find_enumeration(ic4.PropId.IRIS_AUTO)
+                    iris_auto = self.grabber.device_property_map.find_enumeration(ic4.PropId.IRIS_AUTO)
                 except:
-                    self.iris_auto = None
+                    iris_auto = None
 
-            if self.iris_auto:
+            if iris_auto:
                 # Create checkbox
                 iris_auto_check = QCheckBox("Enabled")
 
-                if isinstance(self.iris_auto, ic4.PropEnumeration):
-                    iris_auto_check.setChecked(self.iris_auto.value == "Continuous")
+                if isinstance(iris_auto, ic4.PropEnumeration):
+                    iris_auto_check.setChecked(iris_auto.value == "Continuous")
                 else:
-                    iris_auto_check.setChecked(self.iris_auto.value)
+                    iris_auto_check.setChecked(iris_auto.value)
                 iris_auto_check.checkStateChanged.connect(self.onIrisAutoChanged)
 
                 # Add to layout
@@ -363,17 +366,17 @@ class MainWindow(QMainWindow):
 
             try:
                 # Get IRCutFilterEnable property
-                self.ircut = self.grabber.device_property_map.find_boolean(ic4.PropId.IR_CUT_FILTER_ENABLE)
+                ircut = self.grabber.device_property_map.find_boolean(ic4.PropId.IR_CUT_FILTER_ENABLE)
 
                 # Create checkbox
                 ircut_check = QCheckBox("Enabled")
-                ircut_check.setChecked(self.ircut.value)
+                ircut_check.setChecked(ircut.value)
                 ircut_check.checkStateChanged.connect(self.onIrcutChanged)
 
                 # Add to layout
                 self.props_layout.addRow(QLabel("IR-Cut Filter"), ircut_check)
             except:
-                self.ircut = None
+                pass
 
             try:
                 # Get ZoomMoveCompleted property
