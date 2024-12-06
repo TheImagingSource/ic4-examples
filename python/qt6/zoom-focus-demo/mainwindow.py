@@ -13,6 +13,7 @@ UPDATE_FOCUS_AUTO_EVENT = QEvent.Type(QEvent.Type.User + 2)
 ZOOM_MOVE_COMPLETED_EVENT = QEvent.Type(QEvent.Type.User + 3)
 FOCUS_MOVE_COMPLETED_EVENT = QEvent.Type(QEvent.Type.User + 4)
 DEVICE_LOST_EVENT = QEvent.Type(QEvent.Type.User + 5)
+UPDATE_IRIS_EVENT = QEvent.Type(QEvent.Type.User + 6)
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -74,6 +75,8 @@ class MainWindow(QMainWindow):
             self.onFocusMoveCompleted()
         if ev.type() == DEVICE_LOST_EVENT:
             self.onDeviceLost()
+        if ev.type() == UPDATE_IRIS_EVENT:
+            self.onUpdateIris()
 
     def zoomSliderChanged(self, val):
         # The zoom slider changed: Set new value and update text
@@ -131,6 +134,37 @@ class MainWindow(QMainWindow):
             if self.focus_auto.value != "Once":
                 val = self.grabber.device_property_map.find_integer(ic4.PropId.FOCUS).value
                 self.event_log.appendPlainText(f"FocusAuto completed (at {val})")
+
+
+    def irisSliderChanged(self, val):
+        # The iris slider changed: Set new value
+        self.iris.value = val
+        # No need to update edit box, iris change notification will do that
+
+    def irisEditDone(self):
+        # If the iris text was changed, set the new value
+        val = int(self.iris_edit.text())
+        if self.iris.value != val:
+            self.iris.value = val
+            # No need to update slider, iris change notification will do that
+
+    def onUpdateIris(self):
+        # This function is called when the notification event for the Iris feature was raised
+        # It updates both the text box and slider
+        val = self.iris.value
+        self.iris_edit.setText(str(val))
+        self.iris_edit.setEnabled(not self.iris.is_locked)
+        self.iris_slider.blockSignals(True)
+        self.iris_slider.setValue(val)
+        self.iris_slider.setEnabled(not self.iris.is_locked)
+        self.iris_slider.blockSignals(False)
+
+    def onIrisAutoChanged(self, state: Qt.CheckState):
+        # Change iris auto state
+        if isinstance(self.iris_auto, ic4.PropEnumeration):
+            self.iris_auto.value = "Continuous" if (state == Qt.CheckState.Checked) else "Off"
+        else:
+            self.iris_auto.value = (state == Qt.CheckState.Checked)
 
     def onIrcutChanged(self, state: Qt.CheckState):
         # Change movable IR-Cut filter state
@@ -268,6 +302,66 @@ class MainWindow(QMainWindow):
                 self.props_layout.addRow(QLabel("Auto-Focus"), self.run_auto_focus)
 
             try:
+                # Get iris property
+                self.iris = self.grabber.device_property_map.find_integer(ic4.PropId.IRIS)
+
+                # Iris can be changed by IrisAuto, so register a notification handler
+                # The notification is run on a separate thread, which should not interact with UI elements
+                # Therefore, post an event to the main thread
+                self.iris.event_add_notification(lambda p: QApplication.postEvent(self, QEvent(UPDATE_IRIS_EVENT)))
+
+                # Create Iris slider
+                self.iris_slider = QSlider(Qt.Orientation.Horizontal)
+                self.iris_slider.valueChanged.connect(self.irisSliderChanged)
+                self.iris_slider.setMinimum(self.iris.minimum)
+                self.iris_slider.setMaximum(self.iris.maximum)
+                self.iris_slider.setValue(self.iris.value)
+                self.iris_slider.setEnabled(not self.iris.is_locked)
+
+                # Create Iris textbox
+                self.iris_edit = QLineEdit()
+                self.iris_edit.setMinimumWidth(60)
+                self.iris_edit.setMaximumWidth(60)
+                self.iris_edit.setValidator(QIntValidator(self.iris.minimum, self.iris.maximum))
+                self.iris_edit.setText(str(self.iris.value))
+                self.iris_edit.editingFinished.connect(self.irisEditDone)
+                self.iris_edit.setEnabled(not self.iris.is_locked)
+
+                # Add to layout
+                iris_group = QHBoxLayout()
+                iris_group.addWidget(self.iris_slider)
+                iris_group.addWidget(self.iris_edit)
+                self.props_layout.addRow(QLabel("Iris"), iris_group)
+            except:
+                self.iris = None
+
+            try:
+                # Get IrisAuto property
+                self.iris_auto = self.grabber.device_property_map.find_boolean(ic4.PropId.IRIS_AUTO)
+            except:
+                self.iris_auto = None
+
+            if self.iris_auto is None:
+                try:
+                    # Get IrisAuto property
+                    self.iris_auto = self.grabber.device_property_map.find_enumeration(ic4.PropId.IRIS_AUTO)
+                except:
+                    self.iris_auto = None
+
+            if self.iris_auto:
+                # Create checkbox
+                iris_auto_check = QCheckBox("Enabled")
+
+                if isinstance(self.iris_auto, ic4.PropEnumeration):
+                    iris_auto_check.setChecked(self.iris_auto.value == "Continuous")
+                else:
+                    iris_auto_check.setChecked(self.iris_auto.value)
+                iris_auto_check.checkStateChanged.connect(self.onIrisAutoChanged)
+
+                # Add to layout
+                self.props_layout.addRow(QLabel("Iris Auto"), iris_auto_check)
+
+            try:
                 # Get IRCutFilterEnable property
                 self.ircut = self.grabber.device_property_map.find_boolean(ic4.PropId.IR_CUT_FILTER_ENABLE)
 
@@ -324,7 +418,7 @@ class MainWindow(QMainWindow):
                 self.event_log = None
 
     def onDeviceLost(self):
-        # The opened camera got disconnected!        
+        # The opened camera got disconnected!
         QMessageBox.warning(self, "", f"The video capture device is lost!", QMessageBox.StandardButton.Ok)
 
         # Clear out controls generated for the previous device
