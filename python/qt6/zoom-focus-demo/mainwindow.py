@@ -1,6 +1,6 @@
 
 from PySide6.QtCore import QEvent, Qt
-from PySide6.QtGui import QIntValidator
+from PySide6.QtGui import QIntValidator, QCloseEvent
 from PySide6.QtWidgets import QApplication, QMainWindow, QDialog, QMessageBox
 from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout, QFormLayout
 from PySide6.QtWidgets import QPushButton, QLabel, QSplitter, QFrame, QSlider, QLineEdit, QCheckBox, QPlainTextEdit
@@ -77,6 +77,11 @@ class MainWindow(QMainWindow):
             self.onDeviceLost()
         if ev.type() == UPDATE_IRIS_EVENT:
             self.onUpdateIris()
+
+    def closeEvent(self, ev: QCloseEvent):
+        # Some drivers don't like their stream being stopped late
+        if self.grabber.is_streaming:
+            self.grabber.stream_stop()
 
     def zoomSliderChanged(self, val):
         # The zoom slider changed: Set new value and update text
