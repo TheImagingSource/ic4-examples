@@ -23,8 +23,6 @@ on this object modify the contents of the image buffer.
 
 Finally, the modified image buffer is passed to an `ic4.WinForms.Display` control for display.
 
-The drawing takes place in the callback of the IC4 `QueueSink`, as the drawing must be repeated for each new image. 
-
 ### Setup the QueueSink
 In the `startStream` method the sink is created:
 ```C#
