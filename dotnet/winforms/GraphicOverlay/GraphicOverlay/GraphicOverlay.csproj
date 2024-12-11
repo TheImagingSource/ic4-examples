@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Platforms>x64</Platforms>
+    <ApplicationIcon>tis.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="tis.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ic4dotnet" Version="1.2.0.2954" />
+    <PackageReference Include="ic4dotnet.System.Drawing" Version="1.2.0.2954" />
+    <PackageReference Include="ic4dotnet.System.Windows.Forms" Version="1.2.0.2954" />
+  </ItemGroup>
+
+</Project>
