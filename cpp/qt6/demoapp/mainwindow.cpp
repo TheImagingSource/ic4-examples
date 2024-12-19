@@ -43,10 +43,12 @@
 #define IC4_DEMOAPP_VERSION_LINE "(No version info available)"
 #endif
 
-MainWindow::MainWindow(QWidget* parent)
+MainWindow::MainWindow(const init_options& params, QWidget* parent)
 	: QMainWindow(parent)
 	, _videowriter(ic4::VideoWriterType::MP4_H264)
 {
+	_showSettingsMenu = params.show_settings_menu;
+
 	// Make sure the %appdata%/demoapp directory exists
 	auto appDataDirectory = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
 	QDir(appDataDirectory).mkpath(".");
@@ -76,12 +78,22 @@ MainWindow::MainWindow(QWidget* parent)
 		QMessageBox::information(this, {}, ex.what());
 	}
 
-	if (QFileInfo::exists(_devicefile.c_str()))
+	std::filesystem::path deviceSetupFile_value;
+	if (params.deviceSetupFile.empty())
+	{
+		deviceSetupFile_value = _devicefile;
+	}
+	else
+	{
+		deviceSetupFile_value = params.deviceSetupFile.string();
+	}
+
+	if (std::filesystem::is_regular_file(deviceSetupFile_value))
 	{
 		ic4::Error err;
 
 		// Try to load the last used device.
-		if (!_grabber.deviceOpenFromState(_devicefile, err))
+		if (!_grabber.deviceOpenFromState(deviceSetupFile_value, err))
 		{
 			auto message = "Loading last used device failed: " + err.message();
 			QMessageBox::information(this, {}, message.c_str());

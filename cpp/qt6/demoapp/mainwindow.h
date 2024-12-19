@@ -16,12 +16,19 @@
 
 #include "PropertyDialog.h"
 
+#include <filesystem>
+
 class MainWindow : public QMainWindow, ic4::QueueSinkListener
 {
 	Q_OBJECT
 
 public:
-	explicit MainWindow(QWidget* parent = nullptr);
+	struct init_options {
+		std::filesystem::path deviceSetupFile;
+		bool show_settings_menu = false;
+	};
+		
+	explicit MainWindow(const init_options& params, QWidget* parent = nullptr);
 
 	~MainWindow();
 
@@ -58,8 +65,8 @@ private:
 	void customEvent(QEvent* event);
 	void savePhoto(const ic4::ImageBuffer& imagebuffer);
 
-	std::string _devicefile;    // File name of device state xml
-	std::string _codecconfigfile;    // File name of device state xml
+	std::string _devicefile;		// File name of device state xml
+	std::string _codecconfigfile;   // File name of device state xml
 	std::mutex _snapphotomutex;
 	bool _shootPhoto = false;
 	std::atomic<bool> _capturetovideo = false;
