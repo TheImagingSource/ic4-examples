@@ -50,12 +50,15 @@ MainWindow::MainWindow(const init_options& params, QWidget* parent)
 	_showSettingsMenu = params.show_settings_menu;
 
 	// Make sure the %appdata%/demoapp directory exists
-	auto appDataDirectory = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-	QDir(appDataDirectory).mkpath(".");
+	if (!params.appDataDirectory.empty())
+	{
+		QDir(QString::fromStdString(params.appDataDirectory.string())).mkpath(".");
 
-	_devicefile = appDataDirectory.toStdString() + "/device.json";
-	_codecconfigfile = appDataDirectory.toStdString() + "/codecconfig.json";
-	readSettingsFile(appDataDirectory);
+		_devicefile = params.appDataDirectory / "device.json";
+		_codecconfigfile = params.appDataDirectory / "codecconfig.json";
+		readSettingsFile(params.appDataDirectory);
+	}
+
 
 	createUI();
 
@@ -79,13 +82,13 @@ MainWindow::MainWindow(const init_options& params, QWidget* parent)
 	}
 
 	std::filesystem::path deviceSetupFile_value;
-	if (params.deviceSetupFile.empty())
+	if (!params.deviceSetupFile.has_value())
 	{
 		deviceSetupFile_value = _devicefile;
 	}
 	else
 	{
-		deviceSetupFile_value = params.deviceSetupFile.string();
+		deviceSetupFile_value = params.deviceSetupFile.value();
 	}
 
 	if (std::filesystem::is_regular_file(deviceSetupFile_value))
@@ -102,7 +105,7 @@ MainWindow::MainWindow(const init_options& params, QWidget* parent)
 		onDeviceOpened();
 	}
 
-	if (QFileInfo::exists(_codecconfigfile.c_str()))
+	if (std::filesystem::is_regular_file(_codecconfigfile))
 	{
 		ic4::Error err;
 
@@ -912,9 +915,9 @@ void MainWindow::framesQueued(ic4::QueueSink& sink)
 	}
 }
 
-void MainWindow::readSettingsFile(const QString& appDataDirectory)
+void MainWindow::readSettingsFile(const std::filesystem::path& appDataDirectory)
 {
-	QFile file(appDataDirectory + "/settings.json" );
+	QFile file(ic4demoapp::fspath_to_QString(appDataDirectory / "settings.json") );
 	if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
 		return;
 	}

@@ -3,6 +3,7 @@
 
 #include <QApplication>
 
+
 int main(int argc, char* argv[])
 {
 	//qputenv("QT_COMMAND_LINE_PARSER_NO_GUI_MESSAGE_BOXES", "1");
@@ -15,30 +16,33 @@ int main(int argc, char* argv[])
 	QApplication::setApplicationDisplayName("IC4 Demo Application");
 	QApplication::setStyle("fusion");
 
-	MainWindow::init_options init = {};
+	MainWindow::init_options init = {
+		/*.appDataDirectory =*/ ic4demoapp::QString_to_fspath(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)),
+		/*.deviceSetupFile =*/ std::nullopt,
+	};
 
 	{
-
-		auto appDataDirectory = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-		QDir(appDataDirectory).mkpath(".");
-
-		auto device_setup_path = std::filesystem::path(appDataDirectory.toStdString()) / "device.json";
+		auto device_setup_path = init.appDataDirectory / "device.json";
 
 		QCommandLineParser parser;
 		parser.setApplicationDescription("IC4 Demo Application");
 		auto helpOption = parser.addHelpOption();
 		auto versionOption = parser.addVersionOption();
 
-		QCommandLineOption cli_option_device_file("device-file");
-		cli_option_device_file.setDescription(
-			QString("Sets the device-setup-file to load on startup. Default='") % QString::fromStdString(device_setup_path.string()) % "'.)"
+		QCommandLineOption cli_option_device_file("device-file",
+			"Sets the device state file to load on startup. Default='" % QString::fromStdString(device_setup_path.string()) % "'.)",
+			"file"
 		);
-		cli_option_device_file.setValueName("file");
 		parser.addOption(cli_option_device_file);
 
-		QCommandLineOption cli_option_settings("settings");
-		cli_option_settings.setDescription("Show settings menu");
-		cli_option_settings.setValueName("enable");
+		QCommandLineOption cli_option_app_data_dir("app-data-directory",
+			"Sets the directory to load/store program settings like 'last open device' and 'codec-config'."
+			" Default='" % QString::fromStdString(init.appDataDirectory.string()) % "'.)",
+			"directory"
+		);
+		parser.addOption(cli_option_app_data_dir);
+
+		QCommandLineOption cli_option_settings("settings", "Show settings menu", "enable");
 		parser.addOption(cli_option_settings);
 
 		auto res = parser.parse(QApplication::arguments());
@@ -73,7 +77,11 @@ int main(int argc, char* argv[])
 		}
 		if (parser.isSet(cli_option_device_file))
 		{
-			init.deviceSetupFile = std::filesystem::path(parser.value(cli_option_device_file).toStdString());
+			init.deviceSetupFile = ic4demoapp::QString_to_fspath(parser.value(cli_option_device_file));
+		}
+		if (parser.isSet(cli_option_app_data_dir))
+		{
+			init.appDataDirectory = ic4demoapp::QString_to_fspath(parser.value(cli_option_app_data_dir));
 		}
 		if (parser.isSet(cli_option_settings))
 		{

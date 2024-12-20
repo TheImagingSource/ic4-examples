@@ -18,13 +18,38 @@
 
 #include <filesystem>
 
+namespace ic4demoapp
+{
+	inline auto QString_to_fspath(const QString& str) -> std::filesystem::path {
+#if defined _WIN32
+		return str.toStdWString();
+#else
+		return str.toStdString();
+#endif
+	}
+
+	inline auto fspath_to_QString(const std::filesystem::path& str) -> QString {
+#if defined _WIN32
+		return QString::fromStdWString(str.wstring());
+#else
+		return QString::fromStdString(str.string());
+#endif
+	}
+}
+
+
 class MainWindow : public QMainWindow, ic4::QueueSinkListener
 {
 	Q_OBJECT
 
 public:
 	struct init_options {
-		std::filesystem::path deviceSetupFile;
+		std::filesystem::path appDataDirectory;
+		
+		// If empty, then appDataDirectory / "device.json" is used, if deviceSetupFile.value().empty() no device is opened
+		std::optional<std::filesystem::path> deviceSetupFile;
+
+		// Show the settings menu
 		bool show_settings_menu = false;
 	};
 		
@@ -65,8 +90,9 @@ private:
 	void customEvent(QEvent* event);
 	void savePhoto(const ic4::ImageBuffer& imagebuffer);
 
-	std::string _devicefile;		// File name of device state xml
-	std::string _codecconfigfile;   // File name of device state xml
+	std::filesystem::path _devicefile;		// File name of device state xml
+	std::filesystem::path _codecconfigfile;   // File name of device state xml
+
 	std::mutex _snapphotomutex;
 	bool _shootPhoto = false;
 	std::atomic<bool> _capturetovideo = false;
@@ -111,7 +137,7 @@ private:
 
 	ic4::PropVisibility _defaultVisibility = ic4::PropVisibility::Beginner;
 
-	void	readSettingsFile(const QString& appDataDirectory);
+	void readSettingsFile(const std::filesystem::path& appDataDirectory);
 };
 
 #endif // MAINWINDOW_H
