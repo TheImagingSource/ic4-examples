@@ -143,7 +143,7 @@ void HighSpeedCaptureDialog::updateUI()
 
 void HighSpeedCaptureDialog::readSettings()
 {
-	QSettings settings("The Imaging Source", "HighSpeedCapture Sample Application");
+	QSettings settings("The Imaging Source Europe GmbH", "HighSpeedCapture Sample Application");
 
 	auto defaultDestination = QString("%1/HighSpeedCapture Sample").arg(QStandardPaths::writableLocation(QStandardPaths::PicturesLocation));
 	auto destinationDirectory = settings.value("DestinationDirectory", defaultDestination).toString();
