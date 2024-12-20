@@ -10,16 +10,16 @@ int main(int argc, char* argv[])
 
 	QApplication app(argc, argv);
 	QApplication::setApplicationName("ic4-demoapp");
-#if defined IC4_DEMOAPP_VERSION_LINE
-	QApplication::setApplicationVersion(IC4_DEMOAPP_VERSION_LINE);
-#endif
 	QApplication::setApplicationDisplayName("IC4 Demo Application");
 	QApplication::setStyle("fusion");
 
 	MainWindow::init_options init = {
 		/*.appDataDirectory =*/ ic4demoapp::QString_to_fspath(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)),
 		/*.deviceSetupFile =*/ std::nullopt,
+		/*.show_settings_menu = */
 	};
+
+	bool only_show_program_version = false;
 
 	{
 		auto device_setup_path = init.appDataDirectory / "device.json";
@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
 		);
 		parser.addOption(cli_option_app_data_dir);
 
-		QCommandLineOption cli_option_settings("settings", "Show settings menu", "enable");
+		QCommandLineOption cli_option_settings("settings", "Add the settings menu to the menu bar. Default='0'.", "enable");
 		parser.addOption(cli_option_settings);
 
 		auto res = parser.parse(QApplication::arguments());
@@ -72,8 +72,7 @@ int main(int argc, char* argv[])
 		}
 		if (parser.isSet(versionOption))
 		{
-			parser.showVersion();
-			return 0;
+			only_show_program_version = true;
 		}
 		if (parser.isSet(cli_option_device_file))
 		{
@@ -94,6 +93,25 @@ int main(int argc, char* argv[])
 	conf.logTargets = ic4::LogTarget::WinDebug;
 	conf.defaultErrorHandlerBehavior = ic4::ErrorHandlerBehavior::Throw;
 	ic4::initLibrary(conf);
+
+	if (only_show_program_version)
+	{
+		std::string version_text = app.applicationDisplayName().toStdString() + " " + app.applicationVersion().toStdString();
+		version_text += "\n\n";
+		version_text += ic4::getVersionInfo(ic4::VersionInfoFlags::Default);
+
+#if defined _WIN32
+		QMessageBox::information(0, QGuiApplication::applicationDisplayName(),
+				 "<html><head/><body><pre>"
+				 + QString::fromStdString(version_text) + "</pre></body></html>");
+#else
+		std::fputs(version_text.c_str(), stdout);
+
+		//parser.showVersion();
+#endif
+		return 0;
+	}
+
 
 	MainWindow mainWindow(init);
 	mainWindow.show();
