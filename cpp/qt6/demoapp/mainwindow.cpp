@@ -265,7 +265,7 @@ void MainWindow::createUI()
 			std::error_code ec;
 			std::filesystem::remove( _devicefile, ec );
 			if (ec) {
-				qWarning().noquote() << "Failed to delete: " << QString(_devicefile.c_str());
+				qWarning().noquote() << "Failed to delete: " << QString::fromStdString(_devicefile.string());
 			}
 		}
 	);
