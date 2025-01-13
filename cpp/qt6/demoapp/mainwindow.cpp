@@ -144,13 +144,14 @@ void MainWindow::createUI()
 	// Device Selection
 	_DeviceSelectAct = new QAction(selector.loadIcon(":/images/camera.png"), tr("&Select"), this);
 	_DeviceSelectAct->setStatusTip(tr("Select a video capture device"));
-    _DeviceSelectAct->setShortcut(QKeySequence::Open);
+	_DeviceSelectAct->setShortcut(QKeySequence::Open);
 	connect(_DeviceSelectAct, &QAction::triggered, this, &MainWindow::onSelectDevice);
 
 	// Device Properties
 	_DevicePropertiesAct = new QAction(selector.loadIcon(":/images/imgset.png"), tr("&Properties"), this);
 	_DevicePropertiesAct->setStatusTip(tr("Show device property dialog"));
 	_DevicePropertiesAct->setEnabled(false);
+	_DeviceSelectAct->setShortcut(QKeySequence::Print);
 	connect(_DevicePropertiesAct, &QAction::triggered, this, &MainWindow::onDeviceProperties);
 
     // Device Driver Properties
