@@ -39,10 +39,6 @@
 #include <filesystem>
 #include <string>
 
-#ifndef IC4_DEMOAPP_VERSION_LINE
-#define IC4_DEMOAPP_VERSION_LINE "(No version info available)"
-#endif
-
 MainWindow::MainWindow(const init_options& params, QWidget* parent)
 	: QMainWindow(parent)
 	, _videowriter(ic4::VideoWriterType::MP4_H264)
@@ -838,6 +834,13 @@ void MainWindow::onCloseDevice()
 
 void MainWindow::onAbout()
 {
+	auto ver = QApplication::applicationVersion();
+	if (ver.isEmpty()) {
+		ver = "(No version info available)";
+	} else {
+		ver = "Version " + ver;
+	}
+
 	QMessageBox about(this);
 	about.setWindowTitle("About");
 	about.setTextFormat(Qt::RichText);
@@ -853,7 +856,7 @@ void MainWindow::onAbout()
 			"<a href='%3'>%3</a>"
 		)
 		.arg(QApplication::applicationDisplayName())
-		.arg(IC4_DEMOAPP_VERSION_LINE)
+		.arg(ver)
 		.arg("https://github.com/TheImagingSource/ic4-examples")
 	);
 	about.exec();

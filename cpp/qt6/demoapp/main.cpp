@@ -12,6 +12,9 @@ int main(int argc, char* argv[])
 	QApplication::setApplicationName("ic4-demoapp");
 	QApplication::setApplicationDisplayName("IC4 Demo Application");
 	QApplication::setStyle("fusion");
+#if defined IC4_QTDIALOG_APPVERSION
+	QApplication::setApplicationVersion(IC4_QTDIALOG_APPVERSION);
+#endif
 
 	MainWindow::init_options init = {
 		/*.appDataDirectory =*/ ic4demoapp::QString_to_fspath(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)),
@@ -96,7 +99,11 @@ int main(int argc, char* argv[])
 
 	if (only_show_program_version)
 	{
-		std::string version_text = app.applicationDisplayName().toStdString() + " " + app.applicationVersion().toStdString();
+		std::string version_text = app.applicationDisplayName().toStdString();
+		auto app_ver = app.applicationVersion();
+		if (!app_ver.isEmpty()) {
+			version_text += " " + app_ver.toStdString();
+		}
 		version_text += "\n\n";
 		version_text += ic4::getVersionInfo(ic4::VersionInfoFlags::Default);
 
