@@ -9,12 +9,12 @@ int main(int argc, char* argv[])
 	//qputenv("QT_COMMAND_LINE_PARSER_NO_GUI_MESSAGE_BOXES", "1");
 
 	QApplication app(argc, argv);
-	QApplication::setApplicationName("ic4-demoapp");
-	QApplication::setApplicationDisplayName("IC4 Demo Application");
-	QApplication::setStyle("fusion");
+	app.setApplicationName("ic4-demoapp");
+	app.setApplicationDisplayName("IC4 Demo Application");
 #if defined IC4_QTDIALOG_APPVERSION
-	QApplication::setApplicationVersion(IC4_QTDIALOG_APPVERSION);
+	app.setApplicationVersion(IC4_QTDIALOG_APPVERSION);
 #endif
+	app.setStyle("fusion");
 
 	MainWindow::init_options init = {
 		/*.appDataDirectory =*/ ic4demoapp::QString_to_fspath(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)),
@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
 		);
 		parser.addOption(cli_option_app_data_dir);
 
-		QCommandLineOption cli_option_settings("settings", "Add the settings menu to the menu bar. Default='0'.", "enable");
+		QCommandLineOption cli_option_settings("enable-settings", "Add the settings menu to the menu bar.");
 		parser.addOption(cli_option_settings);
 
 		auto res = parser.parse(QApplication::arguments());
@@ -61,6 +61,8 @@ int main(int argc, char* argv[])
 #endif
 			return 1;
 		}
+
+		auto unknownOptionNames = parser.unknownOptionNames();
 
 		if (parser.isSet(helpOption))
 		{
@@ -87,7 +89,7 @@ int main(int argc, char* argv[])
 		}
 		if (parser.isSet(cli_option_settings))
 		{
-			init.show_settings_menu = parser.value(cli_option_settings).toInt() != 0;
+			init.show_settings_menu = true;
 		}
 	}
 

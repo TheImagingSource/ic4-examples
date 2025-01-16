@@ -6,7 +6,12 @@
 int main(int argc, char* argv[])
 {
 	QApplication app(argc, argv);
+
+	app.setApplicationName("ic4-device-manager");
 	app.setApplicationDisplayName("IC4 Device Manager");
+#if defined IC4_QTDIALOG_APPVERSION
+	app.setApplicationVersion(IC4_QTDIALOG_APPVERSION);
+#endif
 
 	app.setStyle("fusion");
 
