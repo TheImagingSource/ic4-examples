@@ -33,14 +33,14 @@ int main(int argc, char* argv[])
 		auto versionOption = parser.addVersionOption();
 
 		QCommandLineOption cli_option_device_file("device-file",
-			"Sets the device state file to load on startup. Default='" % QString::fromStdString(device_setup_path.string()) % "'.)",
+			"Sets the device state file to load on startup. Default='" % QString::fromStdString(device_setup_path.string()) % "'",
 			"file"
 		);
 		parser.addOption(cli_option_device_file);
 
 		QCommandLineOption cli_option_app_data_dir("app-data-directory",
 			"Sets the directory to load/store program settings like 'last open device' and 'codec-config'."
-			" Default='" % QString::fromStdString(init.appDataDirectory.string()) % "'.)",
+			" Default='" % QString::fromStdString(init.appDataDirectory.string()) % "'",
 			"directory"
 		);
 		parser.addOption(cli_option_app_data_dir);
