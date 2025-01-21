@@ -147,7 +147,7 @@ void MainWindow::createUI()
 	_DevicePropertiesAct = new QAction(selector.loadIcon(":/images/imgset.png"), tr("&Properties"), this);
 	_DevicePropertiesAct->setStatusTip(tr("Show device property dialog"));
 	_DevicePropertiesAct->setEnabled(false);
-	_DeviceSelectAct->setShortcut(QKeySequence::Print);
+	_DevicePropertiesAct->setShortcut(QKeySequence::Print);
 	connect(_DevicePropertiesAct, &QAction::triggered, this, &MainWindow::onDeviceProperties);
 
     // Device Driver Properties
