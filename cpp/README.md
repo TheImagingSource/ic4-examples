@@ -24,6 +24,8 @@ All C++ examples assume that the IC4 SDK for C++ is installed. For Windows, this
 
 The examples require *CMake* (On *Windows*, this is provided by *Visual Studio 2019* or later) and a C++ compiler supporting at least C++14.
 
+Some example programs make use of *Qt* to provide a user interface. On *Windows*, please make sure to install the Qt component matching your compiler; e.g. when compiling the example programs using *Microsoft Visual Studio 2022*, customize the [Qt Online Installer](https://www.qt.io/download-qt-installer-oss) to include the *MSVC 2022 64-bit* component. On Debian-based Linux systems, install the *qt6-base-dev* package.
+
 # Compiling the Example Programs
 
 Most examples are built using *CMake*. You can either manually use *CMake* to build the example programs, or use an IDE that knows how to build *CMake* projects.
