@@ -34,24 +34,47 @@ if((NOT Qt6_FOUND) AND (NOT Qt5_FOUND) )
             set( QT_VERSION_MAJOR 6 )               # This is only needed for Qt5, but to keep it consistent we define it for both
         endif()
     else()
-        find_package(Qt5 REQUIRED COMPONENTS Core Widgets)
+        find_package(Qt5 QUIET COMPONENTS Core)
+        if( Qt5_FOUND )
+            find_package(Qt5 REQUIRED COMPONENTS Core Widgets)
 
-        set(CMAKE_AUTOMOC ON)
-        set(CMAKE_AUTORCC ON)
-        set(CMAKE_AUTOUIC ON)
 
-        if(${Qt5Core_VERSION} VERSION_LESS 5.15.0) # Version < 5.15. do not have qt_add_resources so replace it with an indirect call
-            macro(qt_add_resources)
-                qt5_add_resources(${ARGV})
-            endmacro()
-        endif()
+            set(CMAKE_AUTOMOC ON)
+            set(CMAKE_AUTORCC ON)
+            set(CMAKE_AUTOUIC ON)
 
-        if( NOT QT_VERSION )
-            set( QT_VERSION ${Qt5Core_VERSION} )
-            set( QT_VERSION_MAJOR 5 )               # This is only needed for Qt5, but to keep it consistent we define it for both
+            if(${Qt5Core_VERSION} VERSION_LESS 5.15.0) # Version < 5.15. do not have qt_add_resources so replace it with an indirect call
+                macro(qt_add_resources)
+                    qt5_add_resources(${ARGV})
+                endmacro()
+            endif()
+
+            if( NOT QT_VERSION )
+                set( QT_VERSION ${Qt5Core_VERSION} )
+                set( QT_VERSION_MAJOR 5 )               # This is only needed for Qt5, but to keep it consistent we define it for both
+            endif()
         endif()
     endif()
 
-    message( STATUS "QT_VERSION=${QT_VERSION} found")
-
+    
+    if( QT_VERSION )
+        message( STATUS "QT_VERSION=${QT_VERSION} found")
+    else()
+        # Warning/Error message generation for missing Qt installation
+        if(QT_REQUIRED_TOP_LEVEL)
+	        if(WIN32)
+		        message(FATAL_ERROR "No Qt5 or Qt6 installation found. To build Qt examples, install Qt.\n"
+			        "On Windows, add the path to your Qt installation to CMAKE_PREFIX_PATH in cpp/qt6/common/setup_qt.cmake")
+	        else()
+		        message(FATAL_ERROR "No Qt5 or Qt6 installation found. To build Qt examples, install Qt.")
+	        endif()
+        else()
+	        if(WIN32)
+		        message(WARNING "No Qt5 or Qt6 installation found. To build Qt examples, install Qt.\n"
+			        "On Windows, add the path to your Qt installation to CMAKE_PREFIX_PATH in cpp/qt6/common/setup_qt.cmake")
+	        else()
+		        message(WARNING "No Qt5 or Qt6 installation found. To build Qt examples, install Qt.")
+	        endif()
+        endif()
+    endif()
 endif()

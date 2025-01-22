@@ -1,8 +1,10 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.21)
 
 project(qt6-dialogs)
 
 find_package( ic4 CONFIG REQUIRED )
+
+set(QT_REQUIRED_TOP_LEVEL ${PROJECT_IS_TOP_LEVEL})
 
 include( ../setup_qt.cmake )
 
