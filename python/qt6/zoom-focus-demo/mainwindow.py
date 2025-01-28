@@ -170,13 +170,13 @@ class MainWindow(QMainWindow):
         self.iris_slider.setEnabled(not self.iris.is_locked)
         self.iris_slider.blockSignals(False)
 
-    def onIrisAutoChanged(self, state: Qt.CheckState):
+    def onIrisAutoChanged(self, state: int):
         # Change iris auto state
-        self.grabber.device_property_map.set_value(ic4.PropId.IRIS_AUTO, state == Qt.CheckState.Checked)
+        self.grabber.device_property_map.set_value(ic4.PropId.IRIS_AUTO, state == Qt.CheckState.Checked.value)
 
-    def onIrcutChanged(self, state: Qt.CheckState):
+    def onIrcutChanged(self, state: int):
         # Change movable IR-Cut filter state
-        self.grabber.device_property_map.set_value(ic4.PropId.IR_CUT_FILTER_ENABLE, state == Qt.CheckState.Checked)
+        self.grabber.device_property_map.set_value(ic4.PropId.IR_CUT_FILTER_ENABLE, state == Qt.CheckState.Checked.value)
 
     def onZoomMoveCompleted(self):
         # This function is called when the notification event for the ZoomMoveCompleted feature was raised
@@ -364,7 +364,7 @@ class MainWindow(QMainWindow):
                     iris_auto_check.setChecked(iris_auto.value == "Continuous")
                 else:
                     iris_auto_check.setChecked(iris_auto.value)
-                iris_auto_check.checkStateChanged.connect(self.onIrisAutoChanged)
+                iris_auto_check.stateChanged.connect(self.onIrisAutoChanged)
 
                 # Add to layout
                 self.props_layout.addRow(QLabel("Iris Auto"), iris_auto_check)
@@ -376,7 +376,7 @@ class MainWindow(QMainWindow):
                 # Create checkbox
                 ircut_check = QCheckBox("Enabled")
                 ircut_check.setChecked(ircut.value)
-                ircut_check.checkStateChanged.connect(self.onIrcutChanged)
+                ircut_check.stateChanged.connect(self.onIrcutChanged)
 
                 # Add to layout
                 self.props_layout.addRow(QLabel("IR-Cut Filter"), ircut_check)
