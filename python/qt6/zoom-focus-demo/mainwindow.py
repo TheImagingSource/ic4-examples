@@ -364,7 +364,7 @@ class MainWindow(QMainWindow):
                     iris_auto_check.setChecked(iris_auto.value == "Continuous")
                 else:
                     iris_auto_check.setChecked(iris_auto.value)
-                iris_auto_check.checkStateChanged.connect(self.onIrisAutoChanged)
+                iris_auto_check.stateChanged.connect(self.onIrisAutoChanged)
 
                 # Add to layout
                 self.props_layout.addRow(QLabel("Iris Auto"), iris_auto_check)
