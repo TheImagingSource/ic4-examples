@@ -829,6 +829,7 @@ void MainWindow::onCloseDevice()
 	_devicePropertyMap = {};
 	_display->displayBuffer(nullptr, ic4::Error::Ignore());
 
+    updateCameraLabel();
 	updateControls();
 }
 
