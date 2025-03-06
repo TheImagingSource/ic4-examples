@@ -34,20 +34,5 @@ if (WIN32)
 
     ic4_copy_runtime_to_target(ic4-demoapp)
 
-    set(windeployqt_exe  "${Qt6_DIR}/../../../bin/windeployqt.exe")
-    set(windeployqt_exe  "C:/Qt/6.8.2/msvc2022_64/bin/windeployqt.exe")
-
-    #C:\Qt\6.8.0\msvc2022_64\bin\windeployqt.exe --qtpaths "C:\Qt\6.8.0\msvc2022_arm64\bin\qtpaths.bat" ...
-
-    add_custom_command(TARGET ic4-demoapp POST_BUILD
-        COMMAND "${windeployqt_exe}"
-        --qtpaths "C:/Qt/6.8.2/msvc2022_arm64/bin/qtpaths.bat"
-        --verbose 0
-        --no-compiler-runtime
-        --no-translations
-        --no-system-d3d-compiler
-        --no-opengl-sw
-        $<TARGET_FILE:ic4-demoapp>
-        COMMENT "Deploying Qt..."
-    )
+    add_windeployqt_custom_command(ic4-demoapp) # Adds a POST_BUILD call to windeployqt.exe 
 endif()

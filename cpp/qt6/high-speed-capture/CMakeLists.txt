@@ -42,15 +42,6 @@ if (WIN32)
 
     ic4_copy_runtime_to_target(high-speed-capture)
 
-    add_custom_command(TARGET high-speed-capture POST_BUILD
-        COMMAND "${Qt6_DIR}/../../../bin/windeployqt.exe"
-            --verbose 0
-            --no-compiler-runtime
-            --no-translations
-            --no-system-d3d-compiler
-            --no-opengl-sw
-            $<TARGET_FILE:high-speed-capture>
-        COMMENT "Deploying Qt..."
-    )
+    add_windeployqt_custom_command(high-speed-capture) # Adds a POST_BUILD call to windeployqt.exe 
 
 endif ()

@@ -29,15 +29,6 @@ if (WIN32)
 
     ic4_copy_runtime_to_target(ic4-device-manager)
 
-    add_custom_command(TARGET ic4-device-manager POST_BUILD
-        COMMAND "${Qt6_DIR}/../../../bin/windeployqt.exe"
-            --verbose 0
-            --no-compiler-runtime
-            --no-translations
-            --no-system-d3d-compiler
-            --no-opengl-sw
-            $<TARGET_FILE:ic4-device-manager>
-        COMMENT "Deploying Qt..."
-    )
+    add_windeployqt_custom_command(ic4-device-manager) # Adds a POST_BUILD call to windeployqt.exe 
 
 endif ()

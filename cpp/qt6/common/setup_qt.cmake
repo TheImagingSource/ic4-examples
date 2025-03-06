@@ -4,9 +4,9 @@ if((NOT Qt6_FOUND) AND (NOT Qt5_FOUND) )
     if(WIN32)
         # This path probably will not be valid on your system.
         # If cmake complains about not being able to find Qt, point it into your Qt installation directory.
-        list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.8.2/msvc2022_64/")	# Not yet released
+        list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.9.0/msvc2022_64/")	# currently in beta - added 2025/03/06
+        list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.8.2/msvc2022_64/")	# 6.8.3 - added 2025/03/06
         list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.8.1/msvc2022_64/")	# 6.8.1 - MSVC 2022 (only has msvc2022) added 2024/12/02
-        #list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.8.0/msvc2022_64/")	# 6.8.0 is not available in current installer
         list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.7.3/msvc2022_64/")	# 6.7.3 - MSVC 2022
         list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.7.3/msvc2019_64/")	# 6.7.3 - MSVC 2019
         list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.7.2/msvc2019_64/")	# 
@@ -77,4 +77,47 @@ if((NOT Qt6_FOUND) AND (NOT Qt5_FOUND) )
 	        endif()
         endif()
     endif()
+endif()
+
+
+if(WIN32)
+    # Macro to add a POST_BUILD custom-command to call windeployqt on the target executable
+    macro(add_windeployqt_custom_command target_name)
+    
+        if(NOT IC4_WINDEPLOYQT_EXE)
+            set(IC4_WINDEPLOYQT_EXE  "${Qt6_DIR}/../../../bin/windeployqt.exe")
+        endif()
+
+        if(IC4_WINDEPLOYQT_PATHS)
+            add_custom_command(TARGET ${target_name} POST_BUILD
+                COMMAND "${IC4_WINDEPLOYQT_EXE}"
+                --qtpaths "${IC4_WINDEPLOYQT_PATHS}"
+                --verbose 0
+                --no-compiler-runtime
+                --no-translations
+                --no-system-d3d-compiler
+                --no-opengl-sw
+                $<TARGET_FILE:${target_name}>
+                COMMENT "Deploying Qt..."
+            )
+        else()
+
+            add_custom_command(TARGET ${target_name} POST_BUILD
+                COMMAND "${IC4_WINDEPLOYQT_EXE}"
+                --verbose 0
+                --no-compiler-runtime
+                --no-translations
+                --no-system-d3d-compiler
+                --no-opengl-sw
+                $<TARGET_FILE:${target_name}>
+                COMMENT "Deploying Qt..."
+            )
+        endif()
+    endmacro()
+
+else()
+
+    macro(add_windeployqt_custom_command target_name)
+    endmacro()
+
 endif()
