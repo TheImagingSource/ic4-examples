@@ -79,45 +79,4 @@ if((NOT Qt6_FOUND) AND (NOT Qt5_FOUND) )
     endif()
 endif()
 
-
-if(WIN32)
-    # Macro to add a POST_BUILD custom-command to call windeployqt on the target executable
-    macro(add_windeployqt_custom_command target_name)
-    
-        if(NOT IC4_WINDEPLOYQT_EXE)
-            set(IC4_WINDEPLOYQT_EXE  "${Qt6_DIR}/../../../bin/windeployqt.exe")
-        endif()
-
-        if(IC4_WINDEPLOYQT_PATHS)
-            add_custom_command(TARGET ${target_name} POST_BUILD
-                COMMAND "${IC4_WINDEPLOYQT_EXE}"
-                --qtpaths "${IC4_WINDEPLOYQT_PATHS}"
-                --verbose 0
-                --no-compiler-runtime
-                --no-translations
-                --no-system-d3d-compiler
-                --no-opengl-sw
-                $<TARGET_FILE:${target_name}>
-                COMMENT "Deploying Qt..."
-            )
-        else()
-
-            add_custom_command(TARGET ${target_name} POST_BUILD
-                COMMAND "${IC4_WINDEPLOYQT_EXE}"
-                --verbose 0
-                --no-compiler-runtime
-                --no-translations
-                --no-system-d3d-compiler
-                --no-opengl-sw
-                $<TARGET_FILE:${target_name}>
-                COMMENT "Deploying Qt..."
-            )
-        endif()
-    endmacro()
-
-else()
-
-    macro(add_windeployqt_custom_command target_name)
-    endmacro()
-
-endif()
+include( "${CMAKE_CURRENT_LIST_DIR}/windeployqt.cmake" )
