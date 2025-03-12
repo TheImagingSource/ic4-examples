@@ -842,6 +842,18 @@ void MainWindow::onAbout()
 		ver = "Version " + ver;
 	}
 
+#if defined _WIN32
+#	if defined _M_ARM
+	ver += " ARMv7";
+#	elif defined _M_ARM64
+	ver += " ARM64";
+#	elif defined _M_ARM64EC
+	ver += " ARM64EC";
+#	elif defined _M_AMD64 
+	ver += " x64";
+#	endif
+#endif
+
 	QMessageBox about(this);
 	about.setWindowTitle("About");
 	about.setTextFormat(Qt::RichText);
