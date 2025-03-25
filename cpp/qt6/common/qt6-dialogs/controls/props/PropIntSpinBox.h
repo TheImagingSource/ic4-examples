@@ -133,6 +133,13 @@ namespace ic4::ui
 			if (isReadOnly())
 				return;
 
+//#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
+			if (!lineEdit()->isModified())
+				return; 
+
+			lineEdit()->setModified(false);
+//#endif 
+
 			auto text = lineEdit()->text();
 
 			int pos = 0;

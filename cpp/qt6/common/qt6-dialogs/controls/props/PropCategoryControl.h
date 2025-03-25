@@ -8,8 +8,8 @@ namespace ic4::ui
 	class PropCategoryControl : public PropControlBase<ic4::PropCategory>
 	{
 	public:
-		PropCategoryControl(ic4::PropCategory cat, QWidget* parent)
-			: PropControlBase(cat, parent, nullptr)
+		PropCategoryControl(ic4::PropCategory cat, QWidget* parent, StreamRestartFilterFunction func)
+			: PropControlBase(cat, parent, nullptr, func)
 		{
 			this->setStyleSheet(CustomStyle.PropCategoryControlStyle);
 

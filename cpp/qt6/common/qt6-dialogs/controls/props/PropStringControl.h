@@ -41,8 +41,8 @@ namespace ic4::ui
 		StringLineEdit* edit_;
 
 	public:
-		PropStringControl(ic4::PropString prop, QWidget* parent, ic4::Grabber* grabber)
-			: PropControlBase(prop, parent, grabber)
+		PropStringControl(ic4::PropString prop, QWidget* parent, ic4::Grabber* grabber, StreamRestartFilterFunction func)
+			: PropControlBase(prop, parent, grabber, func)
 		{
 			uint64_t max_length = (uint64_t)-1;
 			try

@@ -11,8 +11,8 @@ namespace ic4::ui
 		QPushButton* button_;
 
 	public:
-		PropCommandControl(ic4::PropCommand prop, QWidget* parent, ic4::Grabber* grabber)
-			: PropControlBase(prop, parent, grabber)
+		PropCommandControl(ic4::PropCommand prop, QWidget* parent, ic4::Grabber* grabber, StreamRestartFilterFunction func)
+			: PropControlBase(prop, parent, grabber, func)
 		{
 			std::string text = prop_.displayName();
 

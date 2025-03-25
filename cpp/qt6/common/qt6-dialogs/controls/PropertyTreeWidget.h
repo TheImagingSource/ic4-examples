@@ -266,11 +266,13 @@ namespace ic4::ui
 	{
 		QSortFilterProxyModel& proxy_;
 		ic4::Grabber* grabber_;
+		ic4::ui::StreamRestartFilterFunction restart_filter_;
 
 	public:
-		PropertyTreeItemDelegate(QSortFilterProxyModel& proxy, ic4::Grabber* grabber)
+		PropertyTreeItemDelegate(QSortFilterProxyModel& proxy, ic4::Grabber* grabber, ic4::ui::StreamRestartFilterFunction restart_filter)
 			: proxy_(proxy)
 			, grabber_(grabber)
+			, restart_filter_(restart_filter)
 		{
 		}
 
@@ -290,7 +292,7 @@ namespace ic4::ui
 				return nullptr;
 			}
 				
-			auto* widget = create_prop_control(tree->prop, parent, grabber_);
+			auto* widget = create_prop_control(tree->prop, parent, grabber_, restart_filter_);
 			if (widget)
 			{
 				widget->setContentsMargins(0, 0, 8, 0);
@@ -504,7 +506,7 @@ namespace ic4::ui
 	class PropertyTreeWidgetBase : public T, public app::IViewBase
 	{
 		static_assert(std::is_base_of<QWidget, T>::value, "T must be derived from QWidget");
-		
+
 	public:
 		struct Settings
 		{
@@ -515,7 +517,9 @@ namespace ic4::ui
 			QString initialFilter = "";
 			ic4::PropVisibility initialVisibility = ic4::PropVisibility::Beginner;
 
-            static Settings Default() { return {}; };
+			StreamRestartFilterFunction streamRestartFilter;
+
+			static Settings Default() { return {}; };
 		};
 
 	protected:
@@ -679,7 +683,7 @@ namespace ic4::ui
 		PropertyTreeWidgetBase(PropertyTreeModel* model, ic4::Grabber* grabber, Settings settings = Settings::Default(), QWidget* parent = nullptr)
 			: T(parent)
 			, source_(model)
-			, delegate_(proxy_, grabber)
+			, delegate_(proxy_, grabber, settings.streamRestartFilter)
 			, branchPaintDelegate_(proxy_, this)
 			, settings_(settings)
 		{

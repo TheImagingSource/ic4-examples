@@ -3,6 +3,7 @@
 
 #include <ic4/ic4.h>
 
+#include <QWidget>
 #include <QString>
 #include <QHBoxLayout>
 #include <QApplication>
@@ -21,6 +22,16 @@ namespace ic4::ui
 		virtual bool should_show(const QString& filter, ic4::PropVisibility visibility) = 0;
 	};
 
+	struct StreamRestartInfo
+	{
+		bool do_restart = false;
+		ic4::StreamSetupOption stream_start_option;
+		std::shared_ptr<ic4::Sink> sink;
+		std::shared_ptr<ic4::Display> display;
+	};
+
+	using StreamRestartFilterFunction = std::function<StreamRestartInfo(ic4::Grabber& grabber, const StreamRestartInfo& info)>;
+
 	template<typename TProperty>
 	class PropControlBase : public QWidget, public IPropControl
 	{
@@ -36,13 +47,15 @@ namespace ic4::ui
 
 		QTime prev_update_;
 		QTimer final_update_;
+		StreamRestartFilterFunction restartFilterFunc_;
 
 	public:
 
-		PropControlBase(TProperty prop, QWidget* parent, ic4::Grabber* grabber)
+		PropControlBase(TProperty prop, QWidget* parent, ic4::Grabber* grabber, StreamRestartFilterFunction func)
 			: QWidget(parent)
 			, prop_(prop)
 			, grabber_(grabber)
+			, restartFilterFunc_(func)
 		{
 
 			layout_ = new QHBoxLayout(this);
@@ -152,13 +165,6 @@ namespace ic4::ui
 		}
 
 	private:
-		struct StreamRestartInfo
-		{
-			bool do_restart = false;
-			ic4::StreamSetupOption stream_start_option;
-			std::shared_ptr<ic4::Sink> sink;
-			std::shared_ptr<ic4::Display> display;
-		};
 
 		StreamRestartInfo stopStreamIfRequired(ic4::Error& err)
 		{
@@ -191,7 +197,14 @@ namespace ic4::ui
 			if (!restart_info.do_restart)
 				return true;
 
-			return grabber_->streamSetup(restart_info.sink, restart_info.display, restart_info.stream_start_option, err);
+			StreamRestartInfo info = restart_info;
+
+			if (restartFilterFunc_)
+			{
+				info = restartFilterFunc_(*grabber_, info);
+			}
+
+			return grabber_->streamSetup(info.sink, info.display, info.stream_start_option, err);
 		}
 
 	protected:

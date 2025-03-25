@@ -11,8 +11,8 @@ namespace ic4::ui
 		QCheckBox* check_;
 
 	public:
-		PropBooleanControl(ic4::PropBoolean prop, QWidget* parent, ic4::Grabber* grabber)
-			: PropControlBase(prop, parent, grabber)
+		PropBooleanControl(ic4::PropBoolean prop, QWidget* parent, ic4::Grabber* grabber, StreamRestartFilterFunction func)
+			: PropControlBase(prop, parent, grabber, func)
 		{
 			check_ = new QCheckBox(this);
 			check_->setText("");

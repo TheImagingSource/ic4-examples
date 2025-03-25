@@ -284,8 +284,8 @@ namespace ic4::ui
 		}
 
 	public:
-		PropIntControl(ic4::PropInteger prop, QWidget* parent, ic4::Grabber* grabber)
-			: PropControlBase(prop, parent, grabber)
+		PropIntControl(ic4::PropInteger prop, QWidget* parent, ic4::Grabber* grabber, StreamRestartFilterFunction func)
+			: PropControlBase(prop, parent, grabber, func)
 		{
 			bool is_readonly = prop.isReadOnly();
 
