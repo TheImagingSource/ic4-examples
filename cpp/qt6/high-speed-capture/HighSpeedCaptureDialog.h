@@ -24,15 +24,18 @@ private:
 	void saveSettings();
 
 private:
+	// UI event handlers
 	void onSelectDevice();
 	void onDeviceProperties();
 	void onStartStop();
 
 private:
+	// Qt event overrides
 	void customEvent(QEvent* event) override;
 	void closeEvent(QCloseEvent* event) override;
 
 private:
+	// ic4::QueueSinkListener overrides
 	bool sinkConnected(ic4::QueueSink& sink, const ic4::ImageType& imageType, size_t min_buffers_required) final;
 	void framesQueued(ic4::QueueSink& sink) final;
 
