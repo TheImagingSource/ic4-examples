@@ -10,6 +10,10 @@ if(WIN32)
             set(IC4_WINDEPLOYQT_EXE  "${Qt6_DIR}/../../../bin/windeployqt.exe")
         endif()
 
+        if(NOT EXISTS "${IC4_WINDEPLOYQT_EXE}" )
+			message(WARNING "windeployqt not found")
+		endif()
+
         if(IC4_WINDEPLOYQT_PATHS)
             add_custom_command(TARGET ${target_name} POST_BUILD
                 COMMAND "${IC4_WINDEPLOYQT_EXE}"
