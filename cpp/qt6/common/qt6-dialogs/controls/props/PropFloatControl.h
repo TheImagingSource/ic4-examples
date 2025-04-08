@@ -205,7 +205,6 @@ namespace ic4::ui
 			if (spin_)
 			{
 				QSignalBlocker blk(spin_);
-				spin_->setKeyboardTracking(false);
 				spin_->setSpecialValueText({});
 				spin_->setMinimum(min_);
 				spin_->setMaximum(max_);
@@ -267,6 +266,7 @@ namespace ic4::ui
 			if (spin_)
 			{
 				spin_->setKeyboardTracking(false);
+				spin_->setDecimals(3);
 
 				// TODO
 				connect( spin_, QOverload<double>::of(&FormattingDoubleSpinBox::valueChanged), [this](double val) {
