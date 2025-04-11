@@ -20,13 +20,16 @@
 
 namespace ic4::ui
 {
+	using IntCheckBox = app::CaptureFocus<QCheckBox>;
+	using IntLineEdit = app::CaptureFocus<QLineEdit>;
+
 	class PropIntControl : public PropControlBase<ic4::PropInteger>
 	{
 	private:
-		QCheckBox* check_ = nullptr;
+		IntCheckBox* check_ = nullptr;
 		PropIntSlider* slider_ = nullptr;
 		PropIntSpinBox* spin_ = nullptr;
-		QLineEdit* edit_ = nullptr;
+		IntLineEdit* edit_ = nullptr;
 
 		ic4::PropIntRepresentation representation_;
 		int64_t min_;
@@ -284,8 +287,8 @@ namespace ic4::ui
 		}
 
 	public:
-		PropIntControl(ic4::PropInteger prop, QWidget* parent, ic4::Grabber* grabber, StreamRestartFilterFunction func)
-			: PropControlBase(prop, parent, grabber, func)
+		PropIntControl(ic4::PropInteger prop, QWidget* parent, ic4::Grabber* grabber)
+			: PropControlBase(prop, parent, grabber)
 		{
 			bool is_readonly = prop.isReadOnly();
 
@@ -295,36 +298,36 @@ namespace ic4::ui
 			{
 			case ic4::PropIntRepresentation::Boolean:
 				throw "not implemented";
-				//check_ = new QCheckBox(this);
+				//check_ = new IntCheckBox(this);
 				break;
 			case ic4::PropIntRepresentation::HexNumber:
 				spin_ = is_readonly ? nullptr : new PropIntSpinBox(this, 16);
 				if (spin_)
 					spin_->setPrefix("0x");
-				edit_ = is_readonly ? new QLineEdit(this) : nullptr;
+				edit_ = is_readonly ? new IntLineEdit(this) : nullptr;
 				break;
 			case ic4::PropIntRepresentation::PureNumber:
 				spin_ = is_readonly ? nullptr : new PropIntSpinBox(this);
-				edit_ = is_readonly ? new QLineEdit(this) : nullptr;
+				edit_ = is_readonly ? new IntLineEdit(this) : nullptr;
 				break;
 			case ic4::PropIntRepresentation::Linear:
 				slider_ = is_readonly ? nullptr : new PropIntSlider(this);
 				spin_ = is_readonly ? nullptr : new PropIntSpinBox(this);
-				edit_ = is_readonly ? new QLineEdit(this) : nullptr;
+				edit_ = is_readonly ? new IntLineEdit(this) : nullptr;
 				break;
 			case ic4::PropIntRepresentation::Logarithmic:
 				slider_ = is_readonly ? nullptr : new PropIntSlider(this);
 				spin_ = is_readonly ? nullptr : new PropIntSpinBox(this);
-				edit_ = is_readonly ? new QLineEdit(this) : nullptr;
+				edit_ = is_readonly ? new IntLineEdit(this) : nullptr;
 				printf("not implemented: IC4_PROPINTREP_LOGARITHMIC\n");
 				break;
 			case ic4::PropIntRepresentation::MACAddress:
 				printf("not implemented: IC4_PROPINTREP_MACADDRESS\n");
-				edit_ = new QLineEdit(this);
+				edit_ = new IntLineEdit(this);
 				break;
 			case ic4::PropIntRepresentation::IPV4Address:
 				printf("not implemented: IC4_PROPINTREP_IPV4ADDRESS\n");
-				edit_ = new QLineEdit(this);
+				edit_ = new IntLineEdit(this);
 				break;
 			}
 
@@ -332,14 +335,24 @@ namespace ic4::ui
 			{
 				slider_->value_changed += [this](auto*, auto v) { set_value(v); };
 				slider_->value_step += [this](auto*, auto s) { value_step(s); };
+				slider_->focus_in += [this](auto*) { onPropSelected(); };
 			}
 			if (spin_)
 			{
 				spin_->setKeyboardTracking(false);
 				spin_->value_changed += [this](auto*, auto v) { set_value_unchecked(v); };
 				spin_->value_step += [this](auto*, auto s) { value_step(s); };
+				spin_->focus_in += [this](auto*) { onPropSelected(); };
 				spin_->setMinimumWidth(120);
 				spin_->setSuffix(QString("%1").arg(prop_.unit().c_str()));
+			}
+			if (edit_)
+			{
+				edit_->focus_in += [this](auto*) { onPropSelected(); };
+			}
+			if (check_)
+			{
+				check_->focus_in += [this](auto*) { onPropSelected(); };
 			}
 
 			update_all();

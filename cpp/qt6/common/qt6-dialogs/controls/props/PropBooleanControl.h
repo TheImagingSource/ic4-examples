@@ -6,16 +6,19 @@
 
 namespace ic4::ui
 {
+	using BooleanCheckBox = app::CaptureFocus<QCheckBox>;
+
 	class PropBooleanControl : public PropControlBase<ic4::PropBoolean>
 	{
-		QCheckBox* check_;
+		BooleanCheckBox* check_;
 
 	public:
-		PropBooleanControl(ic4::PropBoolean prop, QWidget* parent, ic4::Grabber* grabber, StreamRestartFilterFunction func)
-			: PropControlBase(prop, parent, grabber, func)
+		PropBooleanControl(ic4::PropBoolean prop, QWidget* parent, ic4::Grabber* grabber)
+			: PropControlBase(prop, parent, grabber)
 		{
-			check_ = new QCheckBox(this);
+			check_ = new BooleanCheckBox(this);
 			check_->setText("");
+			check_->focus_in += [this](auto*) { onPropSelected(); };
 
 			// use stylesheet in qss - breaks checkbox images used in qss!
 			//check_->setStyleSheet("QCheckBox::indicator { width: 16px; height: 16px; }");

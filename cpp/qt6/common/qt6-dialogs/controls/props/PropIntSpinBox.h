@@ -11,7 +11,7 @@
 #include <QDebug>
 namespace ic4::ui
 {
-	class PropIntSpinBox : public QAbstractSpinBox, public app::IViewBase
+	class PropIntSpinBox : public app::CaptureFocus<QAbstractSpinBox>
 	{
 	private:
 		mutable int64_t val_ = 0;
@@ -23,7 +23,7 @@ namespace ic4::ui
 		int number_base_ = 10;
 	public:
 		PropIntSpinBox(QWidget* parent, int number_base = 10)
-			: QAbstractSpinBox(parent)
+			: app::CaptureFocus<QAbstractSpinBox>(parent)
 			, number_base_(number_base)
 		{
 			connect(this, &QAbstractSpinBox::editingFinished, this, &PropIntSpinBox::parse_new_text);

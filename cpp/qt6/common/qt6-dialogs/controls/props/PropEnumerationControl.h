@@ -12,11 +12,14 @@
 
 namespace ic4::ui
 {
+	using EnumComboBox = app::CaptureFocus<QComboBox>;
+	using EnumLineEdit = app::CaptureFocus<QLineEdit>;
+
 	class PropEnumerationControl : public PropControlBase<ic4::PropEnumeration>
 	{
 	private:
-		QComboBox* combo_ = nullptr;
-		QLineEdit* edit_ = nullptr;
+		EnumComboBox* combo_ = nullptr;
+		EnumLineEdit* edit_ = nullptr;
 
 	private:
 		void update_all() override
@@ -101,14 +104,14 @@ namespace ic4::ui
 		}
 
 	public:
-		PropEnumerationControl(ic4::PropEnumeration prop, QWidget* parent, ic4::Grabber* grabber, StreamRestartFilterFunction func)
-			: PropControlBase(prop, parent, grabber, func)
+		PropEnumerationControl(ic4::PropEnumeration prop, QWidget* parent, ic4::Grabber* grabber)
+			: PropControlBase(prop, parent, grabber)
 		{
 			bool is_readonly = prop.isReadOnly();
 
 			if (is_readonly)
 			{
-				edit_ = new QLineEdit(this);
+				edit_ = new EnumLineEdit(this);
 				edit_->setReadOnly(true);
 
 				// use StyleSheet in qss!
@@ -116,7 +119,7 @@ namespace ic4::ui
 			}
 			else
 			{
-				combo_ = new QComboBox(this);
+				combo_ = new EnumComboBox(this);
 			}
 
 			update_all();
@@ -127,7 +130,11 @@ namespace ic4::ui
 					{
 						PropEnumerationControl::comboIndexChanged(index);
 					});
-
+				combo_->focus_in += [this](auto*) { onPropSelected(); };
+			}
+			if (edit_)
+			{
+				edit_->focus_in += [this](auto*) { onPropSelected(); };
 			}
 
 			if (combo_) layout_->addWidget(combo_);

@@ -10,11 +10,11 @@ namespace ic4::ui
 {
 	class PropStringControl : public PropControlBase<ic4::PropString>
 	{
-		class StringLineEdit : public QLineEdit
+		class StringLineEdit : public app::CaptureFocus<QLineEdit>
 		{
 		public:
 			StringLineEdit(QWidget* parent)
-				: QLineEdit(parent)
+				: app::CaptureFocus<QLineEdit>(parent)
 			{
 			}
 
@@ -41,8 +41,8 @@ namespace ic4::ui
 		StringLineEdit* edit_;
 
 	public:
-		PropStringControl(ic4::PropString prop, QWidget* parent, ic4::Grabber* grabber, StreamRestartFilterFunction func)
-			: PropControlBase(prop, parent, grabber, func)
+		PropStringControl(ic4::PropString prop, QWidget* parent, ic4::Grabber* grabber)
+			: PropControlBase(prop, parent, grabber)
 		{
 			uint64_t max_length = (uint64_t)-1;
 			try
@@ -60,6 +60,7 @@ namespace ic4::ui
 			connect(edit_, &QLineEdit::editingFinished, this, &PropStringControl::set_value);
 			edit_->escapePressed += [this](auto) { update_value(); };
 			edit_->setMaxLength(max_length);
+			edit_->focus_in += [this](auto*) { onPropSelected(); };
 
 			update_all();
 

@@ -6,17 +6,20 @@
 
 namespace ic4::ui
 {
+	using CommandButton = app::CaptureFocus<QPushButton>;
+
 	class PropCommandControl : public PropControlBase<ic4::PropCommand>
 	{
-		QPushButton* button_;
+		CommandButton* button_;
 
 	public:
-		PropCommandControl(ic4::PropCommand prop, QWidget* parent, ic4::Grabber* grabber, StreamRestartFilterFunction func)
-			: PropControlBase(prop, parent, grabber, func)
+		PropCommandControl(ic4::PropCommand prop, QWidget* parent, ic4::Grabber* grabber)
+			: PropControlBase(prop, parent, grabber)
 		{
 			std::string text = prop_.displayName();
 
-			button_ = new QPushButton(QString::fromStdString(text), this);
+			button_ = new CommandButton(QString::fromStdString(text), this);
+			button_->focus_in += [this](auto*) { onPropSelected(); };
 
 			connect(button_, &QPushButton::clicked, this, &PropCommandControl::execute);
 

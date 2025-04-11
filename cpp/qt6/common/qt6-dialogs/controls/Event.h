@@ -58,5 +58,21 @@ namespace app
 			return tag_;
 		}
 	};
+
+	template<typename TBase>
+	class CaptureFocus : public TBase, public app::IViewBase
+	{
+	public:
+		using TBase::TBase;
+	public:
+		mutable app::Event<> focus_in;
+	public:
+		void focusInEvent(QFocusEvent* e) override
+		{
+			focus_in(this);
+
+			TBase::focusInEvent(e);
+		}
+	};
 }
 #endif 

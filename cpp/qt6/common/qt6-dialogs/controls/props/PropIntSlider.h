@@ -13,7 +13,7 @@
 
 namespace ic4::ui
 {
-	class PropIntSlider : public QSlider, public app::IViewBase
+	class PropIntSlider : public app::CaptureFocus<QSlider>
 	{
 	private:
 		const int SLIDER_MAX = 10000;
@@ -22,7 +22,7 @@ namespace ic4::ui
 		int64_t max_ = 99;
 	public:
 		PropIntSlider(QWidget* parent)
-			: QSlider(Qt::Orientation::Horizontal, parent)
+			: app::CaptureFocus<QSlider>(Qt::Orientation::Horizontal, parent)
 		{
 			connect(this, &QSlider::valueChanged, this, &PropIntSlider::onValueChanged);
 

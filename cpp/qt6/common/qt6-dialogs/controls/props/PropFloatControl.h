@@ -20,14 +20,14 @@
 
 namespace ic4::ui
 {
-	class FormattingDoubleSpinBox : public QDoubleSpinBox
+	class FormattingDoubleSpinBox : public app::CaptureFocus<QDoubleSpinBox>
 	{
 		ic4::PropDisplayNotation notation_;
 		int precision_;
 
 	public:
 		FormattingDoubleSpinBox(QWidget* parent, ic4::PropDisplayNotation notation, int precision)
-			: QDoubleSpinBox(parent)
+			: app::CaptureFocus<QDoubleSpinBox>(parent)
 			, notation_(notation)
 			, precision_(precision)
 		{
@@ -74,10 +74,12 @@ namespace ic4::ui
 		}
 	};
 
+	using FloatSlider = app::CaptureFocus<QSlider>;
+
 	class PropFloatControl : public PropControlBase<ic4::PropFloat>
 	{
 	private:
-		QSlider* slider_ = nullptr;
+		FloatSlider* slider_ = nullptr;
 		FormattingDoubleSpinBox* spin_ = nullptr;
 
 		double min_;
@@ -234,8 +236,8 @@ namespace ic4::ui
 		}
 
 	public:
-		PropFloatControl(ic4::PropFloat prop, QWidget* parent, ic4::Grabber* grabber, StreamRestartFilterFunction func)
-			: PropControlBase(prop, parent, grabber, func)
+		PropFloatControl(ic4::PropFloat prop, QWidget* parent, ic4::Grabber* grabber)
+			: PropControlBase(prop, parent, grabber)
 		{
 			bool is_readonly = prop.isReadOnly();
 
@@ -249,11 +251,11 @@ namespace ic4::ui
 				spin_ = new FormattingDoubleSpinBox(this, notation, precision);
 				break;
 			case ic4::PropFloatRepresentation::Linear:
-				slider_ = is_readonly ? nullptr : new QSlider(Qt::Orientation::Horizontal, this);
+				slider_ = is_readonly ? nullptr : new FloatSlider(Qt::Orientation::Horizontal, this);
 				spin_ = new FormattingDoubleSpinBox(this, notation, precision);
 				break;
 			case ic4::PropFloatRepresentation::Logarithmic:
-				slider_ = is_readonly ? nullptr : new QSlider(Qt::Orientation::Horizontal, this);
+				slider_ = is_readonly ? nullptr : new FloatSlider(Qt::Orientation::Horizontal, this);
 				spin_ = new FormattingDoubleSpinBox(this, notation, precision);
 				spin_->setStepType(QAbstractSpinBox::StepType::AdaptiveDecimalStepType);
 				break;
@@ -262,6 +264,7 @@ namespace ic4::ui
 			if (slider_)
 			{
 				connect(slider_, &QSlider::valueChanged, this, &PropFloatControl::slider_moved);
+				slider_->focus_in += [this](auto*) { onPropSelected(); };
 			}
 			if (spin_)
 			{
@@ -272,6 +275,7 @@ namespace ic4::ui
 				connect( spin_, QOverload<double>::of(&FormattingDoubleSpinBox::valueChanged), [this](double val) {
 					set_value_unchecked(std::clamp(val, min_, max_));
 				});
+				spin_->focus_in += [this](auto*) { onPropSelected(); };
 
 				spin_->setMinimumWidth(120);
 				spin_->setSuffix(QString(" %1").arg(prop_.unit().c_str()));

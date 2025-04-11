@@ -16,12 +16,6 @@
 
 namespace ic4::ui
 {
-	struct IPropControl
-	{
-		virtual ~IPropControl() = default;
-		virtual bool should_show(const QString& filter, ic4::PropVisibility visibility) = 0;
-	};
-
 	struct StreamRestartInfo
 	{
 		bool do_restart = false;
@@ -31,6 +25,15 @@ namespace ic4::ui
 	};
 
 	using StreamRestartFilterFunction = std::function<StreamRestartInfo(ic4::Grabber& grabber, const StreamRestartInfo& info)>;
+	using PropSelectedFunction = std::function<void(ic4::Property& prop)>;
+
+	struct IPropControl
+	{
+		virtual ~IPropControl() = default;
+		virtual bool should_show(const QString& filter, ic4::PropVisibility visibility) = 0;
+		virtual void registerPropSelected(PropSelectedFunction fn) = 0;
+		virtual void registerStreamRestartFilter(StreamRestartFilterFunction fn) = 0;
+	};
 
 	template<typename TProperty>
 	class PropControlBase : public QWidget, public IPropControl
@@ -47,15 +50,15 @@ namespace ic4::ui
 
 		QTime prev_update_;
 		QTimer final_update_;
-		StreamRestartFilterFunction restartFilterFunc_;
+		StreamRestartFilterFunction restartFilterFunc_ = nullptr;
+		PropSelectedFunction propSelectedFunc_ = nullptr;
 
 	public:
 
-		PropControlBase(TProperty prop, QWidget* parent, ic4::Grabber* grabber, StreamRestartFilterFunction func)
+		PropControlBase(TProperty prop, QWidget* parent, ic4::Grabber* grabber)
 			: QWidget(parent)
 			, prop_(prop)
 			, grabber_(grabber)
-			, restartFilterFunc_(func)
 		{
 
 			layout_ = new QHBoxLayout(this);
@@ -80,10 +83,6 @@ namespace ic4::ui
 					QApplication::postEvent(this, new QEvent(UPDATE_ALL));
 				}
 			);
-
-
-
-			//notify_ = prop_.eventAddNotification([this](ic4::Property&) { update_all(); });
 		}
 		~PropControlBase()
 		{
@@ -116,7 +115,25 @@ namespace ic4::ui
 			return false;
 		}
 
+	public:
+		void registerPropSelected(PropSelectedFunction fn) final
+		{
+			propSelectedFunc_ = fn;
+		}
+		void registerStreamRestartFilter(StreamRestartFilterFunction fn) final
+		{
+			restartFilterFunc_ = fn;
+		}
+
 	protected:
+		void onPropSelected()
+		{
+			if (propSelectedFunc_)
+			{
+				propSelectedFunc_(prop_);
+			}
+		}
+
 		bool shoudDisplayAsLocked() const
 		{
 			bool prop_is_locked = prop_.isLocked(ic4::Error::Ignore());

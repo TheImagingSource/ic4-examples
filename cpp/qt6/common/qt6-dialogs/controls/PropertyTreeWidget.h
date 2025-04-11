@@ -267,12 +267,14 @@ namespace ic4::ui
 		QSortFilterProxyModel& proxy_;
 		ic4::Grabber* grabber_;
 		ic4::ui::StreamRestartFilterFunction restart_filter_;
+		ic4::ui::PropSelectedFunction prop_selected_;
 
 	public:
-		PropertyTreeItemDelegate(QSortFilterProxyModel& proxy, ic4::Grabber* grabber, ic4::ui::StreamRestartFilterFunction restart_filter)
+		PropertyTreeItemDelegate(QSortFilterProxyModel& proxy, ic4::Grabber* grabber, ic4::ui::StreamRestartFilterFunction restart_filter, ic4::ui::PropSelectedFunction prop_selected)
 			: proxy_(proxy)
 			, grabber_(grabber)
 			, restart_filter_(restart_filter)
+			, prop_selected_(prop_selected)
 		{
 		}
 
@@ -292,7 +294,7 @@ namespace ic4::ui
 				return nullptr;
 			}
 				
-			auto* widget = create_prop_control(tree->prop, parent, grabber_, restart_filter_);
+			auto* widget = create_prop_control(tree->prop, parent, grabber_, restart_filter_, prop_selected_);
 			if (widget)
 			{
 				widget->setContentsMargins(0, 0, 8, 0);
@@ -683,7 +685,7 @@ namespace ic4::ui
 		PropertyTreeWidgetBase(PropertyTreeModel* model, ic4::Grabber* grabber, Settings settings = Settings::Default(), QWidget* parent = nullptr)
 			: T(parent)
 			, source_(model)
-			, delegate_(proxy_, grabber, settings.streamRestartFilter)
+			, delegate_(proxy_, grabber, settings.streamRestartFilter, [this](auto& p) { info_text_->update(p); })
 			, branchPaintDelegate_(proxy_, this)
 			, settings_(settings)
 		{
