@@ -17,6 +17,9 @@ public:
 	PropertyInfoBox(QWidget* parent)
 		: QTextEdit(parent)
 	{
+        // without this an empty info box would be writeable
+        // and could trap user cursor when using tab for navigation
+        setReadOnly(true);
 	}
 
 	void clear()
