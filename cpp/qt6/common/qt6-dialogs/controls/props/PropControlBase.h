@@ -31,7 +31,6 @@ namespace ic4::ui
 	struct IPropControl
 	{
 		virtual ~IPropControl() = default;
-		virtual bool should_show(const QString& filter, ic4::PropVisibility visibility) = 0;
 		virtual void registerPropSelected(PropSelectedFunction fn) = 0;
 		virtual void registerStreamRestartFilter(StreamRestartFilterFunction fn) = 0;
 	};
@@ -88,32 +87,6 @@ namespace ic4::ui
 		~PropControlBase()
 		{
 			prop_.eventRemoveNotification(notify_, ic4::Error::Ignore());
-		}
-
-	public:
-		bool should_show(const QString& filter, ic4::PropVisibility visibility) override
-		{
-			auto filters = filter.toLower().split(QRegularExpression(R"([(,|\|)])"));
-
-			auto prop_display_name = QString::fromStdString(prop_.displayName()).toLower();
-			auto prop_name = QString::fromStdString(prop_.name()).toLower();
-			auto prop_vis = prop_.visibility();
-
-			if (prop_vis > visibility)
-				return false;
-
-			if (filters.isEmpty())
-				return true;
-
-			for (auto&& f : filters)
-			{
-				if (prop_display_name.contains(f))
-					return true;
-				if (prop_name.contains(f))
-					return true;
-			}
-
-			return false;
 		}
 
 	public:
