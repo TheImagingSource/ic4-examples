@@ -11,6 +11,7 @@
 #include <QDebug>
 #include <QTime>
 #include <QTimer>
+#include <QRegularExpression>
 
 #include <utility>
 
