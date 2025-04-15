@@ -379,11 +379,8 @@ void MainWindow::changeEvent(QEvent* ev)
 	}
 }
 
-void MainWindow::onUpdateStatisticsTimer()
+void MainWindow::updateStatistics()
 {
-	if (!_grabber.isDeviceValid())
-		return;
-
 	ic4::Error err;
 	auto stats = _grabber.streamStatistics(err);
 	if (err.isSuccess())
@@ -416,6 +413,14 @@ void MainWindow::onUpdateStatisticsTimer()
 	{
 		qWarning().noquote() << "Failed query stream statistics:" << err.message().c_str();
 	}
+}
+
+void MainWindow::onUpdateStatisticsTimer()
+{
+	if (!_grabber.isStreaming())
+		return;
+
+	updateStatistics();
 }
 
 /////////////////////////////////////////////////////////////
@@ -577,6 +582,9 @@ void MainWindow::startstopstream()
 				{
 					onStopCaptureVideo();
 				}
+
+				// Update statistics one final time (auto update is disabled while stream is stopped)
+				updateStatistics();
 			}
 			else
 			{

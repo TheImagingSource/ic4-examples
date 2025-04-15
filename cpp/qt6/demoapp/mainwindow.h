@@ -78,6 +78,7 @@ private:
 	void updateControls();
 	void updateTriggerControl();
 	void updateCameraLabel();
+	void updateStatistics();
 	void onUpdateStatisticsTimer();
 
 	void createUI();
