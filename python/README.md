@@ -14,7 +14,7 @@ After downloading, please make sure to keep the per-language directory structure
 
 ***Warning:*** Be careful when cloning/extracting to a directory with a long path name; many tools are still limited by Windows' legacy 260-character path length limit and can raise obscure error messages in case a file path exceeds it.
 
-## Prerequisites for Bulding and Testing the Example Programs
+## Prerequisites for Building and Testing the Example Programs
 
 All examples assume you have access to an industrial camera from [The Imaging Source](https://www.theimagingsource.com).
 
@@ -69,6 +69,7 @@ This section contains
 - A simple application showing how to display live video in a Qt6/PySide6 application ([first steps](/python/qt6/qt6-first-steps))
 - A Python implementation of [ic4-demoapp](/python/qt6/demoapp)
 - An application showcasing the use of zoom and focus features ([zoom-focus-demo](/python/qt6/zoom-focus-demo))
+- A demo application for [fullscreen](/python/qt6/fullscreen) display for multiple cameras
 
 ## Third-Party Integration
 

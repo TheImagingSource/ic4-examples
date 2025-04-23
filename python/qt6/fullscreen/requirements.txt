@@ -1,0 +1,3 @@
+PySide6
+imagingcontrol4
+imagingcontrol4pyside6
