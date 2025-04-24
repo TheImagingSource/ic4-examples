@@ -117,15 +117,15 @@ MainWindow::MainWindow(const init_options& params, QWidget* parent)
 	}
 
 	updateControls();
-
-	if (params.start_full_screen)
-	{
-		onToggleFullScreen();
-	}
 }
 
 MainWindow::~MainWindow()
 {
+}
+
+void MainWindow::showVideoFullScreen()
+{
+	onToggleFullScreen();
 }
 
 /// <summary>
@@ -331,21 +331,21 @@ void MainWindow::createUI()
 
 	////////////////////////////////////////////////////////////////////////////
 	// Create the Toolbar
-	QToolBar* toolbar = new QToolBar("&Toolbar", this);
-	addToolBar(Qt::ToolBarArea::TopToolBarArea, toolbar);
-	toolbar->addAction(_DeviceSelectAct);
-	toolbar->addAction(_DevicePropertiesAct);
-	toolbar->addSeparator();
-	toolbar->addAction(_TriggerModeAct);
-	toolbar->addSeparator();
-	toolbar->addAction(_StartLiveAct);
-	toolbar->addSeparator();
-	toolbar->addAction(_ShootPhotoAct);
-	toolbar->addSeparator();
-	toolbar->addAction(_recordstartact);
-	toolbar->addAction(_recordpauseact);
-	toolbar->addAction(_recordstopact);
-	toolbar->addAction(_codecpropertyact);
+	_toolBar = new QToolBar("&Toolbar", this);
+	addToolBar(Qt::ToolBarArea::TopToolBarArea, _toolBar);
+	_toolBar->addAction(_DeviceSelectAct);
+	_toolBar->addAction(_DevicePropertiesAct);
+	_toolBar->addSeparator();
+	_toolBar->addAction(_TriggerModeAct);
+	_toolBar->addSeparator();
+	_toolBar->addAction(_StartLiveAct);
+	_toolBar->addSeparator();
+	_toolBar->addAction(_ShootPhotoAct);
+	_toolBar->addSeparator();
+	_toolBar->addAction(_recordstartact);
+	_toolBar->addAction(_recordpauseact);
+	_toolBar->addAction(_recordstopact);
+	_toolBar->addAction(_codecpropertyact);
 
 	////////////////////////////////////////////////////////////////////////////
 	// Create the video display Widget
@@ -405,12 +405,6 @@ void MainWindow::changeEvent(QEvent* ev)
 			_codecpropertyact->setIcon(selector.loadIcon(":/images/gear.png"));
 			break;
 		}
-	case QEvent::ActivationChange:
-		if (isActiveWindow())
-		{
-			onExitFullScreen();
-		}
-		break;
 	default:
 		break;
 	}
@@ -960,31 +954,25 @@ void MainWindow::onDisplayContextMenu(const QPoint& pos)
 
 void MainWindow::onToggleFullScreen()
 {
-	if (_VideoWidget->isFullScreen())
+	if (isFullScreen())
 	{
-		setCentralWidget(_VideoWidget);
-
-		_VideoWidget->showNormal();
-
-		show();
+		showNormal();
+		menuBar()->show();
+		statusBar()->show();
+		_toolBar->show();
 	}
 	else
 	{
-		hide();
-
-		_VideoWidget->setParent(nullptr);
-		// move the stand-alone widget to the position of the main window
-		// parentless widgets default their position to 0:0
-		// this causes the fullscreen widget to always appear in the upper left corner
-		// we want to widget to be on the same monitor as the main window
-		_VideoWidget->move(pos());
-		_VideoWidget->showFullScreen();
+		showFullScreen();
+		menuBar()->hide();
+		statusBar()->hide();
+		_toolBar->hide();
 	}
 }
 
 void MainWindow::onExitFullScreen()
 {
-	if( _VideoWidget->isFullScreen() )
+	if( isFullScreen() )
 	{
 		onToggleFullScreen();
 	}

@@ -59,6 +59,8 @@ public:
 
 	~MainWindow();
 
+	void showVideoFullScreen();
+
 private:
 	void onSelectDevice();
 	void onDeviceProperties();
@@ -106,6 +108,8 @@ private:
 
 	QGridLayout* mainLayout = nullptr;
 	ic4interop::Qt::DisplayWidget* _VideoWidget = nullptr;
+
+	QToolBar* _toolBar = nullptr;
 
 	QAction* _DeviceSelectAct = nullptr;
 	QAction* _DevicePropertiesAct = nullptr;
