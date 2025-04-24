@@ -967,7 +967,7 @@ void MainWindow::onToggleFullScreen()
 		_VideoWidget->showNormal();
 
 		// When starting in full screen mode, the main window is initially not shown
-		showNormal();
+		show();
 	}
 	else
 	{
