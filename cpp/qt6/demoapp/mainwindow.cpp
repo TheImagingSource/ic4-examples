@@ -224,7 +224,9 @@ void MainWindow::createUI()
 
 	_toggleFullscreenAct = new QAction(tr("&Full Screen"), this);
 	_toggleFullscreenAct->setStatusTip(tr("Toggle full screen display"));
-	_toggleFullscreenAct->setShortcut(QKeySequence::FullScreen);
+	QList<QKeySequence> keys = {QKeySequence::FullScreen, QKeySequence(Qt::Key_F11)};
+	_toggleFullscreenAct->setShortcuts(keys);
+
 	connect(_toggleFullscreenAct, &QAction::triggered, this, &MainWindow::onToggleFullScreen);
 
 	auto aboutAct = new QAction(tr("&About..."), this);
