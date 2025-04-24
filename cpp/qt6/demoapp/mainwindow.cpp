@@ -373,6 +373,7 @@ void MainWindow::createUI()
 	_VideoWidget->addAction(_DeviceSelectAct);
 	_VideoWidget->addAction(_closeDeviceAct);
 	_VideoWidget->addAction(_DevicePropertiesAct);
+	_VideoWidget->addAction(_ShootPhotoAct);
 	_VideoWidget->addAction(_exportDeviceSettingsAct);
 	_VideoWidget->addAction(_importDeviceSettingsAct);
 	_VideoWidget->addAction(exitFullscreenAct);
@@ -956,13 +957,23 @@ void MainWindow::onToggleFullScreen()
 {
 	if (isFullScreen())
 	{
-		showNormal();
+		if (_preFullscreenMaximized)
+		{
+			showMaximized();
+		}
+		else
+		{
+			showNormal();
+		}
+
 		menuBar()->show();
 		statusBar()->show();
 		_toolBar->show();
 	}
 	else
 	{
+		_preFullscreenMaximized = isMaximized();
+
 		showFullScreen();
 		menuBar()->hide();
 		statusBar()->hide();

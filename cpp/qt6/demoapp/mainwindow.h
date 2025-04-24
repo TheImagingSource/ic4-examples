@@ -149,6 +149,8 @@ private:
 	ic4::PropVisibility _defaultVisibility = ic4::PropVisibility::Beginner;
 
 	void readSettingsFile(const std::filesystem::path& appDataDirectory);
+
+	bool _preFullscreenMaximized = false;
 };
 
 #endif // MAINWINDOW_H
