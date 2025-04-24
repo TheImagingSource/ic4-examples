@@ -79,6 +79,7 @@ private:
 	void onAbout();
 	void onDisplayContextMenu(const QPoint& pos);
 	void onToggleFullScreen();
+	void onExitFullScreen();
 	void onDeviceOpened();
 	void updateControls();
 	void updateTriggerControl();

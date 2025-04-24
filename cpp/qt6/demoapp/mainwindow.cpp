@@ -182,6 +182,7 @@ void MainWindow::createUI()
 	_ShootPhotoAct = new QAction(selector.loadIcon(":/images/photo.png"), tr("&Shoot photo"), this);
 	_ShootPhotoAct->setStatusTip(tr("Shoot and save a photo"));
 	_ShootPhotoAct->setEnabled(false);
+	_ShootPhotoAct->setShortcut(QKeySequence::Save);
 	connect(_ShootPhotoAct, &QAction::triggered, this, &MainWindow::onShootPhoto);
 
 	// Capture Video
@@ -220,20 +221,21 @@ void MainWindow::createUI()
 	// Close device
 	_closeDeviceAct = new QAction(tr("&Close"), this);
 	_closeDeviceAct->setStatusTip(tr("Close the currently opened device"));
-    _closeDeviceAct->setShortcuts(QKeySequence::Close);
+	_closeDeviceAct->setShortcuts(QKeySequence::Close);
+	connect(_closeDeviceAct, &QAction::triggered, this, &MainWindow::onCloseDevice);
 
 	_toggleFullscreenAct = new QAction(tr("&Full Screen"), this);
 	_toggleFullscreenAct->setStatusTip(tr("Toggle full screen display"));
-	QList<QKeySequence> keys = {QKeySequence::FullScreen, QKeySequence(Qt::Key_F11)};
-	_toggleFullscreenAct->setShortcuts(keys);
-
+	_toggleFullscreenAct->setShortcut(Qt::Key_F11);
 	connect(_toggleFullscreenAct, &QAction::triggered, this, &MainWindow::onToggleFullScreen);
+
+	auto exitFullscreenAct = new QAction(this);
+	exitFullscreenAct->setShortcut(Qt::Key_Escape);
+	connect(exitFullscreenAct, &QAction::triggered, this, &MainWindow::onExitFullScreen);
 
 	auto aboutAct = new QAction(tr("&About..."), this);
 	aboutAct->setStatusTip(tr("About ic4-demoapp"));
 	connect(aboutAct, &QAction::triggered, this, &MainWindow::onAbout);
-
-	connect(_closeDeviceAct, &QAction::triggered, this, &MainWindow::onCloseDevice);
 
 	// Exit Program
 	auto exitAct = new QAction(tr("E&xit"), this);
@@ -374,6 +376,7 @@ void MainWindow::createUI()
 	_VideoWidget->addAction(_DevicePropertiesAct);
 	_VideoWidget->addAction(_exportDeviceSettingsAct);
 	_VideoWidget->addAction(_importDeviceSettingsAct);
+	_VideoWidget->addAction(exitFullscreenAct);
 }
 
 void MainWindow::closeEvent(QCloseEvent* ev)
@@ -404,9 +407,9 @@ void MainWindow::changeEvent(QEvent* ev)
 			break;
 		}
 	case QEvent::ActivationChange:
-		if (isActiveWindow() && _VideoWidget->isFullScreen())
+		if (isActiveWindow())
 		{
-			onToggleFullScreen();
+			onExitFullScreen();
 		}
 		break;
 	default:
@@ -976,6 +979,14 @@ void MainWindow::onToggleFullScreen()
 		// we want to widget to be on the same monitor as the main window
 		_VideoWidget->move(pos());
 		_VideoWidget->showFullScreen();
+	}
+}
+
+void MainWindow::onExitFullScreen()
+{
+	if( _VideoWidget->isFullScreen() )
+	{
+		onToggleFullScreen();
 	}
 }
 
