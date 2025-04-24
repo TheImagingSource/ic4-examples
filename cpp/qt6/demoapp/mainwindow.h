@@ -51,6 +51,8 @@ public:
 
 		// Show the settings menu
 		bool show_settings_menu = false;
+
+		bool start_full_screen = false;
 	};
 		
 	explicit MainWindow(const init_options& params, QWidget* parent = nullptr);
@@ -73,6 +75,8 @@ private:
 	void onImportDeviceSettings();
 	void onCloseDevice();
 	void onAbout();
+	void onDisplayContextMenu(const QPoint& pos);
+	void onToggleFullScreen();
 
 	void onDeviceOpened();
 	void updateControls();
@@ -86,6 +90,7 @@ private:
 protected:
 	void closeEvent(QCloseEvent* ev) override;
 	void changeEvent(QEvent* ev) override;
+	bool eventFilter(QObject* obj, QEvent* event) override;
 
 private:
 	void customEvent(QEvent* event);
@@ -114,6 +119,7 @@ private:
 	QAction* _codecpropertyact = nullptr;
 	QAction* _exportDeviceSettingsAct = nullptr;
 	QAction* _importDeviceSettingsAct = nullptr;
+	QAction* _toggleFullscreenAct = nullptr;
 
 	QAction* _closeDeviceAct = nullptr;
 

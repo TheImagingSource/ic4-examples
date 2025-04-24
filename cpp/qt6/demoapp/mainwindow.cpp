@@ -117,6 +117,11 @@ MainWindow::MainWindow(const init_options& params, QWidget* parent)
 	}
 
 	updateControls();
+
+	if (params.start_full_screen)
+	{
+		onToggleFullScreen();
+	}
 }
 
 MainWindow::~MainWindow()
@@ -216,6 +221,11 @@ void MainWindow::createUI()
 	_closeDeviceAct->setStatusTip(tr("Close the currently opened device"));
     _closeDeviceAct->setShortcuts(QKeySequence::Close);
 
+	_toggleFullscreenAct = new QAction(tr("&Full Screen"), this);
+	_toggleFullscreenAct->setStatusTip(tr("Toggle full screen display"));
+	_toggleFullscreenAct->setShortcut(QKeySequence::FullScreen);
+	connect(_toggleFullscreenAct, &QAction::triggered, this, &MainWindow::onToggleFullScreen);
+
 	auto aboutAct = new QAction(tr("&About..."), this);
 	aboutAct->setStatusTip(tr("About ic4-demoapp"));
 	connect(aboutAct, &QAction::triggered, this, &MainWindow::onAbout);
@@ -307,6 +317,11 @@ void MainWindow::createUI()
 	settingsMenu->menuAction()->setVisible(_showSettingsMenu);
 
 	////////////////////////////////////////////////////////////////////////////
+	// Create the View Menu
+	auto viewMenu = menuBar()->addMenu(tr("&View"));
+	viewMenu->addAction(_toggleFullscreenAct);
+
+	////////////////////////////////////////////////////////////////////////////
 	// Create the Help Menu
 	auto helpMenu = menuBar()->addMenu(tr("&Help"));
 	helpMenu->addAction(aboutAct);
@@ -345,6 +360,18 @@ void MainWindow::createUI()
 	_updateStatisticsTimer = new QTimer(this);
 	connect(_updateStatisticsTimer, &QTimer::timeout, this, &MainWindow::onUpdateStatisticsTimer);
 	_updateStatisticsTimer->start(100);
+
+	_VideoWidget->installEventFilter(this);
+	_VideoWidget->setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
+	connect(_VideoWidget, &QWidget::customContextMenuRequested, this, &MainWindow::onDisplayContextMenu);
+
+	// Add commands with hot keys to the video widgets so that hot keys work in full screen mode
+	_VideoWidget->addAction(_toggleFullscreenAct);
+	_VideoWidget->addAction(_DeviceSelectAct);
+	_VideoWidget->addAction(_closeDeviceAct);
+	_VideoWidget->addAction(_DevicePropertiesAct);
+	_VideoWidget->addAction(_exportDeviceSettingsAct);
+	_VideoWidget->addAction(_importDeviceSettingsAct);
 }
 
 void MainWindow::closeEvent(QCloseEvent* ev)
@@ -377,6 +404,29 @@ void MainWindow::changeEvent(QEvent* ev)
 	default:
 		break;
 	}
+}
+
+bool MainWindow::eventFilter(QObject* obj, QEvent* event)
+{
+	if (obj == _VideoWidget)
+	{
+		switch (event->type())
+		{
+		case QEvent::MouseButtonDblClick:
+			if (((QMouseEvent*)event)->button() == Qt::MouseButton::LeftButton)
+			{
+				onToggleFullScreen();
+				return true;
+			}
+			break;
+		case QEvent::Close:
+			// Forward Alt-F4 to main window
+			close();
+			break;
+		}
+	}
+
+	return false;
 }
 
 void MainWindow::updateStatistics()
@@ -507,7 +557,7 @@ void MainWindow::updateCameraLabel()
 /// </summary>
 void MainWindow::onSelectDevice()
 {	
-	DeviceSelectionDialog cDlg(this, &_grabber);
+	DeviceSelectionDialog cDlg(_VideoWidget, &_grabber);
 	if (cDlg.exec() == 1)
 	{
 		if (_propertyDialog != nullptr)
@@ -542,7 +592,7 @@ void MainWindow::onDeviceProperties()
 {
 	if (_propertyDialog == nullptr)
 	{
-		_propertyDialog = new PropertyDialog(_grabber, this, tr("Device Properties"));
+		_propertyDialog = new PropertyDialog(_grabber, _VideoWidget, tr("Device Properties"));
 		_propertyDialog->setPropVisibility(_defaultVisibility);
 	}
 
@@ -551,7 +601,7 @@ void MainWindow::onDeviceProperties()
 
 void MainWindow::onDeviceDriverProperties()
 {
-    PropertyDialog cDlg(_grabber.driverPropertyMap(), this, tr("Device Driver Properties"));
+    PropertyDialog cDlg(_grabber.driverPropertyMap(), _VideoWidget, tr("Device Driver Properties"));
 	cDlg.setPropVisibility(_defaultVisibility);
 	
 	cDlg.exec();
@@ -637,7 +687,7 @@ void MainWindow::savePhoto(const ic4::ImageBuffer& imagebuffer)
 
 	static auto savePictureDirectory = QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
 
-	QFileDialog dialog(this, tr("Save photo"));
+	QFileDialog dialog(_VideoWidget, tr("Save photo"));
 	dialog.setNameFilters(filters);
 	dialog.setFileMode(QFileDialog::AnyFile);
 	dialog.setAcceptMode(QFileDialog::AcceptSave);
@@ -684,7 +734,7 @@ void MainWindow::onStartCaptureVideo()
 
 	static auto saveVideoDirectory = QStandardPaths::writableLocation(QStandardPaths::MoviesLocation);
 
-	QFileDialog dialog(this, tr("Capture Video"));
+	QFileDialog dialog(_VideoWidget, tr("Capture Video"));
 	dialog.setNameFilters(filters);
 	dialog.setFileMode(QFileDialog::AnyFile);
 	dialog.setAcceptMode(QFileDialog::AcceptSave);
@@ -744,7 +794,7 @@ void MainWindow::onStopCaptureVideo()
 
 void MainWindow::onCodecProperties()
 {
-	PropertyDialog cDlg(_videowriter.propertyMap(), this, tr("Codec Settings"));
+	PropertyDialog cDlg(_videowriter.propertyMap(), _VideoWidget, tr("Codec Settings"));
 	cDlg.setPropVisibility(_defaultVisibility);
 	if (cDlg.exec() == 1)
 	{
@@ -756,7 +806,7 @@ void MainWindow::onExportDeviceSettings()
 {
 	const QStringList filters({ "Device Settings Files (*.json)" });
 
-	QFileDialog dialog(this, tr("Export Device Settings"));
+	QFileDialog dialog(_VideoWidget, tr("Export Device Settings"));
 	dialog.setNameFilters(filters);
 	dialog.setFileMode(QFileDialog::AnyFile);
 	dialog.setAcceptMode(QFileDialog::AcceptSave);
@@ -782,7 +832,7 @@ void MainWindow::onImportDeviceSettings()
 {
 	const QStringList filters({ "Device Settings Files (*.json)", "All Files (*.*)"});
 
-	QFileDialog dialog(this, tr("Import Device Settings"));
+	QFileDialog dialog(_VideoWidget, tr("Import Device Settings"));
 	dialog.setNameFilters(filters);
 	dialog.setFileMode(QFileDialog::AnyFile);
 	dialog.setAcceptMode(QFileDialog::AcceptOpen);
@@ -881,6 +931,38 @@ void MainWindow::onAbout()
 		.arg("https://github.com/TheImagingSource/ic4-examples")
 	);
 	about.exec();
+}
+
+void MainWindow::onDisplayContextMenu(const QPoint& pos)
+{
+	QMenu* menu = new QMenu(this);
+	menu->addAction(_toggleFullscreenAct);
+	menu->addSeparator();
+	menu->addAction(_DeviceSelectAct);
+	menu->addAction(_DevicePropertiesAct);
+	menu->addSeparator();
+	menu->addAction(_ShootPhotoAct);
+	menu->addSeparator();
+	menu->addAction(_exportDeviceSettingsAct);
+	menu->addAction(_importDeviceSettingsAct);
+	menu->popup(_VideoWidget->mapToGlobal(pos));
+}
+
+void MainWindow::onToggleFullScreen()
+{
+	if (_VideoWidget->isFullScreen())
+	{
+		setCentralWidget(_VideoWidget);
+		_VideoWidget->showNormal();
+
+		// When starting in full screen mode, the main window is initially not shown
+		showNormal();
+	}
+	else
+	{
+		_VideoWidget->setParent(nullptr);
+		_VideoWidget->showFullScreen();
+	}
 }
 
 /// <summary>

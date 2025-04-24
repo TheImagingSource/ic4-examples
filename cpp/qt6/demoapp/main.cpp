@@ -48,6 +48,9 @@ int main(int argc, char* argv[])
 		QCommandLineOption cli_option_settings("enable-settings", "Add the settings menu to the menu bar.");
 		parser.addOption(cli_option_settings);
 
+		QCommandLineOption cli_option_fullscreen("fullscreen", "Start in full screen mode.");
+		parser.addOption(cli_option_fullscreen);
+
 		auto res = parser.parse(QApplication::arguments());
 		if (!res) {
 #if defined _WIN32
@@ -75,10 +78,8 @@ int main(int argc, char* argv[])
 #endif
 			return 0;
 		}
-		if (parser.isSet(versionOption))
-		{
-			only_show_program_version = true;
-		}
+
+		only_show_program_version = parser.isSet(versionOption);
 		if (parser.isSet(cli_option_device_file))
 		{
 			init.deviceSetupFile = ic4demoapp::QString_to_fspath(parser.value(cli_option_device_file));
@@ -87,10 +88,8 @@ int main(int argc, char* argv[])
 		{
 			init.appDataDirectory = ic4demoapp::QString_to_fspath(parser.value(cli_option_app_data_dir));
 		}
-		if (parser.isSet(cli_option_settings))
-		{
-			init.show_settings_menu = true;
-		}
+		init.show_settings_menu = parser.isSet(cli_option_settings);
+		init.start_full_screen = parser.isSet(cli_option_fullscreen);
 	}
 
 	ic4::InitLibraryConfig conf = {};
@@ -123,7 +122,11 @@ int main(int argc, char* argv[])
 
 
 	MainWindow mainWindow(init);
-	mainWindow.show();
+
+	if (!init.start_full_screen)
+	{
+		mainWindow.show();
+	}
 
 	return app.exec();
 }
