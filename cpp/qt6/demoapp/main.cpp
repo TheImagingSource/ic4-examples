@@ -123,7 +123,11 @@ int main(int argc, char* argv[])
 
 	MainWindow mainWindow(init);
 
-	if (!init.start_full_screen)
+	if (init.start_full_screen)
+	{
+		mainWindow.showWithVideoFullScreen();
+	}
+	else
 	{
 		mainWindow.show();
 	}

@@ -117,15 +117,16 @@ MainWindow::MainWindow(const init_options& params, QWidget* parent)
 	}
 
 	updateControls();
-
-	if (params.start_full_screen)
-	{
-		onToggleFullScreen();
-	}
 }
 
 MainWindow::~MainWindow()
 {
+}
+
+void MainWindow::showWithVideoFullScreen()
+{
+	showMinimized();
+	onToggleFullScreen();
 }
 
 /// <summary>
@@ -281,7 +282,6 @@ void MainWindow::createUI()
 	start_stream_on_open->setChecked(_start_stream_on_open);
 	connect(start_stream_on_open, &QAction::triggered, [this, start_stream_on_open] { _start_stream_on_open = !_start_stream_on_open; start_stream_on_open->setChecked(_start_stream_on_open); });
 
-
 	////////////////////////////////////////////////////////////////////////////
 	// Create the File Menu
 	auto fileMenu = menuBar()->addMenu(tr("&File"));
@@ -328,7 +328,7 @@ void MainWindow::createUI()
 
 	////////////////////////////////////////////////////////////////////////////
 	// Create the Toolbar
-	QToolBar* toolbar = new QToolBar(this);
+	QToolBar* toolbar = new QToolBar("&Toolbar", this);
 	addToolBar(Qt::ToolBarArea::TopToolBarArea, toolbar);
 	toolbar->addAction(_DeviceSelectAct);
 	toolbar->addAction(_DevicePropertiesAct);

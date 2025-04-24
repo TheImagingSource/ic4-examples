@@ -59,6 +59,8 @@ public:
 
 	~MainWindow();
 
+	void showWithVideoFullScreen();
+
 private:
 	void onSelectDevice();
 	void onDeviceProperties();
@@ -77,7 +79,6 @@ private:
 	void onAbout();
 	void onDisplayContextMenu(const QPoint& pos);
 	void onToggleFullScreen();
-
 	void onDeviceOpened();
 	void updateControls();
 	void updateTriggerControl();
