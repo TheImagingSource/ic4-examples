@@ -966,11 +966,12 @@ void MainWindow::onToggleFullScreen()
 
 		_VideoWidget->showNormal();
 
-		// When starting in full screen mode, the main window is initially not shown
 		show();
 	}
 	else
 	{
+		hide();
+
 		_VideoWidget->setParent(nullptr);
 		// move the stand-alone widget to the position of the main window
 		// parentless widgets default their position to 0:0
