@@ -937,7 +937,7 @@ void MainWindow::onAbout()
 
 void MainWindow::onDisplayContextMenu(const QPoint& pos)
 {
-	QMenu* menu = new QMenu(this);
+	QMenu* menu = new QMenu(_VideoWidget);
 	menu->addAction(_toggleFullscreenAct);
 	menu->addSeparator();
 	menu->addAction(_DeviceSelectAct);
