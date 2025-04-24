@@ -117,16 +117,15 @@ MainWindow::MainWindow(const init_options& params, QWidget* parent)
 	}
 
 	updateControls();
+
+	if (params.start_full_screen)
+	{
+		onToggleFullScreen();
+	}
 }
 
 MainWindow::~MainWindow()
 {
-}
-
-void MainWindow::showWithVideoFullScreen()
-{
-	showMinimized();
-	onToggleFullScreen();
 }
 
 /// <summary>

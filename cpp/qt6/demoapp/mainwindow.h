@@ -59,8 +59,6 @@ public:
 
 	~MainWindow();
 
-	void showWithVideoFullScreen();
-
 private:
 	void onSelectDevice();
 	void onDeviceProperties();
