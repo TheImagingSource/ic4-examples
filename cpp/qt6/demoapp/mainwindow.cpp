@@ -403,6 +403,12 @@ void MainWindow::changeEvent(QEvent* ev)
 			_codecpropertyact->setIcon(selector.loadIcon(":/images/gear.png"));
 			break;
 		}
+	case QEvent::ActivationChange:
+		if (isActiveWindow() && _VideoWidget->isFullScreen())
+		{
+			onToggleFullScreen();
+		}
+		break;
 	default:
 		break;
 	}
@@ -955,6 +961,7 @@ void MainWindow::onToggleFullScreen()
 	if (_VideoWidget->isFullScreen())
 	{
 		setCentralWidget(_VideoWidget);
+
 		_VideoWidget->showNormal();
 
 		// When starting in full screen mode, the main window is initially not shown
