@@ -963,6 +963,11 @@ void MainWindow::onToggleFullScreen()
 	else
 	{
 		_VideoWidget->setParent(nullptr);
+		// move the stand-alone widget to the position of the main window
+		// parentless widgets default their position to 0:0
+		// this causes the fullscreen widget to always appear in the upper left corner
+		// we want to widget to be on the same monitor as the main window
+		_VideoWidget->move(pos());
 		_VideoWidget->showFullScreen();
 	}
 }
