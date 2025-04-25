@@ -347,6 +347,9 @@ void MainWindow::createUI()
 	_toolBar->addAction(_recordstopact);
 	_toolBar->addAction(_codecpropertyact);
 
+	// prevent hiding the toolbar
+	_toolBar->setContextMenuPolicy(Qt::PreventContextMenu);
+
 	////////////////////////////////////////////////////////////////////////////
 	// Create the video display Widget
 	_VideoWidget = new ic4interop::Qt::DisplayWidget(this);
