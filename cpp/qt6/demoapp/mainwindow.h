@@ -15,28 +15,9 @@
 #include <ic4-interop/interop-Qt.h>
 
 #include "PropertyDialog.h"
+#include "settings.h"
 
 #include <filesystem>
-
-namespace ic4demoapp
-{
-	inline auto QString_to_fspath(const QString& str) -> std::filesystem::path {
-#if defined _WIN32
-		return str.toStdWString();
-#else
-		return str.toStdString();
-#endif
-	}
-
-	inline auto fspath_to_QString(const std::filesystem::path& str) -> QString {
-#if defined _WIN32
-		return QString::fromStdWString(str.wstring());
-#else
-		return QString::fromStdString(str.string());
-#endif
-	}
-}
-
 
 class MainWindow : public QMainWindow, ic4::QueueSinkListener
 {
@@ -79,6 +60,9 @@ private:
 	void onAbout();
 	void onDisplayContextMenu(const QPoint& pos);
 	void onToggleFullScreen();
+	void onFullScreenShowMenuBarToggled(bool checked);
+	void onFullScreenShowToolBarToggled(bool checked);
+	void onFullScreenShowStatusBarToggled(bool checked);
 	void onExitFullScreen();
 	void onDeviceOpened();
 	void updateControls();
@@ -97,6 +81,8 @@ protected:
 private:
 	void customEvent(QEvent* event);
 	void savePhoto(const ic4::ImageBuffer& imagebuffer);
+
+	Settings _settings = {};
 
 	std::filesystem::path _devicefile;		// File name of device state xml
 	std::filesystem::path _codecconfigfile;   // File name of device state xml
@@ -124,6 +110,9 @@ private:
 	QAction* _exportDeviceSettingsAct = nullptr;
 	QAction* _importDeviceSettingsAct = nullptr;
 	QAction* _toggleFullscreenAct = nullptr;
+	QAction* _toggle_visibility_full_screen_menu_bar = nullptr;
+	QAction* _toggle_visibility_full_screen_tool_bar = nullptr;
+	QAction* _toggle_visibility_full_screen_status_bar = nullptr;
 
 	QAction* _closeDeviceAct = nullptr;
 

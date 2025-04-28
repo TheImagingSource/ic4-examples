@@ -1,5 +1,6 @@
 
 #include "mainwindow.h"
+#include "pathutils.h"
 
 #include <QApplication>
 
@@ -10,6 +11,7 @@ int main(int argc, char* argv[])
 
 	QApplication app(argc, argv);
 	app.setApplicationName("ic4-demoapp");
+	app.setOrganizationName("The Imaging Source");
 	app.setApplicationDisplayName("IC4 Demo Application");
 #if defined IC4_QTDIALOG_APPVERSION
 	app.setApplicationVersion(IC4_QTDIALOG_APPVERSION);

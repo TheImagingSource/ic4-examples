@@ -18,7 +18,10 @@ qt_add_resources(DEMOAPP_RESOURCES demoapp.qrc)
 add_executable(ic4-demoapp
     ${DEMOAPP_RESOURCES}
     "main.cpp"
+    "mainwindow.h"
     "mainwindow.cpp"
+    "settings.h"
+    "settings.cpp"
     "events.h"
     "demoapp.rc"
 )

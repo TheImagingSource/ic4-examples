@@ -18,6 +18,7 @@
 
 #include "mainwindow.h"
 #include "events.h"
+#include "pathutils.h"
 
 #include "DeviceSelectionDialog.h"
 #include "ResourceSelector.h"
@@ -35,6 +36,7 @@
 #include <QClipboard>
 #include <QTimer>
 #include <QKeySequence>
+#include <QSettings>
 
 #include <filesystem>
 #include <string>
@@ -44,6 +46,8 @@ MainWindow::MainWindow(const init_options& params, QWidget* parent)
 	, _videowriter(ic4::VideoWriterType::MP4_H264)
 {
 	_showSettingsMenu = params.show_settings_menu;
+
+	_settings.read();
 
 	// Make sure the %appdata%/demoapp directory exists
 	if (!params.appDataDirectory.empty())
@@ -55,7 +59,7 @@ MainWindow::MainWindow(const init_options& params, QWidget* parent)
 		readSettingsFile(params.appDataDirectory);
 	}
 
-
+	_defaultVisibility = _settings.default_visibility;
 	createUI();
 
 	// Create the sink for accessing images.
@@ -121,6 +125,7 @@ MainWindow::MainWindow(const init_options& params, QWidget* parent)
 
 MainWindow::~MainWindow()
 {
+	_settings.write();
 }
 
 void MainWindow::showVideoFullScreen()
@@ -223,6 +228,8 @@ void MainWindow::createUI()
 	_closeDeviceAct->setShortcuts(QKeySequence::Close);
 	connect(_closeDeviceAct, &QAction::triggered, this, &MainWindow::onCloseDevice);
 
+	// View/Fullscreen
+
 	_toggleFullscreenAct = new QAction(tr("&Full Screen"), this);
 	_toggleFullscreenAct->setStatusTip(tr("Toggle full screen display"));
 	_toggleFullscreenAct->setShortcut(Qt::Key_F11);
@@ -232,6 +239,25 @@ void MainWindow::createUI()
 	exitFullscreenAct->setShortcut(Qt::Key_Escape);
 	connect(exitFullscreenAct, &QAction::triggered, this, &MainWindow::onExitFullScreen);
 
+	_toggle_visibility_full_screen_menu_bar = new QAction(tr("Show &Menu Bar"), this);
+	_toggle_visibility_full_screen_menu_bar->setStatusTip("Show menu bar in full screen mode");
+	_toggle_visibility_full_screen_menu_bar->setCheckable(true);
+	_toggle_visibility_full_screen_menu_bar->setChecked(_settings.full_screen_show_menu_bar);
+	connect(_toggle_visibility_full_screen_menu_bar, &QAction::toggled, this, &MainWindow::onFullScreenShowMenuBarToggled);
+
+	_toggle_visibility_full_screen_tool_bar = new QAction(tr("Show &Tool Bar"), this);
+	_toggle_visibility_full_screen_menu_bar->setStatusTip("Show tool bar in full screen mode");
+	_toggle_visibility_full_screen_tool_bar->setCheckable(true);
+	_toggle_visibility_full_screen_tool_bar->setChecked(_settings.full_screen_show_tool_bar);
+	connect(_toggle_visibility_full_screen_tool_bar, &QAction::toggled, this, &MainWindow::onFullScreenShowToolBarToggled);
+
+	_toggle_visibility_full_screen_status_bar = new QAction(tr("Show &Status Bar"), this);
+	_toggle_visibility_full_screen_menu_bar->setStatusTip("Show status bar in full screen mode");
+	_toggle_visibility_full_screen_status_bar->setCheckable(true);
+	_toggle_visibility_full_screen_status_bar->setChecked(_settings.full_screen_show_status_bar);
+	connect(_toggle_visibility_full_screen_status_bar, &QAction::toggled, this, &MainWindow::onFullScreenShowStatusBarToggled);
+
+	// Help
 	auto aboutAct = new QAction(tr("&About..."), this);
 	aboutAct->setStatusTip(tr("About ic4-demoapp"));
 	connect(aboutAct, &QAction::triggered, this, &MainWindow::onAbout);
@@ -324,6 +350,12 @@ void MainWindow::createUI()
 	auto viewMenu = menuBar()->addMenu(tr("&View"));
 	viewMenu->addAction(_toggleFullscreenAct);
 
+	auto fullscreen_menu = new QMenu("Full Screen &Options");
+	viewMenu->addMenu(fullscreen_menu);
+	fullscreen_menu->addAction(_toggle_visibility_full_screen_menu_bar);
+	fullscreen_menu->addAction(_toggle_visibility_full_screen_tool_bar);
+	fullscreen_menu->addAction(_toggle_visibility_full_screen_status_bar);
+
 	////////////////////////////////////////////////////////////////////////////
 	// Create the Help Menu
 	auto helpMenu = menuBar()->addMenu(tr("&Help"));
@@ -347,8 +379,9 @@ void MainWindow::createUI()
 	_toolBar->addAction(_recordstopact);
 	_toolBar->addAction(_codecpropertyact);
 
-	// prevent hiding the toolbar
+	// prevent context menu on menu/tool bars
 	_toolBar->setContextMenuPolicy(Qt::PreventContextMenu);
+	menuBar()->setContextMenuPolicy(Qt::PreventContextMenu);
 
 	////////////////////////////////////////////////////////////////////////////
 	// Create the video display Widget
@@ -380,6 +413,7 @@ void MainWindow::createUI()
 	_VideoWidget->addAction(_exportDeviceSettingsAct);
 	_VideoWidget->addAction(_importDeviceSettingsAct);
 	_VideoWidget->addAction(exitFullscreenAct);
+	_VideoWidget->addAction(exitAct);
 }
 
 void MainWindow::closeEvent(QCloseEvent* ev)
@@ -874,7 +908,9 @@ void MainWindow::onImportDeviceSettings()
 
 			// Restart stream
 			if (this->_start_stream_on_open)
+			{
 				startstopstream();
+			}
 		}
 	}
 }
@@ -944,15 +980,23 @@ void MainWindow::onAbout()
 void MainWindow::onDisplayContextMenu(const QPoint& pos)
 {
 	QMenu* menu = new QMenu(_VideoWidget);
-	menu->addAction(_toggleFullscreenAct);
-	menu->addSeparator();
 	menu->addAction(_DeviceSelectAct);
 	menu->addAction(_DevicePropertiesAct);
 	menu->addSeparator();
 	menu->addAction(_ShootPhotoAct);
 	menu->addSeparator();
+
+	menu->addAction(_toggleFullscreenAct);
+	QMenu* visibility_menu = new QMenu("Full Screen &Options", menu);
+	visibility_menu->addAction(_toggle_visibility_full_screen_menu_bar);
+	visibility_menu->addAction(_toggle_visibility_full_screen_tool_bar);
+	visibility_menu->addAction(_toggle_visibility_full_screen_status_bar);
+	menu->addMenu(visibility_menu);
+	menu->addSeparator();
+
 	menu->addAction(_exportDeviceSettingsAct);
 	menu->addAction(_importDeviceSettingsAct);
+
 	menu->popup(_VideoWidget->mapToGlobal(pos));
 }
 
@@ -978,11 +1022,65 @@ void MainWindow::onToggleFullScreen()
 		_preFullscreenMaximized = isMaximized();
 
 		showFullScreen();
-		menuBar()->hide();
-		statusBar()->hide();
-		_toolBar->hide();
+		if (!_settings.full_screen_show_menu_bar)
+		{
+			menuBar()->hide();
+		}
+		if (!_settings.full_screen_show_status_bar)
+		{
+			statusBar()->hide();
+		}
+		if (!_settings.full_screen_show_tool_bar)
+		{
+			_toolBar->hide();
+		}
 	}
 }
+
+void MainWindow::onFullScreenShowMenuBarToggled(bool checked)
+{
+	_settings.full_screen_show_menu_bar = checked;
+
+	if (!checked && isFullScreen())
+	{
+		menuBar()->hide();
+	}
+	else
+	{
+		menuBar()->show();
+	}
+}
+
+
+void MainWindow::onFullScreenShowToolBarToggled(bool checked)
+{
+	_settings.full_screen_show_tool_bar = checked;
+
+	if (!checked && isFullScreen())
+	{
+		_toolBar->hide();
+	}
+	else
+	{
+		_toolBar->show();
+	}
+}
+
+
+void MainWindow::onFullScreenShowStatusBarToggled(bool checked)
+{
+	_settings.full_screen_show_status_bar = checked;
+
+	if (!checked && isFullScreen())
+	{
+		statusBar()->hide();
+	}
+	else
+	{
+		statusBar()->show();
+	}
+}
+
 
 void MainWindow::onExitFullScreen()
 {
