@@ -307,18 +307,23 @@ void HighSpeedCaptureDialog::customEvent(QEvent* event)
 {
 	if (event->type() == UPDATE_STATS)
 	{
+		int64_t num_total = _num_total.load();
+		int64_t num_filled = _num_filled.load();
+		int64_t num_free = _num_free.load();
+		int64_t num_processed = _num_processed.load();
+
 		// Update progress bars and their labels
-		_filledBuffersProgress->setMaximum(_num_total);
-		_filledBuffersProgress->setValue(_num_filled);
-		_filledBuffersLabel->setText(QString("%1 / %2").arg(_num_filled).arg(_num_total));
-		_freeBuffersProgress->setMaximum(_num_total);
-		_freeBuffersProgress->setValue(_num_free);
-		_freeBuffersLabel->setText(QString("%1 / %2").arg(_num_free).arg(_num_total));
+		_filledBuffersProgress->setMaximum(num_total);
+		_filledBuffersProgress->setValue(num_filled);
+		_filledBuffersLabel->setText(QString("%1 / %2").arg(num_filled).arg(num_total));
+		_freeBuffersProgress->setMaximum(num_total);
+		_freeBuffersProgress->setValue(num_free);
+		_freeBuffersLabel->setText(QString("%1 / %2").arg(num_free).arg(num_total));
 
 		// Update saved/dropped label
 		auto stats = _grabber.streamStatistics();
 		auto numDropped = stats.device_transmission_error + stats.device_underrun + stats.sink_ignored + stats.sink_underrun;
-		_captureInfo->setText(QString("Saved Images: %1 Frames Dropped: %2").arg(_num_processed).arg(numDropped));
+		_captureInfo->setText(QString("Saved Images: %1 Frames Dropped: %2").arg(num_processed).arg(numDropped));
 
 		event->accept();
 	}

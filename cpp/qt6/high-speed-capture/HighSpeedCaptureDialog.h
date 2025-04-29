@@ -43,14 +43,14 @@ private:
 	ic4::Grabber _grabber;
 	std::shared_ptr<ic4::Display> _display;
 	std::shared_ptr<ic4::QueueSink> _sink;
-	int _frame_number;
+	int _frame_number = 0;
 
 	std::mutex _frames_queued_mtx;
 
-	std::atomic<int64_t> _num_processed;
-	std::atomic<int64_t> _num_total;
-	std::atomic<int64_t> _num_free;
-	std::atomic<int64_t> _num_filled;
+	std::atomic<int64_t> _num_processed = 0;
+	std::atomic<int64_t> _num_total = 0;
+	std::atomic<int64_t> _num_free = 0;
+	std::atomic<int64_t> _num_filled = 0;
 
 	std::atomic<bool> _cancel_cleanup = false;
 	std::atomic<bool> _cleanup_active = false;
