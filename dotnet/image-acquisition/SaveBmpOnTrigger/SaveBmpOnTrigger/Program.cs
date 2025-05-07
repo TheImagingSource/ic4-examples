@@ -63,7 +63,7 @@ namespace savebmpontrigger
                     {
                         Console.WriteLine($"Failed to save buffer: {err.Message}");
                     }
-
+                    buffer.Dispose();
                     counter++;
                 }
             };
