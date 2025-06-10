@@ -563,19 +563,21 @@ void MainWindow::updateTriggerControl()
 	}
 	else
 	{
-		ic4::Error err;
-		bool enabled = _devicePropertyMap.getValueString(ic4::PropId::TriggerMode, err) == "On";
-
-		if (err.isError())
+		bool triggerAvailable = false;
+		bool triggerEnabled = false;
+		auto triggerMode = _devicePropertyMap.find(ic4::PropId::TriggerMode, ic4::Error::Ignore());
+		if (triggerMode.is_valid())
 		{
-			_TriggerModeAct->setEnabled(false);
-			_TriggerModeAct->setChecked(false);
+			ic4::Error err;
+			auto val = triggerMode.getValue(err);
+			if (!err.isError())
+			{
+				triggerAvailable = true;
+				triggerEnabled = val == "On";
+			}
 		}
-		else
-		{
-			_TriggerModeAct->setEnabled(true);
-			_TriggerModeAct->setChecked(enabled);
-		}
+		_TriggerModeAct->setEnabled(triggerAvailable);
+		_TriggerModeAct->setChecked(triggerEnabled);
 	}
 }
 
@@ -618,7 +620,9 @@ void MainWindow::onDeviceOpened()
 	_devicePropertyMap = _grabber.devicePropertyMap(ic4::Error::Ignore());
 
 	auto triggerMode = _devicePropertyMap.find(ic4::PropId::TriggerMode, ic4::Error::Ignore());
-	triggerMode.eventAddNotification([this](ic4::Property&) { updateTriggerControl(); }, ic4::Error::Ignore());
+	if (triggerMode.is_valid()) {
+		triggerMode.eventAddNotification([this](ic4::Property&) { updateTriggerControl(); }, ic4::Error::Ignore());
+	}
 
 	updateCameraLabel();
 	if (_start_stream_on_open)
