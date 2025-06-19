@@ -22,6 +22,9 @@ void Settings::read()
 		default_visibility = ic4::PropVisibility::Beginner;
 		break;
 	}
+
+	show_settings_menu = s.value("show_settings_menu", show_settings_menu).toBool();
+	start_stream_on_open = s.value("start_stream_on_open", start_stream_on_open).toBool();
 }
 
 void Settings::write()
@@ -33,4 +36,8 @@ void Settings::write()
 	s.setValue("full_screen_show_menu_bar", full_screen_show_menu_bar);
 	s.setValue("full_screen_show_status_bar", full_screen_show_status_bar);
 	s.setValue("full_screen_show_tool_bar", full_screen_show_tool_bar);
+
+	s.setValue("show_settings_menu", show_settings_menu);
+	s.setValue("start_stream_on_open", start_stream_on_open);
+
 }

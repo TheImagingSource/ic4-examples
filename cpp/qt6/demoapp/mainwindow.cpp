@@ -45,9 +45,13 @@ MainWindow::MainWindow(const init_options& params, QWidget* parent)
 	: QMainWindow(parent)
 	, _videowriter(ic4::VideoWriterType::MP4_H264)
 {
-	_showSettingsMenu = params.show_settings_menu;
-
 	_settings.read();
+
+	if (params.show_settings_menu) {
+		_showSettingsMenu = true;
+	} else {
+		_showSettingsMenu = _settings.show_settings_menu;
+	}
 
 	// Make sure the %appdata%/demoapp directory exists
 	if (!params.appDataDirectory.empty())
@@ -56,10 +60,8 @@ MainWindow::MainWindow(const init_options& params, QWidget* parent)
 
 		_devicefile = params.appDataDirectory / "device.json";
 		_codecconfigfile = params.appDataDirectory / "codecconfig.json";
-		readSettingsFile(params.appDataDirectory);
 	}
 
-	_defaultVisibility = _settings.default_visibility;
 	createUI();
 
 	// Create the sink for accessing images.
@@ -273,23 +275,23 @@ void MainWindow::createUI()
 	defaultVisibilityMenu->setStatusTip(tr("Sets the default visibility"));
 	auto beginnerEntry = defaultVisibilityMenu->addAction(tr("Beginner"));
 	beginnerEntry->setCheckable(true);
-	beginnerEntry->setChecked(_defaultVisibility == ic4::PropVisibility::Beginner);
+	beginnerEntry->setChecked(_settings.default_visibility == ic4::PropVisibility::Beginner);
 	auto expertEntry = defaultVisibilityMenu->addAction(tr("Expert"));
 	expertEntry->setCheckable(true);
-	expertEntry->setChecked(_defaultVisibility == ic4::PropVisibility::Expert);
+	expertEntry->setChecked(_settings.default_visibility == ic4::PropVisibility::Expert);
 	auto guruEntry = defaultVisibilityMenu->addAction(tr("Guru"));
 	guruEntry->setCheckable(true);
-	guruEntry->setChecked(_defaultVisibility == ic4::PropVisibility::Guru);
+	guruEntry->setChecked(_settings.default_visibility == ic4::PropVisibility::Guru);
 
 	auto update_entries = [this, beginnerEntry, expertEntry, guruEntry] {
-		beginnerEntry->setChecked(_defaultVisibility == ic4::PropVisibility::Beginner);
-		expertEntry->setChecked(_defaultVisibility == ic4::PropVisibility::Expert);
-		guruEntry->setChecked(_defaultVisibility == ic4::PropVisibility::Guru);
+		beginnerEntry->setChecked(_settings.default_visibility == ic4::PropVisibility::Beginner);
+		expertEntry->setChecked(_settings.default_visibility == ic4::PropVisibility::Expert);
+		guruEntry->setChecked(_settings.default_visibility == ic4::PropVisibility::Guru);
 	};
 
-	connect(beginnerEntry, &QAction::triggered, [this, update_entries] { _defaultVisibility = ic4::PropVisibility::Beginner; update_entries(); });
-	connect(expertEntry, &QAction::triggered, [this, update_entries] { _defaultVisibility = ic4::PropVisibility::Expert; update_entries(); });
-	connect(guruEntry, &QAction::triggered, [this, update_entries] { _defaultVisibility = ic4::PropVisibility::Guru; update_entries(); });
+	connect(beginnerEntry, &QAction::triggered, [this, update_entries] { _settings.default_visibility = ic4::PropVisibility::Beginner; update_entries(); });
+	connect(expertEntry, &QAction::triggered, [this, update_entries] { _settings.default_visibility = ic4::PropVisibility::Expert; update_entries(); });
+	connect(guruEntry, &QAction::triggered, [this, update_entries] { _settings.default_visibility = ic4::PropVisibility::Guru; update_entries(); });
 
 	auto deleteDeviceSettingsFile  = new QAction(tr("Delete Device Settings File"), this);
 	deleteDeviceSettingsFile->setStatusTip(tr("Deletes the current device settings file"));
@@ -306,10 +308,15 @@ void MainWindow::createUI()
 		}
 	);
 
-	auto start_stream_on_open = new QAction(tr("Start stream on open"), this);
-	start_stream_on_open->setCheckable(true);
-	start_stream_on_open->setChecked(_start_stream_on_open);
-	connect(start_stream_on_open, &QAction::triggered, [this, start_stream_on_open] { _start_stream_on_open = !_start_stream_on_open; start_stream_on_open->setChecked(_start_stream_on_open); });
+	auto startStreamOnOpenAction = new QAction(tr("Start stream on open"), this);
+	startStreamOnOpenAction->setCheckable(true);
+	startStreamOnOpenAction->setChecked(_showSettingsMenu);
+	connect(startStreamOnOpenAction, &QAction::triggered,
+		[this, startStreamOnOpenAction] { 
+			_settings.start_stream_on_open = !_settings.start_stream_on_open;
+			startStreamOnOpenAction->setChecked(_settings.start_stream_on_open);
+		}
+	);
 
 	////////////////////////////////////////////////////////////////////////////
 	// Create the File Menu
@@ -342,7 +349,7 @@ void MainWindow::createUI()
 	auto settingsMenu = menuBar()->addMenu(tr("&Settings"));
 	settingsMenu->addMenu(defaultVisibilityMenu);
 	settingsMenu->addAction(deleteDeviceSettingsFile);
-	settingsMenu->addAction(start_stream_on_open);
+	settingsMenu->addAction(startStreamOnOpenAction);
 	settingsMenu->menuAction()->setVisible(_showSettingsMenu);
 
 	////////////////////////////////////////////////////////////////////////////
@@ -625,7 +632,7 @@ void MainWindow::onDeviceOpened()
 	}
 
 	updateCameraLabel();
-	if (_start_stream_on_open)
+	if (_showSettingsMenu)
 	{
 		startstopstream();
 	}
@@ -639,7 +646,7 @@ void MainWindow::onDeviceProperties()
 	if (_propertyDialog == nullptr)
 	{
 		_propertyDialog = new PropertyDialog(_grabber, _VideoWidget, tr("Device Properties"));
-		_propertyDialog->setPropVisibility(_defaultVisibility);
+		_propertyDialog->setPropVisibility(_settings.default_visibility);
 	}
 
 	_propertyDialog->show();
@@ -648,7 +655,7 @@ void MainWindow::onDeviceProperties()
 void MainWindow::onDeviceDriverProperties()
 {
     PropertyDialog cDlg(_grabber.driverPropertyMap(), _VideoWidget, tr("Device Driver Properties"));
-	cDlg.setPropVisibility(_defaultVisibility);
+	cDlg.setPropVisibility(_settings.default_visibility);
 	
 	cDlg.exec();
 
@@ -841,7 +848,7 @@ void MainWindow::onStopCaptureVideo()
 void MainWindow::onCodecProperties()
 {
 	PropertyDialog cDlg(_videowriter.propertyMap(), _VideoWidget, tr("Codec Settings"));
-	cDlg.setPropVisibility(_defaultVisibility);
+	cDlg.setPropVisibility(_settings.default_visibility);
 	if (cDlg.exec() == 1)
 	{
 		_videowriter.propertyMap().serialize(_codecconfigfile);
@@ -911,7 +918,7 @@ void MainWindow::onImportDeviceSettings()
 			_devicePropertyMap = _grabber.devicePropertyMap(ic4::Error::Ignore());
 
 			// Restart stream
-			if (this->_start_stream_on_open)
+			if (this->_settings.start_stream_on_open)
 			{
 				startstopstream();
 			}
@@ -1150,38 +1157,3 @@ void MainWindow::framesQueued(ic4::QueueSink& sink)
 		}
 	}
 }
-
-void MainWindow::readSettingsFile(const std::filesystem::path& appDataDirectory)
-{
-	QFile file(ic4demoapp::fspath_to_QString(appDataDirectory / "settings.json") );
-	if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-		return;
-	}
-
-	_showSettingsMenu = true;
-
-	QString val = file.readAll();
-	file.close();
-
-	QJsonDocument d = QJsonDocument::fromJson(val.toUtf8());
-	QJsonObject json_mainwindows = d.object().value("MainWindow").toObject();
-	if (json_mainwindows.empty()) {
-		return;
-	}
-	if (auto val = json_mainwindows["Default Visibility"]; val.isDouble()) {
-		switch (val.toInt())
-		{
-		case 0:	_defaultVisibility = ic4::PropVisibility::Beginner;	break;
-		case 1:	_defaultVisibility = ic4::PropVisibility::Expert; break;
-		case 2:	_defaultVisibility = ic4::PropVisibility::Guru; break;
-		case 3:	_defaultVisibility = ic4::PropVisibility::Invisible; break;
-		default:
-			break;
-		}
-	}
-	if (auto val = json_mainwindows["Start stream on open"]; val.isBool()) {
-		_start_stream_on_open = val.toBool(_start_stream_on_open);
-	}
-
-}
-

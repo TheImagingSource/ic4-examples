@@ -29,8 +29,10 @@ int main(int argc, char* argv[])
 	{
 		auto device_setup_path = init.appDataDirectory / "device.json";
 
+		QSettings settings_stuff;
+
 		QCommandLineParser parser;
-		parser.setApplicationDescription("IC4 Demo Application");
+		parser.setApplicationDescription("IC4 Demo Application\n\tSettings: " + settings_stuff.fileName());
 		auto helpOption = parser.addHelpOption();
 		auto versionOption = parser.addVersionOption();
 
@@ -53,12 +55,15 @@ int main(int argc, char* argv[])
 		QCommandLineOption cli_option_fullscreen("fullscreen", "Start in full screen mode.");
 		parser.addOption(cli_option_fullscreen);
 
+
+		QString help_text = parser.helpText();
+
 		auto res = parser.parse(QApplication::arguments());
 		if (!res) {
 #if defined _WIN32
 			QMessageBox::warning(0, QGuiApplication::applicationDisplayName(),
 								 "<html><head/><body><h2>" + parser.errorText() + "</h2><pre>"
-								 + parser.helpText() + "</pre></body></html>");
+								 + help_text + "</pre></body></html>");
 #else
 			std::fputs(qPrintable(parser.errorText()), stderr);
 			std::fputs("\n\n", stderr);
@@ -71,10 +76,13 @@ int main(int argc, char* argv[])
 
 		if (parser.isSet(helpOption))
 		{
+
 #if defined _WIN32
 			QMessageBox::information(0, QGuiApplication::applicationDisplayName(),
-					 "<html><head/><body><pre>"
-					 + parser.helpText() + "</pre></body></html>");
+				"<html><head/><body><pre>" +
+				help_text +
+				"</pre></body></html>"
+			);
 #else
 			parser.showHelp();
 #endif
