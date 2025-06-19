@@ -19,8 +19,11 @@ add_library(qt6-dialogs STATIC
     controls/PropertyInfoBox.h
     controls/SwitchDriverGroupBox.cpp
     controls/SwitchDriverGroupBox.h
+    controls/PropertyTreeWidget.cpp
+    controls/PropertyTreeWidget.h
     controls/PropertyControls.h
     controls/PropertyControls.cpp
+
     controls/props/PropIntControl.h
     controls/props/PropIntSpinBox.h
     controls/props/PropEnumerationControl.h
@@ -30,7 +33,6 @@ add_library(qt6-dialogs STATIC
     controls/props/PropBooleanControl.h
     controls/props/PropFloatControl.h
     controls/props/PropCategoryControl.h
-    controls/PropertyTreeWidget.h
 
     DeviceSelectionDialog.h
     DeviceSelectionDialog.cpp

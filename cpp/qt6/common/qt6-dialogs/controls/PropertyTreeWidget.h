@@ -33,111 +33,42 @@ namespace ic4::ui
 {
 	struct PropertyTreeNode
 	{
-		PropertyTreeNode* parent;
-		ic4::Property prop;
-		ic4::PropType prop_type;
-		int row;
+	protected:
+		PropertyTreeNode* parent_;
 
-		QString prop_name;
-		QString display_name;
-		std::vector<std::unique_ptr<PropertyTreeNode>> children;
+		ic4::Property prop_;
+		ic4::PropType prop_type_;
+		int row_;
 
+		QString prop_name_;
+		QString display_name_;
+		std::vector<std::unique_ptr<PropertyTreeNode>> children_;
+		ic4::Property::NotificationToken notification_token_ = {};
+		bool prev_available_ = false;
+	public:
+		PropertyTreeNode(PropertyTreeNode* parent_, const ic4::Property& prop, ic4::PropType type, int row, QString pn, QString dn);
+		~PropertyTreeNode();
 
-		ic4::Property::NotificationToken notification_token = {};
-		bool prev_available;
+		void populate();
 
-		PropertyTreeNode(PropertyTreeNode* parent_, const ic4::Property& prop_, ic4::PropType type, int row_, QString pn, QString dn)
-			: parent(parent_)
-			, prop(prop_)
-			, prop_type(type)
-			, row(row_)
-			, prop_name(std::move(pn))
-			, display_name(std::move(dn))
+		int num_children() const;
+
+		PropertyTreeNode* child(int n) const;
+
+		void register_notification_once(std::function<void(PropertyTreeNode*)> item_changed);
+
+		bool is_category() const noexcept
 		{
+			return prop_type_ == ic4::PropType::Category;
 		}
 
-		~PropertyTreeNode()
-		{
-			if (notification_token)
-				prop.eventRemoveNotification(notification_token, ic4::Error::Ignore());
-		}
+		auto prop() noexcept -> ic4::Property& { return prop_; }
+		auto children() noexcept -> std::vector<std::unique_ptr<PropertyTreeNode>>& { return children_; }
 
-		void populate()
-		{
-			if (!children.empty())
-				return;
-
-			if (prop.type(ic4::Error::Ignore()) == ic4::PropType::Category)
-			{
-				int index = 0;
-				for (auto&& feature : prop.asCategory().features())
-				{
-					auto child_name = QString::fromStdString(feature.name());
-					auto child_display_name = QString::fromStdString(feature.displayName());
-
-					auto tmp_prop_type = feature.type(ic4::Error::Ignore());
-
-					switch (tmp_prop_type)
-					{
-						// only show valid properties
-					case ic4::PropType::Integer:
-					case ic4::PropType::Command:
-					case ic4::PropType::String:
-					case ic4::PropType::Enumeration:
-					case ic4::PropType::Boolean:
-					case ic4::PropType::Float:
-					case ic4::PropType::Category:
-						children.push_back(std::make_unique<PropertyTreeNode>(this, feature, tmp_prop_type, index++, child_name, child_display_name));
-						break;
-					default:
-						break;
-					}
-				}
-			}
-		}
-
-		int num_children() const
-		{
-			const_cast<PropertyTreeNode*>(this)->populate();
-
-			return static_cast<int>(children.size());
-		}
-
-		PropertyTreeNode* child(int n) const
-		{
-			const_cast<PropertyTreeNode*>(this)->populate();
-
-			if (n < static_cast<int>(children.size()))
-				return children[n].get();
-
-			return nullptr;
-		}
-
-		void register_notification_once(std::function<void(PropertyTreeNode*)> item_changed)
-		{
-			if (notification_token)
-				return;
-
-			prev_available = prop.isAvailable(ic4::Error::Ignore());
-
-			notification_token = prop.eventAddNotification(
-				[this, item_changed](ic4::Property& local_prop)
-				{
-					bool new_available = local_prop.isAvailable(ic4::Error::Ignore());
-					if (prev_available != new_available)
-					{
-						item_changed(this);
-						prev_available = new_available;
-					}
-				},
-				ic4::Error::Ignore()
-			);
-		}
-
-		bool is_category() const
-		{
-			return prop_type == ic4::PropType::Category;
-		}
+		auto get_row() const noexcept { return row_; }
+		auto get_parent() const noexcept { return parent_; }
+		auto get_display_name() const noexcept { return display_name_; }
+		auto get_prop_name() const noexcept { return prop_name_; }
 	};
 
 	class PropertyTreeModel : public QAbstractItemModel
@@ -147,119 +78,21 @@ namespace ic4::ui
 		PropertyTreeNode* prop_root_ = nullptr;
 
 	public:
-		PropertyTreeModel(ic4::PropCategory root)
-			: QAbstractItemModel(Q_NULLPTR)
-			, tree_root_(nullptr, root, ic4::PropType::Category, 0, "", "")
-		{
-			// Add extra layer to make sure root element has a parent
-			// QSortFilterProxyModel::filterAcceptsRow works with parent index
-			auto root_name = root.name(ic4::Error::Ignore());
-			auto root_display_name = root.displayName(ic4::Error::Ignore());
-			tree_root_.children.push_back(std::make_unique<PropertyTreeNode>(&tree_root_, root, ic4::PropType::Category, 0, QString::fromStdString(root_name), QString::fromStdString(root_display_name)));
-			prop_root_ = tree_root_.children.front().get();
-		}
-
-		~PropertyTreeModel()
-		{
-		}
+		PropertyTreeModel(ic4::PropCategory root);
+		~PropertyTreeModel() = default;
 
 		QModelIndex rootIndex() const
 		{
 			return createIndex(0, 0, prop_root_);
 		}
-
 	private:
-		const PropertyTreeNode* parent_item(const QModelIndex& parent) const
-		{
-			if (!parent.isValid())
-				return &tree_root_;
-
-			return static_cast<const PropertyTreeNode*>(parent.internalPointer());
-		}
-
+		const PropertyTreeNode* parent_item(const QModelIndex& parent) const;
 	protected:
-		QModelIndex index(int row, int column, const QModelIndex& parent = QModelIndex()) const override
-		{
-			if (!hasIndex(row, column, parent))
-				return QModelIndex();
-
-			auto* parentItem = parent_item(parent);
-
-			auto* childItem = parentItem->child(row);
-			if (childItem)
-			{
-				childItem->register_notification_once(
-					[this](PropertyTreeNode* item)
-					{
-						auto item_index = createIndex(item->row, 0, item);
-
-						const_cast<PropertyTreeModel*>(this)->dataChanged(item_index, item_index);
-					}
-				);
-
-				return createIndex(row, column, childItem);
-			}
-
-			return QModelIndex();
-		}
-		QModelIndex parent(const QModelIndex& index) const override
-		{
-			if (!index.isValid())
-				return QModelIndex();
-
-			auto* childItem = static_cast<PropertyTreeNode*>(index.internalPointer());
-			auto* parentItem = childItem->parent;
-
-			if (parentItem == &tree_root_)
-				return QModelIndex();
-
-			return createIndex(parentItem->row, 0, parentItem);
-		}
-		int rowCount(const QModelIndex& parent = QModelIndex()) const override
-		{
-			if (parent.column() > 0)
-				return 0;
-
-			auto* parentItem = parent_item(parent);
-
-			return parentItem->num_children();
-		}
-		int columnCount(const QModelIndex& parent = QModelIndex()) const override
-		{
-			Q_UNUSED(parent);
-			return 2;
-		}
-		QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override
-		{
-			if (!index.isValid())
-				return QVariant();
-
-			auto* tree = static_cast<PropertyTreeNode*>(index.internalPointer());
-			switch (role)
-			{
-			case Qt::TextAlignmentRole:
-				if (tree->children.size() == 0)
-					return  static_cast<Qt::Alignment::Int>(Qt::AlignVCenter | Qt::AlignRight);
-				else
-					return  static_cast<Qt::Alignment::Int>(Qt::AlignVCenter | Qt::AlignLeft);
-				break;
-			case Qt::DisplayRole:
-				if (index.column() == 0)
-					return tree->display_name;
-				return {};
-			case Qt::ToolTipRole:
-			{
-				auto tt = tree->prop.tooltip();
-				auto desc = tree->prop.description();
-
-				if (!tt.empty()) return QString::fromStdString(tt);
-				if (!desc.empty()) return QString::fromStdString(desc);
-				return tree->display_name;
-			}
-			default:
-				return {};
-			}
-		}
+		QModelIndex index(int row, int column, const QModelIndex& parent = QModelIndex()) const override;
+		QModelIndex parent(const QModelIndex& index) const override;
+		int rowCount(const QModelIndex& parent = QModelIndex()) const override;
+		int columnCount(const QModelIndex& parent = QModelIndex()) const override;
+		QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
 	};
 
 	class PropertyTreeItemDelegate : public QStyledItemDelegate
@@ -268,97 +101,25 @@ namespace ic4::ui
 		ic4::Grabber* grabber_;
 		ic4::ui::StreamRestartFilterFunction restart_filter_;
 		ic4::ui::PropSelectedFunction prop_selected_;
-
 	public:
-		PropertyTreeItemDelegate(QSortFilterProxyModel& proxy, ic4::Grabber* grabber, ic4::ui::StreamRestartFilterFunction restart_filter, ic4::ui::PropSelectedFunction prop_selected)
-			: proxy_(proxy)
-			, grabber_(grabber)
-			, restart_filter_(restart_filter)
-			, prop_selected_(prop_selected)
-		{
-		}
+		PropertyTreeItemDelegate(QSortFilterProxyModel& proxy, ic4::Grabber* grabber, ic4::ui::StreamRestartFilterFunction restart_filter, ic4::ui::PropSelectedFunction prop_selected);
 
 		void updateGrabber(ic4::Grabber* grabber)
 		{
 			grabber_ = grabber;
 		}
 
-		QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& /* option */, const QModelIndex& index) const override
-		{
-			auto source_index = proxy_.mapToSource(index);
-
-			auto* tree = static_cast<PropertyTreeNode*>(source_index.internalPointer());
-
-			if (!tree)
-			{
-				return nullptr;
-			}
-				
-			auto* widget = create_prop_control(tree->prop, parent, grabber_, restart_filter_, prop_selected_);
-			if (widget)
-			{
-				widget->setContentsMargins(0, 0, 8, 0);
-			}
-
-			return widget;
-		}
+		QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& /* option */, const QModelIndex& index) const override;
 	};
 
 	class TestItemDelegateForPaint : public QStyledItemDelegate
 	{
 		QSortFilterProxyModel& proxy_;
 		QWidget* parent_ = nullptr;
-
 	public:
-		TestItemDelegateForPaint(QSortFilterProxyModel& proxy, QWidget* parent)
-			: proxy_(proxy), parent_(parent)
-		{
-		}
+		TestItemDelegateForPaint(QSortFilterProxyModel& proxy, QWidget* parent);
 	
-		void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override
-		{
-			
-			auto source_index = proxy_.mapToSource(index);
-			auto* tree = static_cast<PropertyTreeNode*>(source_index.internalPointer());
-			
-			if (tree->children.size() > 0) {
-				// This paints the left half of the category title and background
-				painter->save();
-				if (CustomStyle.ItemDelegateForPaintTextColorEnabled)
-				{
-					painter->setPen(CustomStyle.ItemDelegateForPaintTextColor);
-				}
-				else
-				{
-					painter->setPen(parent_->palette().color(QPalette::Text));
-				}
-				auto r = option.rect;
-				if (CustomStyle.ItemDelegateForPaintBackgroundColorEnabled)
-				{
-					painter->fillRect(r, QBrush(CustomStyle.ItemDelegateForPaintBackgroundColor));
-				}
-				else
-				{
-					painter->fillRect(r, QBrush(parent_->palette().color(QPalette::Mid)));
-				}
-				painter->drawText(r, option.displayAlignment, index.data().toString());
-				painter->restore();
-			}
-			else
-			{
-				QStyledItemDelegate::paint(painter, option, index);
-		
-				/*
-				painter->save();
-				painter->setPen(parent_->palette().color(QPalette::Text));
-				auto r = option.rect;
-				painter->fillRect(r, QBrush(parent_->palette().color(QPalette::Background)));
-				painter->drawText(r, option.displayAlignment, index.data().toString());
-				painter->restore();
-				*/				
-			}
-		}
-	
+		void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override;
 	};
 
 
@@ -368,62 +129,19 @@ namespace ic4::ui
 		ic4::PropVisibility visibility_ = ic4::PropVisibility::Expert;
 
 		std::function<bool(const ic4::Property&)> filter_func_;
-
 	public:
-		FilterPropertiesProxy()
-		{
-			setRecursiveFilteringEnabled(true);
-		}
+		FilterPropertiesProxy();
 
-		void filter(QString text, ic4::PropVisibility vis)
-		{
-			filter_regex_ = QRegularExpression(text, QRegularExpression::PatternOption::CaseInsensitiveOption);
-			visibility_ = vis;
-			invalidate();
-		}
+		void filter(QString text, ic4::PropVisibility vis);
 
-		void filter_func(std::function<bool(const ic4::Property&)> accept_prop)
-		{
-			filter_func_ = accept_prop;
-			invalidate();
-		}
+		void filter_func(std::function<bool(const ic4::Property&)> accept_prop);
 
 	protected:
 
 		// don't show blue selection
-		Qt::ItemFlags flags(const QModelIndex& index) const 
-		{
-			const auto flags = QSortFilterProxyModel::flags(index);
-			return flags & ~Qt::ItemIsSelectable;
-		}
+		Qt::ItemFlags flags(const QModelIndex& index) const;
 
-		bool filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const
-		{
-			auto* tree = static_cast<PropertyTreeNode*>(sourceParent.internalPointer());
-			if (!tree)
-				return false;
-
-			auto& child = *tree->children[sourceRow];
-
-			// Set all categories as hidden.
-			// Qt will still show them if they have visible children.
-			if (child.is_category())
-				return false;
-
-			if (!child.prop.isAvailable())
-				return false;
-
-			if (child.prop.visibility() > visibility_)
-				return false;
-
-			if (!filter_regex_.match(child.display_name).hasMatch() && !filter_regex_.match(child.prop_name).hasMatch())
-				return false;
-
-			if (!filter_func_)
-				return true;
-
-			return filter_func_(child.prop);
-		}
+		bool filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const;
 	};
 
 	class PropertyTreeView : public QTreeView
@@ -432,75 +150,15 @@ namespace ic4::ui
 
 		QSortFilterProxyModel& proxy_;
 	public:
-		PropertyTreeView(QSortFilterProxyModel& proxy)
-			: proxy_(proxy)
-		{
-
-		}
+		PropertyTreeView(QSortFilterProxyModel& proxy);
 
 	protected:
 
-		void mousePressEvent(QMouseEvent* event) override
-		{
-			QModelIndex index = indexAt(event->pos());
-			bool last_state = isExpanded(index);
-			QTreeView::mousePressEvent(event);
-			if (index.isValid() && last_state == isExpanded(index))
-				setExpanded(index, !last_state);
-		}
+		void mousePressEvent(QMouseEvent* event) override;
 
 		void drawBranches(QPainter* painter,
 			const QRect& rect,
-			const QModelIndex& index) const
-		{
-			auto source_index = proxy_.mapToSource(index);
-			auto* tree = static_cast<PropertyTreeNode*>(source_index.internalPointer());
-
-			if (tree->children.size() > 0)
-			{
-				if (CustomStyle.PropertyTreeViewBranchBackgroundEnabled)
-				{
-					painter->fillRect(rect, CustomStyle.PropertyTreeViewBranchBackground);
-				}
-				else
-				{
-					painter->fillRect(rect, QWidget::palette().color(QPalette::Mid));
-				}
-	
-				// 
-				int offset = (rect.width() - indentation()) / 2;
-				auto c = CustomStyle.PropertyTreeViewBranchTextColorEnabled ?
-					CustomStyle.PropertyTreeViewBranchTextColor : QWidget::palette().color(QPalette::Text);
-				int x = rect.x() + rect.width() / 2 + offset;
-				int y = rect.y() + rect.height() / 2;
-				int length = 9;
-
-				if (isExpanded(index))
-				{
-					x = x - 5;
-					y = y - 2;
-					for (int i = 0; i < 5; ++i)
-					{
-						QRect arrow(x + i, y + i, length - (i * 2), 1);
-						painter->fillRect(arrow, c);
-					}
-				}
-				else
-				{
-					x = x - 2;
-					y = y - 5;
-					for (int i = 0; i < 5; ++i)
-					{
-						QRect arrow(x + i, y + i, 1, length - (i * 2));
-						painter->fillRect(arrow, c);
-					}
-				}
-			}
-			else
-			{
-				QTreeView::drawBranches(painter, rect, index);
-			}
-		}
+			const QModelIndex& index) const;
 
 	};
 
@@ -587,7 +245,7 @@ namespace ic4::ui
 				return;
 			}
 
-			info_text_->update(tree->prop);
+			info_text_->update(tree->prop());
 		}
 
 		void update_view()
@@ -809,15 +467,7 @@ namespace ic4::ui
 	class PropertyTreeWidget : public PropertyTreeWidgetBase<QWidget>
 	{
 	public:
-		PropertyTreeWidget(ic4::PropCategory cat, ic4::Grabber* grabber, Settings settings = Settings::Default(), QWidget* parent = nullptr) :
-			PropertyTreeWidgetBase(cat, grabber, settings, parent)
-		{
-		}
-		void closeEvent(QCloseEvent* event) override
-		{
-			clearModel();
-			onClose((app::IViewBase*)this);
-			QWidget::closeEvent(event);
-		}
+		PropertyTreeWidget(ic4::PropCategory cat, ic4::Grabber* grabber, Settings settings = Settings::Default(), QWidget* parent = nullptr);
+		void closeEvent(QCloseEvent* event) override;
 	};
 }
