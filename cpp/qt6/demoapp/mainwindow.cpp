@@ -616,9 +616,51 @@ void MainWindow::onSelectDevice()
 			_propertyDialog->updateGrabber(_grabber);
 		}
 
+		prepareNewDeviceOpen();
+
 		onDeviceOpened();
 	}
 	updateControls();
+}
+
+
+void MainWindow::prepareNewDeviceOpen()
+{
+	// This code detects a Polarization camera
+	// If a Polarization camera is detected we set ProcessedPixelFormatEnable to true and then select BGRa8 as the PixelFormat
+
+	auto propProcessedPixelFormatEnable = _devicePropertyMap.findBoolean("ProcessedPixelFormatEnable", ic4::Error::Ignore());
+	if (propProcessedPixelFormatEnable.is_valid())
+	{
+		auto propPixelFormat = _devicePropertyMap.find(ic4::PropId::PixelFormat, ic4::Error::Ignore());
+		if (propPixelFormat.is_valid())
+		{
+			bool is_pol_camera = false;
+			for (auto& e : propPixelFormat.entries(ic4::Error::Ignore()))
+			{
+				auto cur_entry_pf = static_cast<int32_t>(e.intValue(ic4::Error::Ignore()));
+				if (cur_entry_pf == static_cast<int32_t>(ic4::PixelFormat::PolarizedMono8)
+					|| cur_entry_pf == static_cast<int32_t>(ic4::PixelFormat::PolarizedBayerBG8)) {
+					is_pol_camera = true;
+					break;
+				}
+			}
+			if (is_pol_camera)
+			{
+				ic4::Error err;
+				bool cur_value = propProcessedPixelFormatEnable.getValue(err);	// get current Value for propProcessedPixelFormatEnable
+				if (!err)
+				{
+					if (!cur_value) {	// If it is not already set, 
+						propProcessedPixelFormatEnable.setValue(true, err);
+					}
+					if (!err) {
+						propPixelFormat.setValue(ic4::PixelFormat::BGRa8, ic4::Error::Ignore());
+					}
+				}
+			}
+		}
+	}
 }
 
 void MainWindow::onDeviceOpened()

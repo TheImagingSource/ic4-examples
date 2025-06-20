@@ -82,6 +82,9 @@ private:
 	void customEvent(QEvent* event);
 	void savePhoto(const ic4::ImageBuffer& imagebuffer);
 
+	void prepareNewDeviceOpen();
+
+
 	Settings _settings = {};
 
 	std::filesystem::path _devicefile;		// File name of device state xml
