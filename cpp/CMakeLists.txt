@@ -17,6 +17,7 @@ add_subdirectory( device-handling/device-lost )
 add_subdirectory( image-acquisition/record-mp4-h264 )
 add_subdirectory( image-acquisition/save-bmp-on-trigger )
 add_subdirectory( image-acquisition/save-jpeg-file )
+add_subdirectory( image-acquisition/measure-fps )
 
 add_subdirectory( qt6 )
 

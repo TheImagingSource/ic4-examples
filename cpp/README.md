@@ -100,6 +100,7 @@ This section contains example programs showing how to capture and
 - Save images as [JPEG files](/cpp/image-acquisition/save-jpeg-file)
 - Record videos as [H264-encoded MP4 files](/cpp/image-acquisition/record-mp4-h264) 
 - Save [BMP files on trigger](/cpp/image-acquisition/save-bmp-on-trigger).
+- Measure [framerate of cameras](/cpp/image-acquisition/measure-fps).
 
 ## Advanced Camera Features
 
