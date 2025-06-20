@@ -71,6 +71,9 @@ def example_save_bmp_on_trigger():
 
     # We have to call streamStop before exiting the function, to make sure the listener object is not destroyed before the stream is stopped
     grabber.stream_stop()
+
+    map.set_value(ic4.PropId.TRIGGER_MODE, "Off")
+
     grabber.device_close()
 
 if __name__ == "__main__":

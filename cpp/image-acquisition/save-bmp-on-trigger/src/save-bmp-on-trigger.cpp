@@ -139,6 +139,14 @@ int main()
 
 	// We have to call streamStop before exiting the function, because we have the listener defined as a stack variable.
 	grabber.streamStop();
+
+    // Disable trigger mode
+	if (!map.setValue(ic4::PropId::TriggerMode, "Off", err))
+	{
+		std::cerr << "Failed to disable trigger mode: " << err.message() << std::endl;
+		return -4;
+	}
+
 	grabber.deviceClose();
 
 	return 0;

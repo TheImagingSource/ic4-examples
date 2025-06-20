@@ -90,6 +90,9 @@ namespace savebmpontrigger
             }
 
             grabber.StreamStop();
+
+            propertyMap.SetValue(ic4.PropId.TriggerMode, "Off");
+
             grabber.DeviceClose();
 
         }
