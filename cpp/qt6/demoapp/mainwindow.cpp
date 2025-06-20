@@ -632,7 +632,7 @@ void MainWindow::onDeviceOpened()
 	}
 
 	updateCameraLabel();
-	if (_showSettingsMenu)
+	if (_settings.start_stream_on_open)
 	{
 		startstopstream();
 	}
