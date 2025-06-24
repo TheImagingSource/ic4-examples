@@ -629,10 +629,12 @@ void MainWindow::prepareNewDeviceOpen()
 	// This code detects a Polarization camera
 	// If a Polarization camera is detected we set ProcessedPixelFormatEnable to true and then select BGRa8 as the PixelFormat
 
-	auto propProcessedPixelFormatEnable = _devicePropertyMap.findBoolean("ProcessedPixelFormatEnable", ic4::Error::Ignore());
+	auto propMap = _grabber.devicePropertyMap();
+
+	auto propProcessedPixelFormatEnable = propMap.findBoolean("ProcessedPixelFormatEnable", ic4::Error::Ignore());
 	if (propProcessedPixelFormatEnable.is_valid())
 	{
-		auto propPixelFormat = _devicePropertyMap.find(ic4::PropId::PixelFormat, ic4::Error::Ignore());
+		auto propPixelFormat = propMap.find(ic4::PropId::PixelFormat, ic4::Error::Ignore());
 		if (propPixelFormat.is_valid())
 		{
 			bool is_pol_camera = false;
