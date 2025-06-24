@@ -631,8 +631,8 @@ void MainWindow::prepareNewDeviceOpen()
 
 	auto propMap = _grabber.devicePropertyMap();
 
-	auto propProcessedPixelFormatEnable = propMap.findBoolean("ProcessedPixelFormatEnable", ic4::Error::Ignore());
-	if (propProcessedPixelFormatEnable.is_valid())
+	auto propProcessedPixelFormatsEnable = propMap.findBoolean("ProcessedPixelFormatsEnable", ic4::Error::Ignore());
+	if (propProcessedPixelFormatsEnable.is_valid())
 	{
 		auto propPixelFormat = propMap.find(ic4::PropId::PixelFormat, ic4::Error::Ignore());
 		if (propPixelFormat.is_valid())
@@ -650,11 +650,11 @@ void MainWindow::prepareNewDeviceOpen()
 			if (is_pol_camera)
 			{
 				ic4::Error err;
-				bool cur_value = propProcessedPixelFormatEnable.getValue(err);	// get current Value for propProcessedPixelFormatEnable
+				bool cur_value = propProcessedPixelFormatsEnable.getValue(err);	// get current Value for propProcessedPixelFormatsEnable
 				if (!err)
 				{
 					if (!cur_value) {	// If it is not already set, 
-						propProcessedPixelFormatEnable.setValue(true, err);
+						propProcessedPixelFormatsEnable.setValue(true, err);
 					}
 					if (!err) {
 						propPixelFormat.setValue(ic4::PixelFormat::BGRa8, ic4::Error::Ignore());
