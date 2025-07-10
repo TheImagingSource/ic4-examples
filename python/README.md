@@ -70,6 +70,7 @@ This section contains
 - A Python implementation of [ic4-demoapp](/python/qt6/demoapp)
 - An application showcasing the use of zoom and focus features ([zoom-focus-demo](/python/qt6/zoom-focus-demo))
 - A demo application for [fullscreen](/python/qt6/fullscreen) display for multiple cameras
+- A demo application for [composing HDR images](/python/qt6/still-image-hdr)
 
 ## Third-Party Integration
 
