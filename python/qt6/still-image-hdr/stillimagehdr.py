@@ -342,10 +342,10 @@ class MainWindow(QMainWindow):
             ic4.PropId.MULTI_FRAME_SET_OUTPUT_MODE_CUSTOM_GAIN, False
         )
 
-        # We need to wait for one image to be sure, the new settings
+        # We need to wait for three images to be sure, the new settings
         # are effective in the camera.
-        self.listener.start_capture(1)
-        self.listener.capture_end_event.wait(1)
+        self.listener.start_capture(3)
+        self.listener.capture_end_event.wait(3)
 
         self.listener.start_capture(len(exposure_times))
 
