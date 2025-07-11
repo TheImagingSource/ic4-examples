@@ -68,6 +68,9 @@ class MainWindow(QMainWindow):
         QMainWindow.__init__(self)
         self.setWindowTitle("Still Image HDR")
         self.create_gui()
+
+        self.check_for_devices()
+
         # Create a Grabber object to communicate with a video capture device
         self.grabber = ic4.Grabber()
         self.grabber.event_add_device_lost(
@@ -98,6 +101,21 @@ class MainWindow(QMainWindow):
 
         self.update_controls()
 
+    def check_for_devices(self) -> None:
+        """Show a warning, if no interfaces are found by
+        IC Imaging Control 4. This indicates, that no IC4
+        GenTL Producers are installed.
+        """
+        if len(ic4.DeviceEnum.interfaces()) == 0:
+            QMessageBox.warning(
+                self,
+                "Still Image HDR",
+                "No interfaces found.\nIs an IC4 GenTL Producer from\n"
+                + "https://www.theimagingsource.com/en-us/support/download/\n"
+                + "installed?",
+                QMessageBox.StandardButton.Ok,
+            )
+
     def create_gui(self):
         """Create the user interface"""
         main_widget = QWidget()
@@ -105,7 +123,6 @@ class MainWindow(QMainWindow):
         btn_layout = QVBoxLayout()
 
         # Create a widget to use as the target for video display
-
         self.video_widget = ic4.pyside6.DisplayWidget()
         self.display = self.video_widget.as_display()
         self.display.set_render_position(
@@ -325,6 +342,11 @@ class MainWindow(QMainWindow):
             ic4.PropId.MULTI_FRAME_SET_OUTPUT_MODE_CUSTOM_GAIN, False
         )
 
+        # We need to wait for one image to be sure, the new settings
+        # are effective in the camera.
+        self.listener.start_capture(1)
+        self.listener.capture_end_event.wait(1)
+
         self.listener.start_capture(len(exposure_times))
 
         success = self.listener.capture_end_event.wait(5)
@@ -399,6 +421,7 @@ class MainWindow(QMainWindow):
         """
         prop_map.set_value(ic4.PropId.EXPOSURE_AUTO, value)
         prop_map.set_value(ic4.PropId.GAIN_AUTO, value)
+        prop_map.try_set_value(ic4.PropId.BALANCE_WHITE_AUTO, value)
 
         # Iris is on motorized zoom cameras only.
         prop_map.try_set_value(ic4.PropId.IRIS_AUTO, value)
