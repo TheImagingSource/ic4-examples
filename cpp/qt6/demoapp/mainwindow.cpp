@@ -400,6 +400,9 @@ void MainWindow::createUI()
 	_sbStatisticsLabel = new QLabel("");
 	statusBar()->addPermanentWidget(_sbStatisticsLabel);
 	statusBar()->addPermanentWidget(new QLabel("  "));
+	_sbFpsLabel = new QLabel("");
+	statusBar()->addPermanentWidget(_sbFpsLabel);
+	statusBar()->addPermanentWidget(new QLabel("  "));
 	_sbCameraLabel = new QLabel(statusBar());
 	statusBar()->addPermanentWidget(_sbCameraLabel);
 
@@ -506,12 +509,29 @@ void MainWindow::updateStatistics()
 			.arg(stats.transform_underrun)
 			.arg(stats.sink_underrun);
 
+		if (auto sz = _queuesink->queueSizes(err); err.isSuccess())
+		{
+			tooltip += QString(
+				"\n"
+				"QueueSink:\n"
+				"  Free Queue: %1\n"
+				"  Output Queue: %2")
+				.arg(sz.free_queue_length)
+				.arg(sz.output_queue_length);
+		}
+
 		_sbStatisticsLabel->setToolTip(tooltip);
 	}
 	else
 	{
 		qWarning().noquote() << "Failed query stream statistics:" << err.message().c_str();
 	}
+
+	_sbFpsLabel->setText(
+		QString(
+			"%1 FPS")
+			.arg(_fpsCounter.current(), 0, 'f', 1)
+	);
 }
 
 void MainWindow::onUpdateStatisticsTimer()
@@ -1178,6 +1198,8 @@ void MainWindow::framesQueued(ic4::QueueSink& sink)
 		qWarning().noquote() << "Failed to query buffer from QueueSink:" << err.message().c_str();
 		return;
 	}
+
+	_fpsCounter.notify_frame();
 
 	// Connect the buffer's chunk data to the device's property map
 	// This allows for properties backed by chunk data to be updated

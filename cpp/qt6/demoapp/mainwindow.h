@@ -16,6 +16,7 @@
 
 #include "PropertyDialog.h"
 #include "settings.h"
+#include "fpscounter.h"
 
 #include <filesystem>
 
@@ -120,6 +121,7 @@ private:
 	QAction* _closeDeviceAct = nullptr;
 
 	QLabel* _sbStatisticsLabel = nullptr;
+	QLabel* _sbFpsLabel = nullptr;
 	QLabel* _sbCameraLabel = nullptr;
 
 	QTimer* _updateStatisticsTimer = nullptr;
@@ -137,6 +139,8 @@ private:
 
 	bool _showSettingsMenu = false;
 	bool _preFullscreenMaximized = false;
+
+	ic4demoapp::FpsCounter _fpsCounter;
 };
 
 #endif // MAINWINDOW_H

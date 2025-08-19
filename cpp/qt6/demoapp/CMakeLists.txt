@@ -23,6 +23,8 @@ add_executable(ic4-demoapp
     "settings.h"
     "settings.cpp"
     "events.h"
+    "pathutils.h"
+    "fpscounter.h"
     "demoapp.rc"
 )
 
