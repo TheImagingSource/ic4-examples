@@ -189,9 +189,14 @@ void DeviceSelectionDialog::enumerateDevices()
 
 	auto interfaces = ic4::DeviceEnum::enumInterfaces();
 
+	bool any_devices = false;
+	int num_displayed_devices = 0;
+
 	for (auto&& itf : interfaces)
 	{
 		auto itf_devices = itf.enumDevices();
+
+		any_devices |= !itf_devices.empty();
 
 		std::vector<ic4::DeviceInfo> filtered_itf_devices;
 		if (_filter_func)
@@ -271,6 +276,7 @@ void DeviceSelectionDialog::enumerateDevices()
 			}
 
 			itf_item->addChild(node);
+			num_displayed_devices += 1;
 		}
 	}
 
@@ -287,6 +293,15 @@ void DeviceSelectionDialog::enumerateDevices()
 		err_sub->setForeground(0, QPalette().windowText());
 		err_sub->setFirstColumnSpanned(true);
 		err_sub->setDisabled(true);
+	}
+
+	if (num_displayed_devices == 0 && any_devices)
+	{
+		auto* err_item = new QTreeWidgetItem(_cameraTree);
+		err_item->setText(0, "All available devices are already open.");
+		err_item->setForeground(0, QPalette().windowText());
+		err_item->setFirstColumnSpanned(true);
+		err_item->setDisabled(true);
 	}
 
 	_cameraTree->expandAll();
