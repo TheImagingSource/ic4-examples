@@ -37,6 +37,7 @@
 #include <QTimer>
 #include <QKeySequence>
 #include <QSettings>
+#include <QToolTip>
 
 #include <filesystem>
 #include <string>
@@ -521,6 +522,13 @@ void MainWindow::updateStatistics()
 		}
 
 		_sbStatisticsLabel->setToolTip(tooltip);
+
+		const auto cursor_pos = QCursor::pos();
+		if (QToolTip::isVisible() && _sbStatisticsLabel->underMouse() && QApplication::widgetAt(cursor_pos) == _sbStatisticsLabel)
+		{
+			QToolTip::hideText();
+			QToolTip::showText(cursor_pos, tooltip, _sbStatisticsLabel);
+		}
 	}
 	else
 	{
