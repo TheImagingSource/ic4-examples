@@ -488,9 +488,10 @@ void MainWindow::updateStatistics()
 	auto stats = _grabber.streamStatistics(err);
 	if (err.isSuccess())
 	{
-		auto text = QString("Frames Delivered: %1 Dropped: %2/%3/%4/%5")
+		auto text = QString("Frames Delivered: %1 Dropped: %2/%3/%4/%5/%6")
 			.arg(stats.sink_delivered)
 			.arg(stats.device_transmission_error)
+			.arg(stats.device_transform_underrun)
 			.arg(stats.device_underrun)
 			.arg(stats.transform_underrun)
 			.arg(stats.sink_underrun);
@@ -501,11 +502,13 @@ void MainWindow::updateStatistics()
 			"Frames Delivered: %1\n\n"
 			"Frames Dropped:\n"
 			"  Device Transmission Error: %2\n"
-			"  Device Underrun: %3\n"
-			"  Transform Underrun: %4\n"
-			"  Sink Underrun: %5")
+			"  Device Transform Underrun: %3\n"
+			"  Device Underrun: %4\n"
+			"  Transform Underrun: %5\n"
+			"  Sink Underrun: %6")
 			.arg(stats.sink_delivered)
 			.arg(stats.device_transmission_error)
+			.arg(stats.device_transform_underrun)
 			.arg(stats.device_underrun)
 			.arg(stats.transform_underrun)
 			.arg(stats.sink_underrun);
