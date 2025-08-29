@@ -40,29 +40,7 @@ namespace
 	template<typename TPropType, class Tprop, class TMethod>
 	auto fetch_PropertyMethod_value(Tprop& prop, TMethod method_address) -> std::string
 	{
-		ic4::Error err;
-		TPropType v = (prop.*method_address)(err);
-		if (err.isError()) {
-			if (err.code() == ic4::ErrorCode::GenICamNotImplemented) {
-				return "n/a";
-			}
-			return "err";
-		}
-		return fmt::format("{}", v);
-	}
-
-	template<class TMethod>
-	auto fetch_PropertyMethod_value(ic4::PropInteger& prop, TMethod method_address, ic4::PropIntRepresentation int_rep) -> std::string
-	{
-		ic4::Error err;
-		int64_t v = (prop.*method_address)(err);
-		if (err.isError()) {
-			if (err.code() == ic4::ErrorCode::GenICamNotImplemented) {
-				return "n/a";
-			}
-			return "err";
-		}
-		switch (int_rep)
+		switch (rep)
 		{
 		case ic4::PropIntRepresentation::Boolean:       return fmt::format("{}", v != 0 ? 1 : 0);
 		case ic4::PropIntRepresentation::HexNumber:     return fmt::format("0x{:X}", v);
@@ -91,6 +69,35 @@ namespace
 			return fmt::format("{}", v);
 		}
 	}
+
+	template<class Tprop, class TMethod>
+	auto fetch_PropertyMethod_value(Tprop& prop, TMethod method_address) -> std::string
+	{
+		ic4::Error err;
+		auto v = (prop.*method_address)(err);
+		if (err.isError()) {
+			if (err.code() == ic4::ErrorCode::GenICamNotImplemented) {
+				return "n/a";
+			}
+			return "err";
+		}
+		return fmt::format("{}", v);
+	}
+
+	template<class TMethod>
+	auto fetch_PropertyMethod_value(ic4::PropInteger& prop, TMethod method_address, ic4::PropIntRepresentation int_rep) -> std::string
+	{
+		ic4::Error err;
+		int64_t v = (prop.*method_address)(err);
+		if (err.isError()) {
+			if (err.code() == ic4::ErrorCode::GenICamNotImplemented) {
+				return "n/a";
+			}
+			return "err";
+		}
+		return format_int_prop(v, int_rep);
+	}
+
 }
 
 auto helper::get_value_as_string(ic4::PropInteger& prop) -> std::string
@@ -187,14 +194,14 @@ void helper::print_property(int offset, const ic4::Property& property)
 		{
 			if (!prop.isReadOnly()) {
 				print(offset + 1, "Min: {}, Max: {}\n",
-					fetch_PropertyMethod_value<double>(prop, &ic4::PropFloat::minimum),
-					fetch_PropertyMethod_value<double>(prop, &ic4::PropFloat::maximum)
+					fetch_PropertyMethod_value(prop, &ic4::PropFloat::minimum),
+					fetch_PropertyMethod_value(prop, &ic4::PropFloat::maximum)
 				);
 			}
 
 			if (inc_mode == ic4::PropIncrementMode::Increment) {
 				print(offset + 1, "Inc: {}\n",
-					fetch_PropertyMethod_value<double>(prop, &ic4::PropFloat::increment)
+					fetch_PropertyMethod_value(prop, &ic4::PropFloat::increment)
 				);
 			}
 			else if (inc_mode == ic4::PropIncrementMode::ValueSet)
@@ -215,7 +222,7 @@ void helper::print_property(int offset, const ic4::Property& property)
 			}
 
 			print(offset + 1, "Value: {}\n",
-				fetch_PropertyMethod_value<double>(prop, &ic4::PropFloat::getValue)
+				fetch_PropertyMethod_value(prop, &ic4::PropFloat::getValue)
 			);
 		}
 		break;
@@ -242,7 +249,7 @@ void helper::print_property(int offset, const ic4::Property& property)
 			else
 			{
 				print(offset + 1, "Value: {}, SelectedEntry.Name: '{}'\n",
-					fetch_PropertyMethod_value<int64_t>(prop, &ic4::PropEnumeration::getIntValue),
+					fetch_PropertyMethod_value(prop, &ic4::PropEnumeration::getIntValue),
 					selected_entry.name()
 				);
 			}
@@ -255,7 +262,7 @@ void helper::print_property(int offset, const ic4::Property& property)
 
 		if (prop.isAvailable()) {
 			print(offset + 1, "Value: {}\n",
-				fetch_PropertyMethod_value<bool>(prop, &ic4::PropBoolean::getValue)
+				fetch_PropertyMethod_value(prop, &ic4::PropBoolean::getValue)
 			);
 		}
 		break;
@@ -266,8 +273,8 @@ void helper::print_property(int offset, const ic4::Property& property)
 
 		if (prop.isAvailable()) {
 			print(offset + 1, "Value: '{}', MaxLength: {}\n",
-				fetch_PropertyMethod_value<std::string>(prop, &ic4::PropString::getValue),
-				fetch_PropertyMethod_value<uint64_t>(prop, &ic4::PropString::maxLength)
+				fetch_PropertyMethod_value(prop, &ic4::PropString::getValue),
+				fetch_PropertyMethod_value(prop, &ic4::PropString::maxLength)
 			);
 		}
 		break;
@@ -292,7 +299,7 @@ void helper::print_property(int offset, const ic4::Property& property)
 		ic4::PropRegister prop = property.asRegister();
 
 		print(offset + 1, "Size: {}\n",
-			fetch_PropertyMethod_value<uint64_t>(prop, &ic4::PropRegister::size)
+			fetch_PropertyMethod_value(prop, &ic4::PropRegister::size)
 		);
 		if (prop.isAvailable()) {
 			ic4::Error err;
@@ -326,7 +333,7 @@ void helper::print_property(int offset, const ic4::Property& property)
 		ic4::PropEnumEntry prop = property.asEnumEntry();
 
 		if (prop.isAvailable()) {
-			print(offset + 1, "IntValue: {}\n", fetch_PropertyMethod_value<int64_t>(prop, &ic4::PropEnumEntry::intValue));
+			print(offset + 1, "IntValue: {}\n", fetch_PropertyMethod_value(prop, &ic4::PropEnumEntry::intValue));
 		}
 		print("\n");
 		break;
