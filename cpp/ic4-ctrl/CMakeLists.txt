@@ -11,7 +11,7 @@ if (NOT DISABLE_FETCHCONTENT_PACKAGES)
 	FetchContent_Declare(
 		CLI11
 		GIT_REPOSITORY https://github.com/CLIUtils/CLI11.git
-		GIT_TAG v2.4.2
+		GIT_TAG v2.5.0
 	)
 
 	FetchContent_MakeAvailable(CLI11)
@@ -32,6 +32,9 @@ add_executable( ic4-ctrl
 	"src/ic4-ctrl.cpp"
 	"src/ic4_enum_to_string.h"
 	"src/ic4-ctrl-helper.h"
+
+	"src/print_property.h"
+	"src/print_property.cpp"
 )
 
 target_link_libraries( ic4-ctrl

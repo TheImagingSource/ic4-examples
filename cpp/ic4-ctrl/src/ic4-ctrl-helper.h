@@ -9,13 +9,30 @@
 #include <windows.h>
 #endif
 
+#include <fmt/core.h>
+
+template<class ... Targs>
+void print(fmt::format_string<Targs...> fmt, Targs&& ... args)
+{
+	fmt::print(fmt, std::forward<Targs>(args)...);
+}
+
+template<class ... Targs>
+void print(int offset, fmt::format_string<Targs...> fmt, Targs&& ... args)
+{
+	for (int i = 0; i < offset; ++i) {
+		fmt::print("    ");
+	}
+	fmt::print(fmt, std::forward<Targs>(args)...);
+}
+
 namespace helper
 {
     template<typename T>
     auto from_chars_helper( const std::string& str, T& value ) -> bool = delete;
 
     template<>
-    auto from_chars_helper<int64_t>( const std::string& str, int64_t& value ) -> bool
+    inline auto from_chars_helper<int64_t>( const std::string& str, int64_t& value ) -> bool
     {
         try
         {
@@ -29,7 +46,7 @@ namespace helper
     }
 
     template<>
-    auto from_chars_helper<double>( const std::string& str, double& value ) -> bool
+	inline auto from_chars_helper<double>( const std::string& str, double& value ) -> bool
     {
         try
         {
