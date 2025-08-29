@@ -162,47 +162,68 @@ static auto list_devices(bool serials_only) -> void
 	}
 }
 
-static auto read_IPAddressList(ic4::PropInteger& selector, ic4::PropInteger& selected) -> std::vector<std::string>
+static auto read_IPAddressList(ic4::PropertyMap& map, ic4::PropInteger& subnet_ip, bool add_mask) -> std::vector<std::string>
 {
-	std::vector<std::string> rval;
+	if (!subnet_ip.is_valid())	return {};
+
+	auto selector = map.findInteger("GevInterfaceSubnetSelector", ic4::Error::Ignore());
+	auto subnet_mask = map.findInteger("GevInterfaceSubnetMask", ic4::Error::Ignore());
+	if (!subnet_mask.is_valid()) {
+		add_mask = false;
+	}
+
+	std::vector<std::string> lst;
 	try
 	{
-		auto min_idx = selector.minimum();
-		auto max_idx = selector.maximum();
 
-		for (auto idx = min_idx; idx <= max_idx; ++idx)
+		if (!selector.is_valid()) {
+			// throws on error
+			return { helper::format_int_prop(subnet_ip.getValue(), ic4::PropIntRepresentation::IPV4Address) };
+		}
+
+		auto max_idx = selector.maximum();
+		for (auto idx = selector.minimum(); idx <= max_idx; ++idx)
 		{
 			selector.setValue(idx);
 
-			ic4::Error err;
-			auto val = selected.getValue(err);
-			if (!err) {
-				rval.push_back(helper::get_value_as_string(selected));
+			auto addr = subnet_ip.getValue();
+			if (add_mask)
+			{
+				lst.push_back(fmt::format("{}/{}",
+					helper::format_int_prop(addr, ic4::PropIntRepresentation::IPV4Address),
+					helper::format_int_prop(subnet_mask.getValue(), ic4::PropIntRepresentation::IPV4Address)
+				));
+			}
+			else
+			{
+				lst.push_back(
+					helper::format_int_prop(addr, ic4::PropIntRepresentation::IPV4Address)
+				);
 			}
 		}
+		return lst;
 	}
-	catch (const std::exception& ex)
+	catch (const std::exception& /*ex*/)
 	{
-		return {};
 	}
-	return rval;
-	
+	return {};
 }
 
 auto print_interface_short(int offset, size_t id, ic4::Interface& itf) -> void
 {
+	auto map = itf.interfacePropertyMap();
+
 	std::string add_info;
 
-	auto mtu = itf.interfacePropertyMap().findInteger("MaximumTransmissionUnit", ic4::Error::Ignore());
+	auto mtu = map.findInteger("MaximumTransmissionUnit", ic4::Error::Ignore());
 	if (mtu.is_valid()) {
 		add_info += fmt::format(" MTU={}", helper::get_value_as_string(mtu));
 	}
 
-	auto ipaddr = itf.interfacePropertyMap().findInteger("GevInterfaceSubnetIPAddress", ic4::Error::Ignore());
+	auto ipaddr = map.findInteger("GevInterfaceSubnetIPAddress", ic4::Error::Ignore());
 	if (ipaddr.is_valid())
 	{
-		auto selector = itf.interfacePropertyMap().findInteger("GevInterfaceSubnetSelector", ic4::Error::Ignore());
-		auto lst = read_IPAddressList(selector, ipaddr);
+		auto lst = read_IPAddressList(map, ipaddr, false);
 		add_info += fmt::format(" IPv4={::}", lst);
 	}
 
@@ -291,31 +312,9 @@ static void print_interface( std::string id )
 	}
 
 	auto ipaddr = map.findInteger("GevInterfaceSubnetIPAddress", ic4::Error::Ignore());
-	auto ipaddr_subnet = map.findInteger("GevInterfaceSubnetMask", ic4::Error::Ignore());
-	if (ipaddr.is_valid() && ipaddr_subnet.is_valid())
+	if (ipaddr.is_valid())
 	{
-		auto selector = map.findInteger("GevInterfaceSubnetSelector", ic4::Error::Ignore());
-
-		std::vector<std::string> lst;
-		try
-		{
-			auto max_idx = selector.maximum();
-			for (auto idx = selector.minimum(); idx <= max_idx; ++idx)
-			{
-				selector.setValue(idx);
-
-				auto val = ipaddr.getValue();
-				auto sub = ipaddr_subnet.getValue();
-				lst.push_back(fmt::format("{}/{}",
-					helper::format_int_prop(val, ic4::PropIntRepresentation::IPV4Address),
-					helper::format_int_prop(sub, ic4::PropIntRepresentation::IPV4Address)
-				));
-			}
-			print(1, "GevInterfaceSubnetSelector: {::}", lst);
-		}
-		catch (const std::exception& /*ex*/)
-		{
-		}
+		print(1, "GevInterfaceSubnet-info: {::}", read_IPAddressList(map, ipaddr, true));
 	}
 
 }
@@ -553,6 +552,7 @@ int main( int argc, char** argv )
     bool force_interface = false;
 	bool props_device_driver = false;
 	bool device_cmd_serials = false;
+	std::string arg_filename;
 
     auto list_cmd = app.add_subcommand( "list",
         "List available devices and interfaces by connection."
@@ -588,20 +588,17 @@ int main( int argc, char** argv )
 	props_cmd->add_option("device-id", arg_device_id,
 		"Specifies the device to open. You can specify an index e.g. '0'.")->required();
 
-	std::string arg_filename;
 
 	auto save_props_cmd = app.add_subcommand( "save-prop", 
         "Save properties for the specified device 'ic4-ctrl save-prop -f <filename> <device-id>'." );
     save_props_cmd->add_option( "-f,--filename", arg_filename, "Filename to save into." )->required();
-    save_props_cmd->add_option( "device-id", arg_device_id,
-        "Specifies the device to open. You can specify an index e.g. '0'." )->required();
+    save_props_cmd->add_option( "device-id", arg_device_id, "Specifies the device to open. You can specify an index e.g. '0'." )->required();
 	save_props_cmd->add_flag("--device-driver", props_device_driver, "If set the device instance driver properties are used.");
 
 	auto load_props_cmd = app.add_subcommand("load-prop",
 		"Load properties for the specified device 'ic4-ctrl load-prop -f <filename> <device-id>'.");
 	load_props_cmd->add_option("-f,--filename", arg_filename, "Filename to save into.")->required();
-	load_props_cmd->add_option("device-id", arg_device_id,
-		"Specifies the device to open. You can specify an index e.g. '0'.")->required();
+	load_props_cmd->add_option("device-id", arg_device_id, "Specifies the device to open. You can specify an index e.g. '0'.")->required();
 	load_props_cmd->add_flag("--interface", force_interface, "If set the <device-id> is interpreted as an interface-id.");
 	load_props_cmd->add_flag("--device-driver", props_device_driver, "If set the device instance driver properties are used.");
 
