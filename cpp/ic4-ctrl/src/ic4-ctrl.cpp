@@ -9,6 +9,7 @@
 
 #include <CLI/CLI.hpp>
 #include <fmt/core.h>
+#include <fmt/ranges.h>
 
 #include <cstdint>
 #include <condition_variable>
@@ -161,6 +162,53 @@ static auto list_devices(bool serials_only) -> void
 	}
 }
 
+static auto read_IPAddressList(ic4::PropInteger& selector, ic4::PropInteger& selected) -> std::vector<std::string>
+{
+	std::vector<std::string> rval;
+	try
+	{
+		auto min_idx = selector.minimum();
+		auto max_idx = selector.maximum();
+
+		for (auto idx = min_idx; idx <= max_idx; ++idx)
+		{
+			selector.setValue(idx);
+
+			ic4::Error err;
+			auto val = selected.getValue(err);
+			if (!err) {
+				rval.push_back(helper::get_value_as_string(selected));
+			}
+		}
+	}
+	catch (const std::exception& ex)
+	{
+		return {};
+	}
+	return rval;
+	
+}
+
+auto print_interface_short(int offset, size_t id, ic4::Interface& itf) -> void
+{
+	std::string add_info;
+
+	auto mtu = itf.interfacePropertyMap().findInteger("MaximumTransmissionUnit", ic4::Error::Ignore());
+	if (mtu.is_valid()) {
+		add_info += fmt::format(" MTU={}", helper::get_value_as_string(mtu));
+	}
+
+	auto ipaddr = itf.interfacePropertyMap().findInteger("GevInterfaceSubnetIPAddress", ic4::Error::Ignore());
+	if (ipaddr.is_valid())
+	{
+		auto selector = itf.interfacePropertyMap().findInteger("GevInterfaceSubnetSelector", ic4::Error::Ignore());
+		auto lst = read_IPAddressList(selector, ipaddr);
+		add_info += fmt::format(" IPv4={::}", lst);
+	}
+
+	print(offset, "{:^5} {:64}{}\n", id, itf.interfaceDisplayName(), add_info);
+}
+
 static auto list_interfaces() -> void
 {
     ic4::DeviceEnum devEnum;
@@ -184,16 +232,7 @@ static auto list_interfaces() -> void
 				auto& itf = list.at(i);
 				if (transportLayerName == itf.transportLayerName())
 				{
-					std::string add_info;
-					auto ipaddr = itf.interfacePropertyMap().findInteger("GevInterfaceSubnetIPAddress", ic4::Error::Ignore());
-					if (ipaddr.is_valid()) {
-						add_info += fmt::format(" [{}]", helper::get_value_as_string(ipaddr));
-					}
-					auto mtu = itf.interfacePropertyMap().findInteger("MaximumTransmissionUnit", ic4::Error::Ignore());
-					if (mtu.is_valid()) {
-						add_info += fmt::format(" MTU={}", helper::get_value_as_string(mtu));
-					}
-					print(1, "{:^5} {:64}{}\n", i, itf.interfaceDisplayName(), add_info);
+					print_interface_short(1, i, itf);
 				}
 			}
 			print("\n");
@@ -243,6 +282,42 @@ static void print_interface( std::string id )
     print( "TransportLayerName:    '{}'\n", dev->transportLayerName() );
     print( "TransportLayerType:    '{}'\n", ic4_helper::toString( dev->transportLayerType() ) );
     print( "TransportLayerVersion: '{}'\n", dev->transportLayerVersion() );
+
+	auto map = dev->interfacePropertyMap();
+
+	auto mtu = map.findInteger("MaximumTransmissionUnit", ic4::Error::Ignore());
+	if (mtu.is_valid()) {
+		print(1, "MaximumTransmissionUnit: '{}'\n", helper::get_value_as_string(mtu));
+	}
+
+	auto ipaddr = map.findInteger("GevInterfaceSubnetIPAddress", ic4::Error::Ignore());
+	auto ipaddr_subnet = map.findInteger("GevInterfaceSubnetMask", ic4::Error::Ignore());
+	if (ipaddr.is_valid() && ipaddr_subnet.is_valid())
+	{
+		auto selector = map.findInteger("GevInterfaceSubnetSelector", ic4::Error::Ignore());
+
+		std::vector<std::string> lst;
+		try
+		{
+			auto max_idx = selector.maximum();
+			for (auto idx = selector.minimum(); idx <= max_idx; ++idx)
+			{
+				selector.setValue(idx);
+
+				auto val = ipaddr.getValue();
+				auto sub = ipaddr_subnet.getValue();
+				lst.push_back(fmt::format("{}/{}",
+					helper::format_int_prop(val, ic4::PropIntRepresentation::IPV4Address),
+					helper::format_int_prop(sub, ic4::PropIntRepresentation::IPV4Address)
+				));
+			}
+			print(1, "GevInterfaceSubnetSelector: {::}", lst);
+		}
+		catch (const std::exception& /*ex*/)
+		{
+		}
+	}
+
 }
 
 static auto split_prop_entry( const std::string& prop_string ) -> std::pair<std::string,std::string>
