@@ -22,7 +22,6 @@
 #include "ic4_enum_to_string.h"
 #include "print_property.h"
 
-
 static auto find_device( std::string id ) -> std::unique_ptr<ic4::DeviceInfo>
 {
     ic4::DeviceEnum devEnum;
@@ -96,9 +95,8 @@ static auto list_all_by_connection() -> void
 	ic4::DeviceEnum devEnum;
 	auto list = devEnum.enumInterfaces();
 
-	print("Device tree:\n");
 	if (list.empty()) {
-		print(1, "No Interfaces found\n");
+		print(1, "No GenTL providers found\n");
 	}
 	else
 	{
@@ -109,13 +107,14 @@ static auto list_all_by_connection() -> void
 		}
 		for (auto&& transportLayerName : transport_layer_list)
 		{
-			print(1, "TransportLayer: {}\n", transportLayerName);
+			print(0, "TransportLayer: {}\n", transportLayerName);
 			for (size_t i = 0; i < list.size(); ++i)
 			{
 				auto& itf = list.at(i);
 				if (transportLayerName == itf.transportLayerName())
 				{
-					print(2, "{}\n", itf.interfaceDisplayName());
+					//print(1, "{:64} Index:{:2}\n\n", itf.interfaceDisplayName(), i);
+					print(1, "{:2} {}\n", i, itf.interfaceDisplayName());
 
 					auto dev_list = itf.enumDevices();
 					if (dev_list.empty()) {
@@ -167,7 +166,6 @@ static auto list_interfaces() -> void
     ic4::DeviceEnum devEnum;
     auto list = devEnum.enumInterfaces();
 
-	print("Interface list:\n");
 	if (list.empty()) {
 		print(1, "No Interfaces found\n");
 	}
@@ -180,12 +178,22 @@ static auto list_interfaces() -> void
 		}
 		for (auto&& transportLayerName : transport_layer_list)
 		{
-			print(1, "TransportLayer: {}\n", transportLayerName);
-			for (size_t i = 0; i < list.size(); ++i) {
+			print(0, "TransportLayer: {}\n", transportLayerName);
+			for (size_t i = 0; i < list.size(); ++i)
+			{
 				auto& itf = list.at(i);
 				if (transportLayerName == itf.transportLayerName())
 				{
-					print(2, "{:^5} {}\n", i, itf.interfaceDisplayName());
+					std::string add_info;
+					auto ipaddr = itf.interfacePropertyMap().findInteger("GevInterfaceSubnetIPAddress", ic4::Error::Ignore());
+					if (ipaddr.is_valid()) {
+						add_info += fmt::format(" [{}]", helper::get_value_as_string(ipaddr));
+					}
+					auto mtu = itf.interfacePropertyMap().findInteger("MaximumTransmissionUnit", ic4::Error::Ignore());
+					if (mtu.is_valid()) {
+						add_info += fmt::format(" MTU={}", helper::get_value_as_string(mtu));
+					}
+					print(1, "{:^5} {:64}{}\n", i, itf.interfaceDisplayName(), add_info);
 				}
 			}
 			print("\n");

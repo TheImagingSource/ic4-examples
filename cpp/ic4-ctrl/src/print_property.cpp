@@ -5,6 +5,38 @@
 
 namespace
 {
+	auto format_int_prop(int64_t v, ic4::PropIntRepresentation rep) -> std::string
+	{
+		switch (rep)
+		{
+		case ic4::PropIntRepresentation::Boolean:       return fmt::format("{}", v != 0 ? 1 : 0);
+		case ic4::PropIntRepresentation::HexNumber:     return fmt::format("0x{:X}", v);
+		case ic4::PropIntRepresentation::IPV4Address:
+		{
+			uint64_t v0 = (v >> 0) & 0xFF;
+			uint64_t v1 = (v >> 8) & 0xFF;
+			uint64_t v2 = (v >> 16) & 0xFF;
+			uint64_t v3 = (v >> 24) & 0xFF;
+			return fmt::format("{}.{}.{}.{}", v3, v2, v1, v0);
+		}
+		case ic4::PropIntRepresentation::MACAddress:
+		{
+			uint64_t v0 = (v >> 0) & 0xFF;
+			uint64_t v1 = (v >> 8) & 0xFF;
+			uint64_t v2 = (v >> 16) & 0xFF;
+			uint64_t v3 = (v >> 24) & 0xFF;
+			uint64_t v4 = (v >> 32) & 0xFF;
+			uint64_t v5 = (v >> 40) & 0xFF;
+			return fmt::format("{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}", v5, v4, v3, v2, v1, v0);
+		}
+		case ic4::PropIntRepresentation::Linear:
+		case ic4::PropIntRepresentation::Logarithmic:
+		case ic4::PropIntRepresentation::PureNumber:
+		default:
+			return fmt::format("{}", v);
+		}
+	}
+
 	template<typename TPropType, class Tprop, class TMethod>
 	auto fetch_PropertyMethod_value(Tprop& prop, TMethod method_address) -> std::string
 	{
@@ -59,6 +91,20 @@ namespace
 			return fmt::format("{}", v);
 		}
 	}
+}
+
+auto helper::get_value_as_string(ic4::PropInteger& prop) -> std::string
+{
+	ic4::Error err;
+	int64_t v = prop.getValue(err);
+	if (err.isError()) {
+		return {};
+	}
+	auto rep = prop.representation(err);
+	if (err.isError()) {
+		return {};
+	}
+	return format_int_prop(v, rep);
 }
 
 void helper::print_property(int offset, const ic4::Property& property)
