@@ -542,8 +542,8 @@ static void show_system_info()
 int main( int argc, char** argv )
 {
     CLI::App app{ "Simple ic4 camera control utility", "ic4-ctrl"};
-    app.set_help_flag();
-    app.set_help_all_flag( "-h,--help", "Expand all help" );
+    //app.set_help_flag("-h,--help");
+    app.set_help_all_flag( "--help-all", "Expand all help" );
 
     std::string gentl_path = helper::get_env_var( "GENICAM_GENTL64_PATH" );
     app.add_option( "--gentl-path", gentl_path, "GenTL path environment variable to set." )->default_val( gentl_path );
@@ -553,6 +553,8 @@ int main( int argc, char** argv )
 	bool props_device_driver = false;
 	bool device_cmd_serials = false;
 	std::string arg_filename;
+
+	auto help = app.add_subcommand("help", "Print this help text and quit.")->silent();
 
     auto list_cmd = app.add_subcommand( "list",
         "List available devices and interfaces by connection."
@@ -665,6 +667,13 @@ int main( int argc, char** argv )
 
     try
     {
+
+		if (help->count() != 0)
+		{
+			app.exit(CLI::CallForAllHelp());
+			return 0;
+		}
+
         if( list_cmd->parsed() )
         {
 			list_all_by_connection();
