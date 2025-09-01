@@ -3,6 +3,9 @@
 
 #include "ic4_enum_to_string.h"
 
+#include <fmt/std.h>
+#include <fmt/ranges.h>
+
 namespace
 {
 	template<class Tprop, class TMethod>
@@ -30,7 +33,14 @@ namespace
 			}
 			return "err";
 		}
-		return helper::format_int_prop(v, int_rep);
+		if (v == std::numeric_limits<int64_t>::lowest()) {
+			return "MIN_INT";
+		}
+		if (v == std::numeric_limits<int64_t>::max()) {
+			return "MAX_INT";
+		}
+		auto rval = helper::format_int_prop(v, int_rep);
+		return rval;
 	}
 
 }
@@ -316,7 +326,10 @@ void helper::print_property_short(int offset, const ic4::Property& property)
 	using namespace ic4_helper;
 
 	auto prop_type = property.type();
-	print(offset + 0, "{:24} - Available: {}, Locked: {}, ReadOnly: {}\n", property.name(), property.isAvailable(), property.isLocked(), property.isReadOnly());
+	print(offset + 0, "{} - {}, Av: {}, Lck: {}, RO: {}\n", 
+		property.name(), 
+		toString(property.type()),
+		property.isAvailable() ? 1 : 0, property.isLocked() ? 1 : 0, property.isReadOnly() ? 1 : 0);
 
 	switch (prop_type)
 	{
@@ -329,40 +342,38 @@ void helper::print_property_short(int offset, const ic4::Property& property)
 		if (prop.isAvailable())
 		{
 			std::string range_string;
-			if (inc_mode == ic4::PropIncrementMode::Increment) {
-				if (!prop.isReadOnly()) {
-					print(offset + 1, "Min: {}, Max: {}\n",
-						fetch_PropertyMethod_value(prop, &ic4::PropInteger::minimum, rep),
-						fetch_PropertyMethod_value(prop, &ic4::PropInteger::maximum, rep)
-					);
-				}
-				if (!prop.isReadOnly())
-				{
-					print(offset + 1, "Inc: {}\n",
-						fetch_PropertyMethod_value(prop, &ic4::PropInteger::increment, rep)
-					);
-				}
-			}
-			else if (inc_mode == ic4::PropIncrementMode::ValueSet)
+			if (inc_mode == ic4::PropIncrementMode::ValueSet)
 			{
-				ic4::Error err;
-				std::vector<int64_t> vvset = prop.validValueSet(err);
-				if (err.isError()) {
-					print(offset + 1, "Failed to fetch ValidValueSet\n");
+				range_string = fmt::format(", Range: {}",
+					fetch_PropertyMethod_value(prop, &ic4::PropInteger::validValueSet)
+				);
+			}
+			else
+			{
+				if( rep == ic4::PropIntRepresentation::IPV4Address || rep == ic4::PropIntRepresentation::MACAddress)
+				{
 				}
 				else
 				{
-					print(offset + 1, "ValidValueSet:\n");
-					for (auto&& val : vvset) {
-						print(offset + 2, "{}\n", val);
+					if (!prop.isReadOnly())
+					{
+						range_string += fmt::format(", Range: [{};{}",
+							fetch_PropertyMethod_value(prop, &ic4::PropInteger::minimum, rep),
+							fetch_PropertyMethod_value(prop, &ic4::PropInteger::maximum, rep)
+						);
+						if (inc_mode == ic4::PropIncrementMode::Increment)
+						{
+							range_string += fmt::format(";{}", fetch_PropertyMethod_value(prop, &ic4::PropInteger::increment));
+						}
+						range_string += ']';
 					}
-					print("\n");
 				}
 			}
 
-			print(offset + 1, "Value: {}{}\n",
+			print(offset + 1, "Value: {} {}{}\n",
 				fetch_PropertyMethod_value(prop, &ic4::PropInteger::getValue),
-				prop.unit()
+				prop.unit(),
+				range_string
 			);
 		}
 		break;
@@ -374,37 +385,36 @@ void helper::print_property_short(int offset, const ic4::Property& property)
 
 		if (prop.isAvailable())
 		{
-			if (inc_mode == ic4::PropIncrementMode::Increment) {
+			std::string range_string;
+			if (inc_mode == ic4::PropIncrementMode::ValueSet)
+			{
+				range_string = fmt::format("{}",
+					fetch_PropertyMethod_value(prop, &ic4::PropFloat::validValueSet)
+					);
+			}
+			else
+			{
 				if (!prop.isReadOnly()) {
-					print(offset + 1, "Min: {}, Max: {}\n",
+					range_string += fmt::format("[{};{}",
 						fetch_PropertyMethod_value(prop, &ic4::PropFloat::minimum),
 						fetch_PropertyMethod_value(prop, &ic4::PropFloat::maximum)
 					);
-				}
-				print(offset + 1, "Inc: {}\n",
-					fetch_PropertyMethod_value(prop, &ic4::PropFloat::increment)
-				);
-			}
-			else if (inc_mode == ic4::PropIncrementMode::ValueSet)
-			{
-				ic4::Error err;
-				std::vector<double> vvset = prop.validValueSet(err);
-				if (err.isError()) {
-					print(offset + 1, "Failed to fetch ValidValueSet\n");
+					if (inc_mode == ic4::PropIncrementMode::Increment)
+					{
+						range_string += fmt::format(";{}", fetch_PropertyMethod_value(prop, &ic4::PropFloat::increment));
+					}
+					range_string += ']';
 				}
 				else
 				{
-					print(offset + 1, "ValidValueSet:\n");
-					for (auto&& val : vvset) {
-						print(offset + 2, "{}\n", val);
-					}
-					print("\n");
+					range_string = "[ro]";
 				}
 			}
 
-			print(offset + 1, "Value: {}{}\n",
+			print(offset + 1, "Value: {} {}, Range: {}\n",
 				fetch_PropertyMethod_value(prop, &ic4::PropFloat::getValue),
-				prop.unit()
+				prop.unit(),
+				range_string
 			);
 		}
 		break;
@@ -412,24 +422,20 @@ void helper::print_property_short(int offset, const ic4::Property& property)
 	case ic4::PropType::Enumeration:
 	{
 		auto prop = property.asEnumeration();
-		print(offset + 1, "EnumEntries:\n");
+
+		std::vector<std::string> entries;
 		for (auto&& entry : prop.entries(ic4::Error::Ignore()))
 		{
-			auto prop_enum_entry = entry.asEnumEntry();
-
-			print_property(offset + 2, prop_enum_entry);
-			print("\n");
+			entries.push_back(entry.name());
 		}
 
-		if (prop.isAvailable())
-		{
-			auto str_val = fetch_PropertyMethod_value(prop, &ic4::PropEnumeration::getValue);
-			auto int_val = fetch_PropertyMethod_value(prop, &ic4::PropEnumeration::getIntValue);
+		if (prop.isAvailable()) {
 			print(offset + 1, "Value: '{}', IntValue: {}\n",
-				str_val,
-				int_val
+				fetch_PropertyMethod_value(prop, &ic4::PropEnumeration::getValue),
+				fetch_PropertyMethod_value(prop, &ic4::PropEnumeration::getIntValue)
 			);
 		}
+		print(offset + 1, "Entries: {}\n", entries);
 		break;
 	}
 	case ic4::PropType::Boolean:
@@ -457,46 +463,49 @@ void helper::print_property_short(int offset, const ic4::Property& property)
 	}
 	case ic4::PropType::Command:
 	{
-		print("\n");
+		print(offset + 1, "\n");
 		break;
 	}
 	case ic4::PropType::Category:
 	{
 		auto prop = property.asCategory();
-		print(offset + 1, "Features:\n");
+
+		std::vector<std::string> arr;
 		for (auto&& feature : prop.features(ic4::Error::Ignore()))
 		{
-			print(offset + 2, "{}\n", feature.name());
+			arr.push_back(feature.name());
 		}
+		print(offset + 1, "Features: {}\n", arr);
 		break;
 	}
 	case ic4::PropType::Register:
 	{
 		ic4::PropRegister prop = property.asRegister();
 
-		print(offset + 1, "Size: {}\n",
-			fetch_PropertyMethod_value(prop, &ic4::PropRegister::size)
-		);
-		if (prop.isAvailable()) {
-			ic4::Error err;
-			std::vector<uint8_t> vec = prop.getValue(err);
-			if (err.isError()) {
-				print(offset + 1, "Value: 'err'");
-			}
-			else {
-				std::string str;
+		const auto reg_size = fetch_PropertyMethod_value(prop, &ic4::PropRegister::size);
+		std::string value_string;
+		if (prop.isAvailable())
+		{
+			ic4::Error val_err;
+			auto vec = prop.getValue(val_err);
+			if (val_err.isError()) {
+				value_string = "Value: 'err'";
+			} else {
+				auto orig_size = vec.size();
 				size_t max_entries_to_print = 16;
-				for (size_t i = 0; i < std::min(max_entries_to_print, vec.size()); ++i) {
-					str += fmt::format("{:x}", vec[i]);
-					str += ", ";
+				std::string str;
+				if (vec.size() > 16) {
+					vec.resize(16);
+					str = " ...";
 				}
-				if (vec.size() > max_entries_to_print) {
-					str += "...";
-				}
-				print(offset + 1, "Value: [{}], Value-Size: {}\n", str, vec.size());
+				value_string = fmt::format("Value: [{:n:02x}{}] Value-Size: {}\n", vec, str, orig_size);
 			}
 		}
-		print("\n");
+		else
+		{
+			value_string = "";
+		}
+		print(offset + 1, "Size: {} {}\n", reg_size, value_string);
 		break;
 	}
 	case ic4::PropType::Port:

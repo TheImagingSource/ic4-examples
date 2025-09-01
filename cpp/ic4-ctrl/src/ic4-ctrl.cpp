@@ -340,13 +340,21 @@ static void set_property_from_assign_entry( ic4::PropertyMap& property_map, cons
     }
 }
 
-static void print_or_set_PropertyMap_entries( ic4::PropertyMap& map, const std::vector<std::string>& lst )
+auto print_property(int offset, ic4::Property& prop, bool cmd_short) {
+	if (cmd_short) {
+		helper::print_property_short(0, prop);
+	} else {
+		helper::print_property(0, prop);
+	}
+}
+
+static void exec_prop_cmd( ic4::PropertyMap& map, const std::vector<std::string>& lst, bool cmd_short )
 {
     if( lst.empty() )
     {
         for( auto&& property : map.all() )
         {
-            helper::print_property( 0, property );
+			print_property(0, property, cmd_short);
         }
     }
     else
@@ -362,8 +370,9 @@ static void print_or_set_PropertyMap_entries( ic4::PropertyMap& map, const std::
             {
                 auto property = map.find( entry );
                 if( property.is_valid() ) {
-                    helper::print_property( 0, property );
-                } else {
+					print_property(0, property, cmd_short);
+				}
+				else {
                     print( "Failed to find property for name: '{}'\n", entry );
                 }
             }
@@ -405,11 +414,6 @@ static auto select_prop_map(std::string id, bool force_interface, bool device_dr
 		}
 	}
 	return rval;
-}
-
-static void exec_prop_cmd(ic4::PropertyMap& map, const std::vector<std::string>& lst)
-{
-	print_or_set_PropertyMap_entries(map, lst);
 }
 
 static void save_properties(ic4::PropertyMap& map, std::string filename)
@@ -552,6 +556,7 @@ int main( int argc, char** argv )
     bool force_interface = false;
 	bool props_device_driver = false;
 	bool device_cmd_serials = false;
+	bool props_cmd_short = false;
 	std::string arg_filename;
 
 	auto help = app.add_subcommand("help", "Print this help text and quit.")->silent();
@@ -565,7 +570,7 @@ int main( int argc, char** argv )
         "\tTo list all devices use: `ic4-ctrl device`\n"
         "\tTo show only a specific device: `ic4-ctrl device \"<id>\"\n"
     );
-    auto device_cmd_device_id = device_cmd->add_option( "device-id", arg_device_id,
+    device_cmd->add_option( "device-id", arg_device_id,
         "If specified only information for this device is printed, otherwise all device are listed. You can specify an index e.g. '0'." );
 
 	device_cmd->add_flag("--serials", device_cmd_serials, "Return only the serial number of the devices");
@@ -587,8 +592,10 @@ int main( int argc, char** argv )
 	props_cmd->allow_extras();
 	props_cmd->add_flag("--interface", force_interface, "If set the <device-id> is interpreted as an interface-id.");
 	props_cmd->add_flag("--device-driver", props_device_driver, "If set the device instance driver properties are used.");
+	props_cmd->add_flag("-s,--short", props_cmd_short, "If set the device instance driver properties are used.");
 	props_cmd->add_option("device-id", arg_device_id,
 		"Specifies the device to open. You can specify an index e.g. '0'.")->required();
+	
 
 
 	auto save_props_cmd = app.add_subcommand( "save-prop", 
@@ -697,7 +704,7 @@ int main( int argc, char** argv )
         else if( props_cmd->parsed() )
         {
 			auto prop_map = select_prop_map(arg_device_id, force_interface, props_device_driver);
-            exec_prop_cmd(prop_map.map, props_cmd->remaining() );
+            exec_prop_cmd(prop_map.map, props_cmd->remaining(), props_cmd_short);
         }
         else if( save_props_cmd->parsed() )
         {
