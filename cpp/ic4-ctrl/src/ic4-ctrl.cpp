@@ -22,6 +22,7 @@
 #include "ic4-ctrl-helper.h"
 #include "ic4_enum_to_string.h"
 #include "print_property.h"
+#include "helper_json.h"
 
 static auto find_device( std::string id ) -> std::unique_ptr<ic4::DeviceInfo>
 {
@@ -135,7 +136,7 @@ static auto list_all_by_connection() -> void
 	}
 }
 
-static auto list_devices(bool serials_only) -> void
+static auto list_devices(bool serials_only, bool prop_cmd_json) -> void
 {
 	ic4::DeviceEnum devEnum;
 	auto list = devEnum.enumDevices();
@@ -144,6 +145,9 @@ static auto list_devices(bool serials_only) -> void
 		for (auto&& e : list) {
 			print("{} ", e.serial());
 		}
+	}
+	else if (prop_cmd_json) {
+		print("{}", helper::to_json(list));
 	}
 	else
 	{
@@ -230,44 +234,95 @@ auto print_interface_short(int offset, size_t id, ic4::Interface& itf) -> void
 	print(offset, "{:^5} {:64}{}\n", id, itf.interfaceDisplayName(), add_info);
 }
 
-static auto list_interfaces() -> void
+static auto list_interfaces(bool prop_cmd_json) -> void
 {
     ic4::DeviceEnum devEnum;
     auto list = devEnum.enumInterfaces();
 
-	if (list.empty()) {
-		print(1, "No Interfaces found\n");
+	if (prop_cmd_json) {
+		print("{}", helper::to_json(list));
 	}
 	else
 	{
-		std::set<std::string> transport_layer_list;
-
-		for (auto&& e : list) {
-			transport_layer_list.insert(e.transportLayerName());
+		if (list.empty()) {
+			print(1, "No Interfaces found\n");
 		}
-		for (auto&& transportLayerName : transport_layer_list)
+		else
 		{
-			print(0, "TransportLayer: {}\n", transportLayerName);
-			for (size_t i = 0; i < list.size(); ++i)
-			{
-				auto& itf = list.at(i);
-				if (transportLayerName == itf.transportLayerName())
-				{
-					print_interface_short(1, i, itf);
-				}
+			std::set<std::string> transport_layer_list;
+
+			for (auto&& e : list) {
+				transport_layer_list.insert(e.transportLayerName());
 			}
-			print("\n");
+			for (auto&& transportLayerName : transport_layer_list)
+			{
+				print(0, "TransportLayer: {}\n", transportLayerName);
+				for (size_t i = 0; i < list.size(); ++i)
+				{
+					auto& itf = list.at(i);
+					if (transportLayerName == itf.transportLayerName())
+					{
+						print_interface_short(1, i, itf);
+					}
+				}
+				print("\n");
+			}
 		}
 	}
 }
 
-static void print_device( std::string id, bool device_cmd_serials)
+static void print_interface(std::string id, bool props_cmd_json)
 {
+	if (id.empty()) {
+		return list_interfaces(props_cmd_json);
+	}
+
+	auto dev = find_interface(id);
+	if (!dev) {
+		throw std::runtime_error(fmt::format("Failed to find device for id '{}'\n", id));
+	}
+
+	if (props_cmd_json)
+	{
+		print("{}\n", helper::to_json(*dev));
+	}
+	else
+	{
+		print("DisplayName:           '{}'\n", dev->interfaceDisplayName());
+		print("TransportLayerName:    '{}'\n", dev->transportLayerName());
+		print("TransportLayerType:    '{}'\n", ic4_helper::toString(dev->transportLayerType()));
+		print("TransportLayerVersion: '{}'\n", dev->transportLayerVersion());
+
+		auto map = dev->interfacePropertyMap();
+
+		auto mtu = map.findInteger("MaximumTransmissionUnit", ic4::Error::Ignore());
+		if (mtu.is_valid()) {
+			print(1, "MaximumTransmissionUnit: '{}'\n", helper::get_value_as_string(mtu));
+		}
+
+		auto ipaddr = map.findInteger("GevInterfaceSubnetIPAddress", ic4::Error::Ignore());
+		if (ipaddr.is_valid())
+		{
+			print(1, "GevInterfaceSubnet-info: {::}", read_IPAddressList(map, ipaddr, true));
+		}
+	}
+}
+
+
+static void print_device( std::string id, bool device_cmd_serials, bool props_cmd_json)
+{
+	if (id.empty()) {
+		return list_devices(device_cmd_serials, props_cmd_json);
+	}
     auto dev = find_device( id );
     if( !dev ) {
         throw std::runtime_error( fmt::format( "Failed to find device for id '{}'\n", id ) );
     }
-	if (device_cmd_serials)
+	if (props_cmd_json)
+	{
+		print("{}\n", helper::to_json(*dev));
+	}
+	else if (device_cmd_serials)
 	{
 		print("{} ", dev->serial());
 	}
@@ -292,33 +347,6 @@ static void print_device( std::string id, bool device_cmd_serials)
 	}
 }
 
-static void print_interface( std::string id )
-{
-    auto dev = find_interface( id );
-    if( !dev ) {
-        throw std::runtime_error( fmt::format( "Failed to find device for id '{}'\n", id ) );
-    }
-
-    print( "DisplayName:           '{}'\n", dev->interfaceDisplayName() );
-    print( "TransportLayerName:    '{}'\n", dev->transportLayerName() );
-    print( "TransportLayerType:    '{}'\n", ic4_helper::toString( dev->transportLayerType() ) );
-    print( "TransportLayerVersion: '{}'\n", dev->transportLayerVersion() );
-
-	auto map = dev->interfacePropertyMap();
-
-	auto mtu = map.findInteger("MaximumTransmissionUnit", ic4::Error::Ignore());
-	if (mtu.is_valid()) {
-		print(1, "MaximumTransmissionUnit: '{}'\n", helper::get_value_as_string(mtu));
-	}
-
-	auto ipaddr = map.findInteger("GevInterfaceSubnetIPAddress", ic4::Error::Ignore());
-	if (ipaddr.is_valid())
-	{
-		print(1, "GevInterfaceSubnet-info: {::}", read_IPAddressList(map, ipaddr, true));
-	}
-
-}
-
 static auto split_prop_entry( const std::string& prop_string ) -> std::pair<std::string,std::string>
 {
     auto f = prop_string.find( '=' );
@@ -340,22 +368,43 @@ static void set_property_from_assign_entry( ic4::PropertyMap& property_map, cons
     }
 }
 
-auto print_property(int offset, ic4::Property& prop, bool cmd_short) {
-	if (cmd_short) {
+auto print_property(int offset, ic4::Property& prop, bool cmd_short, bool cmd_json) {
+	if (cmd_json) {
+		print( offset, "{}", helper::to_json(prop));
+	}
+	else if (cmd_short) {
 		helper::print_property_short(0, prop);
 	} else {
 		helper::print_property(0, prop);
 	}
 }
 
-static void exec_prop_cmd( ic4::PropertyMap& map, const std::vector<std::string>& lst, bool cmd_short )
+auto print_property(const ic4::PropertyMap& map, bool cmd_short, bool cmd_json)
+{
+	if (cmd_json) {
+		print(0, "{}", helper::to_json(map));
+	}
+	else if (cmd_short)
+	{
+		for (auto&& prop : map.all())
+		{
+			helper::print_property_short(0, prop);
+		}
+	}
+	else
+	{
+		for (auto&& prop : map.all())
+		{
+			helper::print_property(0, prop);
+		}
+	}
+}
+
+static void exec_prop_cmd( ic4::PropertyMap& map, const std::vector<std::string>& lst, bool cmd_short, bool cmd_json )
 {
     if( lst.empty() )
     {
-        for( auto&& property : map.all() )
-        {
-			print_property(0, property, cmd_short);
-        }
+		print_property(map, cmd_short, cmd_json);
     }
     else
     {
@@ -370,7 +419,7 @@ static void exec_prop_cmd( ic4::PropertyMap& map, const std::vector<std::string>
             {
                 auto property = map.find( entry );
                 if( property.is_valid() ) {
-					print_property(0, property, cmd_short);
+					print_property(0, property, cmd_short, cmd_json);
 				}
 				else {
                     print( "Failed to find property for name: '{}'\n", entry );
@@ -557,6 +606,7 @@ int main( int argc, char** argv )
 	bool props_device_driver = false;
 	bool device_cmd_serials = false;
 	bool props_cmd_short = false;
+	bool json_flag = false;
 	std::string arg_filename;
 
 	auto help = app.add_subcommand("help", "Print this help text and quit.")->silent();
@@ -575,6 +625,9 @@ int main( int argc, char** argv )
 
 	device_cmd->add_flag("--serials", device_cmd_serials, "Return only the serial number of the devices");
 
+	device_cmd->add_flag("--json", json_flag, "A json string is generated.");
+
+
     auto interface_cmd = app.add_subcommand( "interface",
         "List devices or a show information for a single interface.\n"
         "\tTo list all interfaces: `ic4-ctrl interface`\n"
@@ -582,6 +635,9 @@ int main( int argc, char** argv )
     );
     interface_cmd->add_option( "interface-id", arg_device_id,
         "If specified only information for this interface is printed, otherwise all interfaces are listed. You can specify an index e.g. '0'." );
+
+	interface_cmd->add_flag("--json", json_flag, "A json string is generated.");
+
 
     auto props_cmd = app.add_subcommand( "prop",
         "List or set property values of the specified device or interface.\n"
@@ -592,11 +648,10 @@ int main( int argc, char** argv )
 	props_cmd->allow_extras();
 	props_cmd->add_flag("--interface", force_interface, "If set the <device-id> is interpreted as an interface-id.");
 	props_cmd->add_flag("--device-driver", props_device_driver, "If set the device instance driver properties are used.");
-	props_cmd->add_flag("-s,--short", props_cmd_short, "If set the device instance driver properties are used.");
+	props_cmd->add_flag("-s,--short", props_cmd_short, "If set, a shorter property desc is returned.");
+	props_cmd->add_flag("--json", json_flag, "A json string is generated.");
 	props_cmd->add_option("device-id", arg_device_id,
 		"Specifies the device to open. You can specify an index e.g. '0'.")->required();
-	
-
 
 	auto save_props_cmd = app.add_subcommand( "save-prop", 
         "Save properties for the specified device 'ic4-ctrl save-prop -f <filename> <device-id>'." );
@@ -674,7 +729,6 @@ int main( int argc, char** argv )
 
     try
     {
-
 		if (help->count() != 0)
 		{
 			app.exit(CLI::CallForAllHelp());
@@ -687,24 +741,16 @@ int main( int argc, char** argv )
         }
         else if( device_cmd->parsed() )
         {
-            if( arg_device_id.empty() ) {
-                list_devices(device_cmd_serials);
-            } else {
-				print_device(arg_device_id, device_cmd_serials);
-            }
+			print_device(arg_device_id, device_cmd_serials, json_flag);
         }
         else if( interface_cmd->parsed() )
         {
-            if( arg_device_id.empty() ) {
-                list_interfaces();
-            } else {
-				print_interface(arg_device_id);
-            }
+			print_interface(arg_device_id, json_flag);
         }
         else if( props_cmd->parsed() )
         {
 			auto prop_map = select_prop_map(arg_device_id, force_interface, props_device_driver);
-            exec_prop_cmd(prop_map.map, props_cmd->remaining(), props_cmd_short);
+            exec_prop_cmd(prop_map.map, props_cmd->remaining(), props_cmd_short, json_flag);
         }
         else if( save_props_cmd->parsed() )
         {

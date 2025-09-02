@@ -23,9 +23,18 @@ if (NOT DISABLE_FETCHCONTENT_PACKAGES)
 	)
 
 	FetchContent_MakeAvailable(fmt)
+
+	FetchContent_Declare(
+		nlohmann-json
+		GIT_REPOSITORY https://github.com/nlohmann/json.git
+		GIT_TAG v3.12.0
+	)
+
+	FetchContent_MakeAvailable(nlohmann-json)
 else()
 	find_package( CLI11 REQUIRED )
 	find_package( fmt REQUIRED )
+	find_package( nlohmann_json REQUIRED )
 endif()
 
 add_executable( ic4-ctrl
@@ -35,13 +44,14 @@ add_executable( ic4-ctrl
 
 	"src/print_property.h"
 	"src/print_property.cpp"
-)
+ "src/helper_json.cpp")
 
 target_link_libraries( ic4-ctrl
 PRIVATE
 	ic4::core
 	CLI11::CLI11
 	fmt::fmt
+	nlohmann_json::nlohmann_json
 )
 
 if (WIN32)
