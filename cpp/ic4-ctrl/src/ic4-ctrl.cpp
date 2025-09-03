@@ -603,8 +603,8 @@ static void show_system_info()
 int main( int argc, char** argv )
 {
     CLI::App app{ "Simple ic4 camera control utility", "ic4-ctrl"};
-    //app.set_help_flag("-h,--help");
-    app.set_help_all_flag( "--help-all", "Expand all help" );
+    //app.set_help_flag("-h");
+    app.set_help_all_flag( "--help-all", " Print all help texts and exit");
 
     std::string gentl_path = helper::get_env_var( "GENICAM_GENTL64_PATH" );
     app.add_option( "--gentl-path", gentl_path, "GenTL path environment variable to set." )->default_val( gentl_path );
@@ -618,9 +618,9 @@ int main( int argc, char** argv )
 	bool json_flag = false;
 	std::string arg_filename;
 
-	app.add_flag("--version", version_flag, "Prints the program version");
+	app.add_flag("--version", version_flag, "Display program version information and exit");
 
-	auto help = app.add_subcommand("help", "Print this help text and quit.")->silent();
+	auto help = app.add_subcommand("help", "Print this help text and exit.")->silent();
 
     auto list_cmd = app.add_subcommand( "list",
         "List available devices and interfaces by connection."
@@ -748,10 +748,11 @@ int main( int argc, char** argv )
 
 		if (version_flag || version_cmd->parsed()) {
 			show_version();
-			return 0;
 		}
-
-        if( list_cmd->parsed() )
+		else if (system_cmd->parsed()) {
+			show_system_info();
+		}
+		else if( list_cmd->parsed() )
         {
 			list_all_by_connection();
         }
@@ -792,10 +793,6 @@ int main( int argc, char** argv )
 			show_prop_page(prop_map.map, show_default_guru);
         }
 #endif // _WIN32
-        else if( system_cmd->parsed() )
-        {
-            show_system_info();
-        }
         else
         {
             print("No arguments given\n\n");
