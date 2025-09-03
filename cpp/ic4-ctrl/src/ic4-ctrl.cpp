@@ -574,22 +574,30 @@ static void show_prop_page(ic4::PropertyMap& map, bool show_guru)
 
 static void show_version()
 {
-    auto str = ic4::getVersionInfo();
-
-    if (str.empty())
-    {
-        print("Unable to retrieve version information.");
-        return;
-    }
-
-    print("{}", str);
+    std::string  str = ic4::getVersionInfo( ic4::VersionInfoFlags::Version);
+	if (str.empty())
+	{
+		print("Unable to retrieve version information.");
+		return;
+	}
+	str += " ";
+	str += ic4::getVersionInfo(ic4::VersionInfoFlags::BuildID);
+    print("ic4-ctrl {}\n", str);
 }
 
 static void show_system_info()
 {
-    auto env_var = helper::get_env_var( "GENICAM_GENTL64_PATH" );
-    print( 0, "Environment:\n" );
-    print( 1, "GENICAM_GENTL64_PATH: {}\n", env_var );
+	std::string str = ic4::getVersionInfo(ic4::VersionInfoFlags::Default);
+	if (str.empty())
+	{
+		print("Unable to retrieve version information.");
+		return;
+	}
+	print(0, "\n{}\n", str);
+
+	auto env_var = helper::get_env_var("GENICAM_GENTL64_PATH");
+	print(0, "Environment:\n");
+	print(1, "GENICAM_GENTL64_PATH: {}\n", env_var);
 }
 
 int main( int argc, char** argv )
@@ -602,12 +610,15 @@ int main( int argc, char** argv )
     app.add_option( "--gentl-path", gentl_path, "GenTL path environment variable to set." )->default_val( gentl_path );
 
     std::string arg_device_id;
+	bool version_flag = false;
     bool force_interface = false;
 	bool props_device_driver = false;
 	bool device_cmd_serials = false;
 	bool props_cmd_short = false;
 	bool json_flag = false;
 	std::string arg_filename;
+
+	app.add_flag("--version", version_flag, "Prints the program version");
 
 	auto help = app.add_subcommand("help", "Print this help text and quit.")->silent();
 
@@ -735,6 +746,11 @@ int main( int argc, char** argv )
 			return 0;
 		}
 
+		if (version_flag || version_cmd->parsed()) {
+			show_version();
+			return 0;
+		}
+
         if( list_cmd->parsed() )
         {
 			list_all_by_connection();
@@ -779,10 +795,6 @@ int main( int argc, char** argv )
         else if( system_cmd->parsed() )
         {
             show_system_info();
-        }
-        else if( version_cmd->parsed() )
-        {
-            show_version();
         }
         else
         {
