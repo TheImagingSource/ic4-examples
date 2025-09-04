@@ -44,7 +44,7 @@ add_executable( ic4-ctrl
 
 	"src/print_property.h"
 	"src/print_property.cpp"
- "src/helper_json.cpp")
+ "src/helper_json.cpp" "src/print_ic4_object.h" "src/print_ic4_object.cpp")
 
 target_link_libraries( ic4-ctrl
 PRIVATE

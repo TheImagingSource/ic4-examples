@@ -23,45 +23,51 @@
 #include "ic4_enum_to_string.h"
 #include "print_property.h"
 #include "helper_json.h"
+#include "print_ic4_object.h"
 
-static auto find_device( std::string id ) -> std::unique_ptr<ic4::DeviceInfo>
+static auto find_device( std::string id ) -> ic4::DeviceInfo
 {
     ic4::DeviceEnum devEnum;
     auto list = devEnum.enumDevices();
     if( list.size() == 0 ) {
         throw std::runtime_error( "No devices are available" );
     }
-
     for( auto&& dev : list )
     {
         if( dev.serial() == id ) {
-            return std::make_unique<ic4::DeviceInfo>( dev );
+            return dev;
         }
     }
     for( auto&& dev : list )
     {
         if( dev.uniqueName() == id ) {
-            return std::make_unique<ic4::DeviceInfo>( dev );
-        }
+			return dev;
+		}
     }
     for( auto&& dev : list )
     {
         if( dev.modelName() == id ) {
-            return std::make_unique<ic4::DeviceInfo>( dev );
-        }
+			return dev;
+		}
     }
-    int64_t index = 0;
+	for (auto&& dev : list)
+	{
+		if (dev.userID(ic4::Error::Ignore()) == id) {
+			return dev;
+		}
+	}
+	int64_t index = 0;
     if( helper::from_chars_helper( id, index ) )
     {
         if( index < 0 || index >= static_cast<int64_t>(list.size()) )
             return {};
 
-        return std::make_unique<ic4::DeviceInfo>( list.at( index ) );
+        return list.at( index );
     }
     return {};
 }
 
-static auto find_interface( std::string id ) -> std::unique_ptr<ic4::Interface>
+static auto find_interface( std::string id ) -> ic4::Interface
 {
     ic4::DeviceEnum devEnum;
     auto list = devEnum.enumInterfaces();
@@ -72,14 +78,14 @@ static auto find_interface( std::string id ) -> std::unique_ptr<ic4::Interface>
     for( auto&& dev : list )
     {
         if( dev.interfaceDisplayName() == id ) {
-            return std::make_unique<ic4::Interface>( dev );
+			return dev;
         }
     }
     for( auto&& dev : list )
     {
         if( dev.transportLayerName() == id ) {
-            return std::make_unique<ic4::Interface>( dev );
-        }
+			return dev;
+		}
     }
     int64_t index = 0;
     if( helper::from_chars_helper( id, index ) )
@@ -87,7 +93,7 @@ static auto find_interface( std::string id ) -> std::unique_ptr<ic4::Interface>
         if( index < 0 || index >= static_cast<int64_t>(list.size()) )
             return {};
 
-        return std::make_unique<ic4::Interface>( list.at( index ) );
+        return list.at( index );
     }
     return {};
 }
@@ -95,44 +101,56 @@ static auto find_interface( std::string id ) -> std::unique_ptr<ic4::Interface>
 static auto list_all_by_connection() -> void
 {
 	ic4::DeviceEnum devEnum;
-	auto list = devEnum.enumInterfaces();
-
-	if (list.empty()) {
+	auto itf_list = devEnum.enumInterfaces();
+	if (itf_list.empty()) {
 		print(1, "No GenTL providers found\n");
+		return;
 	}
-	else
+
+	std::vector<std::string> transport_layer_list;
+	std::map<std::string, size_t> device_to_index;
+
+	size_t index = 0;
+	for (auto&& e : devEnum.enumDevices())
 	{
-		std::set<std::string> transport_layer_list;
+		device_to_index[e.uniqueName()] = index++;
+	}
 
-		for (auto&& e : list) {
-			transport_layer_list.insert(e.transportLayerName());
-		}
-		for (auto&& transportLayerName : transport_layer_list)
+
+	for (auto&& e : itf_list)
+	{
+		auto tl_name = e.transportLayerName();
+		if (std::none_of(transport_layer_list.begin(), transport_layer_list.end(), [&tl_name](auto& p) { return tl_name == p; }))
 		{
-			print(0, "TransportLayer: {}\n", transportLayerName);
-			for (size_t i = 0; i < list.size(); ++i)
-			{
-				auto& itf = list.at(i);
-				if (transportLayerName == itf.transportLayerName())
-				{
-					//print(1, "{:64} Index:{:2}\n\n", itf.interfaceDisplayName(), i);
-					print(1, "{:2} {}\n", i, itf.interfaceDisplayName());
-
-					auto dev_list = itf.enumDevices();
-					if (dev_list.empty()) {
-						print(3, "No devices\n");
-					}
-					else
-					{
-						for (auto&& device : dev_list) {
-							print(3, "{:24} {:8}\n", device.modelName(), device.serial());
-						}
-					}
-					print("\n");
-				}
-			}
-			print("\n");
+			transport_layer_list.push_back(e.transportLayerName());
 		}
+	}
+	for (auto&& transportLayerName : transport_layer_list)
+	{
+		print(0, "TransportLayer: {}\n", transportLayerName);
+		for (size_t i = 0; i < itf_list.size(); ++i)
+		{
+			auto& itf = itf_list.at(i);
+			if (transportLayerName == itf.transportLayerName())
+			{
+				helper::print_interface_short(1, i, itf);
+
+				print("\n");
+
+				auto dev_list = itf.enumDevices();
+				if (dev_list.empty()) {
+					print(3, "No devices\n");
+				}
+				else
+				{
+					for (auto&& device : dev_list) {
+						helper::print_device_short(3, device_to_index[device.uniqueName()], device);
+					}
+				}
+				print("\n");
+			}
+		}
+		print("\n");
 	}
 }
 
@@ -147,7 +165,7 @@ static auto list_devices(bool serials_only, bool prop_cmd_json) -> void
 		}
 	}
 	else if (prop_cmd_json) {
-		print("{}", helper::to_json(list));
+		print("{}\n", helper::to_json(list));
 	}
 	else
 	{
@@ -157,82 +175,18 @@ static auto list_devices(bool serials_only, bool prop_cmd_json) -> void
 			return;
 		}
 
-		print(1, "Index   {:24} {:8} {}\n", "ModelName", "Serial", "InterfaceName");
+		print(1, "Index   {:24} {:8} {:16} {}\n", "ModelName", "Serial", "UserID", "InterfaceName");
 		int index = 0;
 		for (auto&& e : list) {
-			print(1, "{:^5}   {:24} {:8} {}\n", index, e.modelName(), e.serial(), e.getInterface().transportLayerName());
+			print(1, "{:^5}   {:24} {:8} {:16} {}\n", index, 
+				e.modelName(), e.serial(), e.userID(ic4::Error::Ignore()),
+				e.getInterface().transportLayerName()
+			);
 			index += 1;
 		}
 	}
 }
 
-static auto read_IPAddressList(ic4::PropertyMap& map, ic4::PropInteger& subnet_ip, bool add_mask) -> std::vector<std::string>
-{
-	if (!subnet_ip.is_valid())	return {};
-
-	auto selector = map.findInteger("GevInterfaceSubnetSelector", ic4::Error::Ignore());
-	auto subnet_mask = map.findInteger("GevInterfaceSubnetMask", ic4::Error::Ignore());
-	if (!subnet_mask.is_valid()) {
-		add_mask = false;
-	}
-
-	std::vector<std::string> lst;
-	try
-	{
-
-		if (!selector.is_valid()) {
-			// throws on error
-			return { helper::format_int_prop(subnet_ip.getValue(), ic4::PropIntRepresentation::IPV4Address) };
-		}
-
-		auto max_idx = selector.maximum();
-		for (auto idx = selector.minimum(); idx <= max_idx; ++idx)
-		{
-			selector.setValue(idx);
-
-			auto addr = subnet_ip.getValue();
-			if (add_mask)
-			{
-				lst.push_back(fmt::format("{}/{}",
-					helper::format_int_prop(addr, ic4::PropIntRepresentation::IPV4Address),
-					helper::format_int_prop(subnet_mask.getValue(), ic4::PropIntRepresentation::IPV4Address)
-				));
-			}
-			else
-			{
-				lst.push_back(
-					helper::format_int_prop(addr, ic4::PropIntRepresentation::IPV4Address)
-				);
-			}
-		}
-		return lst;
-	}
-	catch (const std::exception& /*ex*/)
-	{
-	}
-	return {};
-}
-
-auto print_interface_short(int offset, size_t id, ic4::Interface& itf) -> void
-{
-	auto map = itf.interfacePropertyMap();
-
-	std::string add_info;
-
-	auto mtu = map.findInteger("MaximumTransmissionUnit", ic4::Error::Ignore());
-	if (mtu.is_valid()) {
-		add_info += fmt::format(" MTU={}", helper::get_value_as_string(mtu));
-	}
-
-	auto ipaddr = map.findInteger("GevInterfaceSubnetIPAddress", ic4::Error::Ignore());
-	if (ipaddr.is_valid())
-	{
-		auto lst = read_IPAddressList(map, ipaddr, false);
-		add_info += fmt::format(" IPv4={::}", lst);
-	}
-
-	print(offset, "{:^5} {:64}{}\n", id, itf.interfaceDisplayName(), add_info);
-}
 
 static auto list_interfaces(bool prop_cmd_json) -> void
 {
@@ -240,7 +194,7 @@ static auto list_interfaces(bool prop_cmd_json) -> void
     auto list = devEnum.enumInterfaces();
 
 	if (prop_cmd_json) {
-		print("{}", helper::to_json(list));
+		print("{}\n", helper::to_json(list));
 	}
 	else
 	{
@@ -262,7 +216,7 @@ static auto list_interfaces(bool prop_cmd_json) -> void
 					auto& itf = list.at(i);
 					if (transportLayerName == itf.transportLayerName())
 					{
-						print_interface_short(1, i, itf);
+						helper::print_interface_short(1, i, itf);
 					}
 				}
 				print("\n");
@@ -278,22 +232,22 @@ static void print_interface(std::string id, bool props_cmd_json)
 	}
 
 	auto dev = find_interface(id);
-	if (!dev) {
+	if (!dev.is_valid()) {
 		throw std::runtime_error(fmt::format("Failed to find device for id '{}'\n", id));
 	}
 
 	if (props_cmd_json)
 	{
-		print("{}\n", helper::to_json(*dev));
+		print("{}\n", helper::to_json(dev));
 	}
 	else
 	{
-		print("DisplayName:           '{}'\n", dev->interfaceDisplayName());
-		print("TransportLayerName:    '{}'\n", dev->transportLayerName());
-		print("TransportLayerType:    '{}'\n", ic4_helper::toString(dev->transportLayerType()));
-		print("TransportLayerVersion: '{}'\n", dev->transportLayerVersion());
+		print("DisplayName:           '{}'\n", dev.interfaceDisplayName());
+		print("TransportLayerName:    '{}'\n", dev.transportLayerName());
+		print("TransportLayerType:    '{}'\n", ic4_helper::toString(dev.transportLayerType()));
+		print("TransportLayerVersion: '{}'\n", dev.transportLayerVersion());
 
-		auto map = dev->interfacePropertyMap();
+		auto map = dev.interfacePropertyMap();
 
 		auto mtu = map.findInteger("MaximumTransmissionUnit", ic4::Error::Ignore());
 		if (mtu.is_valid()) {
@@ -303,11 +257,10 @@ static void print_interface(std::string id, bool props_cmd_json)
 		auto ipaddr = map.findInteger("GevInterfaceSubnetIPAddress", ic4::Error::Ignore());
 		if (ipaddr.is_valid())
 		{
-			print(1, "GevInterfaceSubnet-info: {::}", read_IPAddressList(map, ipaddr, true));
+			print(1, "GevInterfaceSubnet-info: {::}", helper::read_IPAddressList(map, ipaddr, true));
 		}
 	}
 }
-
 
 static void print_device( std::string id, bool device_cmd_serials, bool props_cmd_json)
 {
@@ -315,23 +268,23 @@ static void print_device( std::string id, bool device_cmd_serials, bool props_cm
 		return list_devices(device_cmd_serials, props_cmd_json);
 	}
     auto dev = find_device( id );
-    if( !dev ) {
+    if( !dev.is_valid() ) {
         throw std::runtime_error( fmt::format( "Failed to find device for id '{}'\n", id ) );
     }
 	if (props_cmd_json)
 	{
-		print("{}\n", helper::to_json(*dev));
+		print("{}\n", helper::to_json(dev));
 	}
 	else if (device_cmd_serials)
 	{
-		print("{} ", dev->serial());
+		print("{} ", dev.serial());
 	}
 	else
 	{
-		print("ModelName:     '{}'\n", dev->modelName());
-		print("Serial:        '{}'\n", dev->serial());
+		print("ModelName:     '{}'\n", dev.modelName());
+		print("Serial:        '{}'\n", dev.serial());
 
-		auto user_id = dev->userID(ic4::Error::Ignore());
+		auto user_id = dev.userID(ic4::Error::Ignore());
 		if (!user_id.empty())
 		{
 			print("UserID:        '{}'\n", user_id);
@@ -341,9 +294,9 @@ static void print_device( std::string id, bool device_cmd_serials, bool props_cm
 			print("UserID:        '<empty>'\n");
 		}
 
-		print("UniqueName:    '{}'\n", dev->uniqueName());
-		print("DeviceVersion: '{}'\n", dev->version());
-		print("InterfaceName: '{}'\n", dev->getInterface().transportLayerName());
+		print("UniqueName:    '{}'\n", dev.uniqueName());
+		print("DeviceVersion: '{}'\n", dev.version());
+		print("InterfaceName: '{}'\n", dev.getInterface().transportLayerName());
 	}
 }
 
@@ -368,9 +321,9 @@ static void set_property_from_assign_entry( ic4::PropertyMap& property_map, cons
     }
 }
 
-auto print_property(int offset, ic4::Property& prop, bool cmd_short, bool cmd_json) {
+static auto print_property_single(ic4::Property& prop, bool cmd_short, bool cmd_json) {
 	if (cmd_json) {
-		print( offset, "{}", helper::to_json(prop));
+		print("{}\n", helper::to_json(prop));
 	}
 	else if (cmd_short) {
 		helper::print_property_short(0, prop);
@@ -379,10 +332,10 @@ auto print_property(int offset, ic4::Property& prop, bool cmd_short, bool cmd_js
 	}
 }
 
-auto print_property(const ic4::PropertyMap& map, bool cmd_short, bool cmd_json)
+static auto print_property(const ic4::PropertyMap& map, bool cmd_short, bool cmd_json)
 {
 	if (cmd_json) {
-		print(0, "{}", helper::to_json(map));
+		print("{}\n", helper::to_json(map));
 	}
 	else if (cmd_short)
 	{
@@ -419,7 +372,7 @@ static void exec_prop_cmd( ic4::PropertyMap& map, const std::vector<std::string>
             {
                 auto property = map.find( entry );
                 if( property.is_valid() ) {
-					print_property(0, property, cmd_short, cmd_json);
+					print_property_single(property, cmd_short, cmd_json);
 				}
 				else {
                     print( "Failed to find property for name: '{}'\n", entry );
@@ -428,7 +381,6 @@ static void exec_prop_cmd( ic4::PropertyMap& map, const std::vector<std::string>
         }
     }
 }
-
 
 struct selected_prop_map
 {
@@ -441,19 +393,19 @@ static auto select_prop_map(std::string id, bool force_interface, bool device_dr
 	selected_prop_map rval;
 	if (force_interface) {
 		auto dev = find_interface(id);
-		if (!dev) {
+		if (!dev.is_valid()) {
 			throw std::runtime_error(fmt::format("Failed to find interface for id '{}'", id));
 		}
-		rval.map = dev->interfacePropertyMap();
+		rval.map = dev.interfacePropertyMap();
 	}
 	else
 	{
 		auto dev = find_device(id);
-		if (!dev) {
+		if (!dev.is_valid()) {
 			throw std::runtime_error(fmt::format("Failed to find device for id '{}'", id));
 		}
 
-		rval.g.deviceOpen(*dev);
+		rval.g.deviceOpen(dev);
 
 		if (device_driver_props) {
 			rval.map = rval.g.driverPropertyMap();
@@ -482,12 +434,12 @@ static void load_properties(ic4::PropertyMap& map, std::string filename)
 static void save_image( std::string id, std::string filename, int count, int timeout_in_ms, std::string image_type )
 {
     auto dev = find_device( id );
-    if( !dev ) {
+    if( !dev.is_valid() ) {
         print( "Failed to find device for id '{}'", id );
         return;
     }
     ic4::Grabber g;
-    g.deviceOpen( *dev );
+    g.deviceOpen( dev );
 
     auto snap_sink = ic4::SnapSink::create();
     g.streamSetup( snap_sink, ic4::StreamSetupOption::AcquisitionStart );
@@ -535,12 +487,12 @@ static void save_image( std::string id, std::string filename, int count, int tim
 static void show_live( std::string id )
 {
     auto dev = find_device( id );
-    if( !dev ) {
+	if (!dev.is_valid()) {
         print( "Failed to find device for id '{}'", id );
         return;
     }
     ic4::Grabber g;
-    g.deviceOpen( *dev );
+    g.deviceOpen( dev );
 
     auto display = ic4::Display::create( ic4::DisplayType::Default, IC4_WINDOW_HANDLE_NULL );
     g.streamSetup( display, ic4::StreamSetupOption::AcquisitionStart );
