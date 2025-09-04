@@ -61,6 +61,6 @@ if (WIN32)
 	)
 endif()
 
-set_property(TARGET ic4-ctrl PROPERTY CXX_STANDARD 14)
+set_property(TARGET ic4-ctrl PROPERTY CXX_STANDARD 17)
 
 ic4_copy_runtime_to_target(ic4-ctrl)

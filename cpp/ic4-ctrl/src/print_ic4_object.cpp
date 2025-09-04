@@ -7,6 +7,8 @@
 #include <fmt/ranges.h>
 #include "print_property.h"
 
+#include <optional>
+
 auto helper::read_IPAddressList(ic4::PropertyMap& map, ic4::PropInteger& subnet_ip, bool add_mask) -> std::vector<std::string>
 {
 	if (!subnet_ip.is_valid())	return {};
@@ -77,15 +79,63 @@ auto helper::print_interface_short(int offset, size_t index, ic4::Interface& itf
 	}
 }
 
-auto helper::print_device_short(int offset, size_t index, ic4::DeviceInfo& dev) -> void
+static auto read_string_from_map(ic4::PropertyMap& map, const char* prop_name) -> std::optional<std::string>
 {
-	std::string add_info;
+	ic4::Error err;
+	auto contents = map.getValueString(prop_name, err);
+	if (!err) {
+		return contents;
+	}
+	return {};
+}
 
-	print(offset, "{:^2} {:24} {:8} {:16}\n", index, 
-		dev.modelName(ic4::Error::Ignore()), dev.serial(ic4::Error::Ignore()), dev.userID(ic4::Error::Ignore())
+auto helper::print_device_short(int offset, size_t index, ic4::DeviceInfo& dev, bool print_transport_layer) -> void
+{
+	std::string transport_layer;
+	if (print_transport_layer) {
+		transport_layer = dev.getInterface().transportLayerName();
+	}
+
+	print(offset, "{:^5} {:24} {:8} {:16} {}\n", index, 
+		dev.modelName(ic4::Error::Ignore()), dev.serial(ic4::Error::Ignore()), dev.userID(ic4::Error::Ignore()),
+		transport_layer
 	);
 
-	if (!add_info.empty()) {
-		print(offset + 1, "{}\n", add_info);
+	std::string add_info;
+
+	try
+	{
+		auto itf_prop_map = dev.getInterface().interfacePropertyMap();
+		if (select_device_in_interface_DeviceSelector(dev, itf_prop_map))
+		{
+			if (auto val = read_string_from_map(itf_prop_map, "DeviceReachableStatus"); val) {
+				add_info += fmt::format("Status: '{}' ", *val);
+			}
+			if (auto val = read_string_from_map(itf_prop_map, "GevDeviceIPAddress"); val) {
+				add_info += fmt::format("IPv4: '{}' ", *val);
+			}
+		}
 	}
+	catch (const std::exception&) {
+		// just skip this here
+	}
+
+	if (!add_info.empty()) {
+		print(offset + 2, "{}\n", add_info);
+	}
+}
+
+auto helper::select_device_in_interface_DeviceSelector(const ic4::DeviceInfo& dev, ic4::PropertyMap& itf_prop_map) -> bool
+{
+	for (int index = 0;; ++index)
+	{
+		if (!itf_prop_map.setValue("DeviceSelector", index, ic4::Error::Ignore())) {
+			return false;
+		}
+		auto str = itf_prop_map.getValueString("DeviceSerialNumber", ic4::Error::Ignore());
+		if (str == dev.serial()) {
+			return true;
+		}
+	}
+	return false;
 }

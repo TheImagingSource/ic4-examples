@@ -144,7 +144,7 @@ static auto list_all_by_connection() -> void
 				else
 				{
 					for (auto&& device : dev_list) {
-						helper::print_device_short(3, device_to_index[device.uniqueName()], device);
+						helper::print_device_short(3, device_to_index[device.uniqueName()], device, false);
 					}
 				}
 				print("\n");
@@ -165,23 +165,19 @@ static auto list_devices(bool serials_only, bool prop_cmd_json) -> void
 		}
 	}
 	else if (prop_cmd_json) {
-		print("{}\n", helper::to_json(list));
+		print("{}\n", helper::to_json_string(list));
 	}
 	else
 	{
-		print("Device list:\n");
 		if (list.empty()) {
-			print(1, "No devices found\n");
+			print(0, "No devices found\n");
 			return;
 		}
 
-		print(1, "Index   {:24} {:8} {:16} {}\n", "ModelName", "Serial", "UserID", "InterfaceName");
+		print(0, "{:^5} {:24} {:8} {:16} {}\n", "Index", "ModelName", "Serial", "UserID", "TransportLayer");
 		int index = 0;
-		for (auto&& e : list) {
-			print(1, "{:^5}   {:24} {:8} {:16} {}\n", index, 
-				e.modelName(), e.serial(), e.userID(ic4::Error::Ignore()),
-				e.getInterface().transportLayerName()
-			);
+		for (auto&& dev : list) {
+			helper::print_device_short(0, index, dev, true);
 			index += 1;
 		}
 	}
@@ -194,7 +190,7 @@ static auto list_interfaces(bool prop_cmd_json) -> void
     auto list = devEnum.enumInterfaces();
 
 	if (prop_cmd_json) {
-		print("{}\n", helper::to_json(list));
+		print("{}\n", helper::to_json_string(list));
 	}
 	else
 	{
@@ -238,27 +234,11 @@ static void print_interface(std::string id, bool props_cmd_json)
 
 	if (props_cmd_json)
 	{
-		print("{}\n", helper::to_json(dev));
+		print("{}\n", helper::to_json(dev).dump(4));
 	}
 	else
 	{
-		print("DisplayName:           '{}'\n", dev.interfaceDisplayName());
-		print("TransportLayerName:    '{}'\n", dev.transportLayerName());
-		print("TransportLayerType:    '{}'\n", ic4_helper::toString(dev.transportLayerType()));
-		print("TransportLayerVersion: '{}'\n", dev.transportLayerVersion());
-
-		auto map = dev.interfacePropertyMap();
-
-		auto mtu = map.findInteger("MaximumTransmissionUnit", ic4::Error::Ignore());
-		if (mtu.is_valid()) {
-			print(1, "MaximumTransmissionUnit: '{}'\n", helper::get_value_as_string(mtu));
-		}
-
-		auto ipaddr = map.findInteger("GevInterfaceSubnetIPAddress", ic4::Error::Ignore());
-		if (ipaddr.is_valid())
-		{
-			print(1, "GevInterfaceSubnet-info: {::}", helper::read_IPAddressList(map, ipaddr, true));
-		}
+		helper::print_json(0, helper::to_json(dev));
 	}
 }
 
@@ -271,32 +251,18 @@ static void print_device( std::string id, bool device_cmd_serials, bool props_cm
     if( !dev.is_valid() ) {
         throw std::runtime_error( fmt::format( "Failed to find device for id '{}'\n", id ) );
     }
-	if (props_cmd_json)
-	{
-		print("{}\n", helper::to_json(dev));
-	}
-	else if (device_cmd_serials)
+
+	if (device_cmd_serials)
 	{
 		print("{} ", dev.serial());
 	}
+	else if (props_cmd_json)
+	{
+		print("{}\n", helper::to_json(dev).dump(4));
+	}
 	else
 	{
-		print("ModelName:     '{}'\n", dev.modelName());
-		print("Serial:        '{}'\n", dev.serial());
-
-		auto user_id = dev.userID(ic4::Error::Ignore());
-		if (!user_id.empty())
-		{
-			print("UserID:        '{}'\n", user_id);
-		}
-		else
-		{
-			print("UserID:        '<empty>'\n");
-		}
-
-		print("UniqueName:    '{}'\n", dev.uniqueName());
-		print("DeviceVersion: '{}'\n", dev.version());
-		print("InterfaceName: '{}'\n", dev.getInterface().transportLayerName());
+		helper::print_json(0, helper::to_json(dev));
 	}
 }
 
@@ -323,7 +289,7 @@ static void set_property_from_assign_entry( ic4::PropertyMap& property_map, cons
 
 static auto print_property_single(ic4::Property& prop, bool cmd_short, bool cmd_json) {
 	if (cmd_json) {
-		print("{}\n", helper::to_json(prop));
+		print("{}\n", helper::to_json_string(prop));
 	}
 	else if (cmd_short) {
 		helper::print_property_short(0, prop);
@@ -335,7 +301,7 @@ static auto print_property_single(ic4::Property& prop, bool cmd_short, bool cmd_
 static auto print_property(const ic4::PropertyMap& map, bool cmd_short, bool cmd_json)
 {
 	if (cmd_json) {
-		print("{}\n", helper::to_json(map));
+		print("{}\n", helper::to_json_string(map));
 	}
 	else if (cmd_short)
 	{

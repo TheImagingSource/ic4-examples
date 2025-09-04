@@ -3,7 +3,9 @@
 
 #include "ic4_enum_to_string.h"
 
+#include <fmt/ranges.h>
 #include <nlohmann/json.hpp>
+#include "print_ic4_object.h"
 
 namespace
 {
@@ -54,6 +56,15 @@ namespace
 		std::vector<std::string> str;
 		for (auto&& entry : lst) {
 			str.push_back(entry.name());
+		}
+		return str;
+	}
+
+	auto to_string_vec(const nlohmann::ordered_json& arr) -> std::vector<std::string>
+	{
+		std::vector<std::string> str;
+		for (auto&& entry : arr) {
+			str.push_back(entry);
 		}
 		return str;
 	}
@@ -238,51 +249,15 @@ namespace
 
 		return rval;
 	}
-
-	auto to_json_(const ic4::DeviceInfo& dev) -> nlohmann::ordered_json
-	{
-		nlohmann::ordered_json rval;
-
-		add_json_line_(rval, "modelName", dev, &ic4::DeviceInfo::modelName);
-		add_json_line_(rval, "uniqueName", dev, &ic4::DeviceInfo::uniqueName);
-		add_json_line_(rval, "serial", dev, &ic4::DeviceInfo::serial);
-		add_json_line_(rval, "version", dev, &ic4::DeviceInfo::version);
-		add_json_line_(rval, "userID", dev, &ic4::DeviceInfo::userID);
-
-		return rval;
-	}
-
-	auto to_json_(const ic4::Interface& itf) -> nlohmann::ordered_json
-	{
-		nlohmann::ordered_json rval;
-
-		add_json_line_(rval, "interfaceDisplayName", itf, &ic4::Interface::interfaceDisplayName);
-		add_json_line_(rval, "transportLayerName", itf, &ic4::Interface::transportLayerName);
-		add_json_line_func(rval, "transportLayerType", [itf](auto& err) { return ic4_helper::toString(itf.transportLayerType(err)); });
-		add_json_line_(rval, "transportLayerVersion", itf, &ic4::Interface::transportLayerVersion);
-
-		return rval;
-	}
 }
 
-auto helper::to_json(const ic4::Property& prop) -> std::string
+auto helper::to_json_string(const ic4::Property& prop) -> std::string
 {
 	auto rval = to_json_(prop);
 	return rval.dump(4);
 }
 
-auto helper::to_json(const ic4::Interface& itf) -> std::string
-{
-	auto rval = to_json_(itf);
-	return rval.dump(4);
-}
-auto helper::to_json(const ic4::DeviceInfo& dev) -> std::string
-{
-	auto rval = to_json_(dev);
-	return rval.dump(4);
-}
-
-auto helper::to_json(const ic4::PropertyMap& map) -> std::string
+auto helper::to_json_string(const ic4::PropertyMap& map) -> std::string
 {
 	nlohmann::ordered_json root;
 	for (auto&& e : map.all()) {
@@ -291,21 +266,104 @@ auto helper::to_json(const ic4::PropertyMap& map) -> std::string
 	return root.dump(4);
 }
 
-auto helper::to_json(const std::vector<ic4::DeviceInfo>& lst) -> std::string
+auto helper::to_json_string(const std::vector<ic4::DeviceInfo>& lst) -> std::string
 {
 	nlohmann::ordered_json root;
 	for (auto&& entry : lst) {
-		root.push_back(to_json_(entry));
+		root.push_back(to_json(entry));
 	}
 	return root.dump(4);
 }
 
 
-auto helper::to_json(const std::vector<ic4::Interface>& lst) -> std::string
+auto helper::to_json_string(const std::vector<ic4::Interface>& lst) -> std::string
 {
 	nlohmann::ordered_json root;
 	for (auto&& entry : lst) {
-		root.push_back(to_json_(entry));
+		root.push_back(to_json(entry));
 	}
 	return root.dump(4);
 }
+
+auto add_json_from_map(nlohmann::ordered_json& rval, ic4::PropertyMap& map, const char* prop_name) -> void
+{
+	ic4::Error err;
+	auto contents = map.getValueString(prop_name, err);
+	if (!err) {
+		add_json_line_(rval, prop_name, contents);
+	}
+}
+
+auto helper::to_json(const ic4::Interface& itf) -> nlohmann::ordered_json
+{
+	nlohmann::ordered_json rval;
+
+	add_json_line_(rval, "DisplayName", itf, &ic4::Interface::interfaceDisplayName);
+	add_json_line_(rval, "TransportLayerName", itf, &ic4::Interface::transportLayerName);
+	add_json_line_func(rval, "TransportLayerType", [itf](auto& err) { return ic4_helper::toString(itf.transportLayerType(err)); });
+	add_json_line_(rval, "TransportLayerVersion", itf, &ic4::Interface::transportLayerVersion);
+
+	auto map = itf.interfacePropertyMap();
+
+	add_json_from_map(rval, map, "MaximumTransmissionUnit");
+
+	auto ipaddr = map.findInteger("GevInterfaceSubnetIPAddress", ic4::Error::Ignore());
+	if (ipaddr.is_valid())
+	{
+		add_json_line_(rval, "GevInterfaceSubnet", helper::read_IPAddressList(map, ipaddr, true));
+	}
+
+	return rval;
+}
+
+auto helper::to_json(const ic4::DeviceInfo& dev) -> nlohmann::ordered_json
+{
+	nlohmann::ordered_json rval;
+
+	auto& itf = dev.getInterface();
+
+	auto itf_prop_map = itf.interfacePropertyMap();
+
+	add_json_line_(rval, "ModelName", dev, &ic4::DeviceInfo::modelName);
+	add_json_line_(rval, "UniqueName", dev, &ic4::DeviceInfo::uniqueName);
+	add_json_line_(rval, "Serial", dev, &ic4::DeviceInfo::serial);
+	add_json_line_(rval, "Version", dev, &ic4::DeviceInfo::version);
+	add_json_line_(rval, "UserID", dev, &ic4::DeviceInfo::userID);
+	add_json_line_(rval, "TransportLayerName", itf.transportLayerName());
+
+	if (select_device_in_interface_DeviceSelector(dev, itf_prop_map))
+	{
+		add_json_from_map(rval, itf_prop_map, "DeviceReachableStatus");
+		add_json_from_map(rval, itf_prop_map, "GevDeviceIPAddress");
+	}
+	return rval;
+}
+
+
+auto print_json_line(int offset, const std::string& prop_name, const std::string& contents)
+{
+	print(offset, "{:32}: '{}'\n", prop_name, contents);
+}
+
+auto helper::print_json(int offset, const nlohmann::ordered_json& json) -> void
+{
+	for (auto&& entry : json.items())
+	{
+		auto key = entry.key();
+		auto value = entry.value();
+		if (value.is_array())
+		{
+			print_json_line(offset, entry.key(), fmt::format("{}", to_string_vec(value)));
+		}
+		else if (value.is_object())
+		{
+			print(offset, "{32}:", key);
+			print_json(offset + 1, value);
+		}
+		else
+		{
+			print_json_line(offset, entry.key(), value);
+		}
+	}
+}
+
