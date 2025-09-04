@@ -14,10 +14,7 @@ namespace
 		ic4::Error err;
 		auto v = (prop.*method_address)(err);
 		if (err.isError()) {
-			if (err.code() == ic4::ErrorCode::GenICamNotImplemented) {
-				return "n/a";
-			}
-			return "err";
+			return "'err'";
 		}
 		return fmt::format("{}", v);
 	}
@@ -326,7 +323,7 @@ void helper::print_property_short(int offset, const ic4::Property& property)
 	using namespace ic4_helper;
 
 	auto prop_type = property.type();
-	print(offset + 0, "{} - {}, Av: {}, Lck: {}, RO: {}\n", 
+	print(offset + 0, "{} - {}, Av: {}, Lck: {}, RO: {} ", 
 		property.name(), 
 		toString(property.type()),
 		property.isAvailable() ? 1 : 0, property.isLocked() ? 1 : 0, property.isReadOnly() ? 1 : 0);
@@ -357,7 +354,7 @@ void helper::print_property_short(int offset, const ic4::Property& property)
 				{
 					if (!prop.isReadOnly())
 					{
-						range_string += fmt::format(", Range: [{};{}",
+						range_string += fmt::format("[{};{}",
 							fetch_PropertyMethod_value(prop, &ic4::PropInteger::minimum, rep),
 							fetch_PropertyMethod_value(prop, &ic4::PropInteger::maximum, rep)
 						);
@@ -370,11 +367,15 @@ void helper::print_property_short(int offset, const ic4::Property& property)
 				}
 			}
 
-			print(offset + 1, "Value: {} {}{}\n",
+			print("Value: {} {} {}",
 				fetch_PropertyMethod_value(prop, &ic4::PropInteger::getValue),
 				prop.unit(),
 				range_string
 			);
+		}
+		else
+		{
+			print("Value: 'na'");
 		}
 		break;
 	}
@@ -405,17 +406,17 @@ void helper::print_property_short(int offset, const ic4::Property& property)
 					}
 					range_string += ']';
 				}
-				else
-				{
-					range_string = "[ro]";
-				}
 			}
 
-			print(offset + 1, "Value: {} {}, Range: {}\n",
+			print("Value: {} {} {}",
 				fetch_PropertyMethod_value(prop, &ic4::PropFloat::getValue),
 				prop.unit(),
 				range_string
 			);
+		}
+		else
+		{
+			print("Value: 'na'");
 		}
 		break;
 	}
@@ -430,12 +431,16 @@ void helper::print_property_short(int offset, const ic4::Property& property)
 		}
 
 		if (prop.isAvailable()) {
-			print(offset + 1, "Value: '{}', IntValue: {}\n",
+			print("Value: '{}' ({}), Entries: {}",
 				fetch_PropertyMethod_value(prop, &ic4::PropEnumeration::getValue),
-				fetch_PropertyMethod_value(prop, &ic4::PropEnumeration::getIntValue)
+				fetch_PropertyMethod_value(prop, &ic4::PropEnumeration::getIntValue),
+				entries
 			);
 		}
-		print(offset + 1, "Entries: {}\n", entries);
+		else
+		{
+			print("Value: 'na', Entries: {}", entries);
+		}
 		break;
 	}
 	case ic4::PropType::Boolean:
@@ -443,9 +448,13 @@ void helper::print_property_short(int offset, const ic4::Property& property)
 		auto prop = property.asBoolean();
 
 		if (prop.isAvailable()) {
-			print(offset + 1, "Value: {}\n",
+			print("Value: {}",
 				fetch_PropertyMethod_value(prop, &ic4::PropBoolean::getValue)
 			);
+		}
+		else
+		{
+			print("Value: 'na'");
 		}
 		break;
 	}
@@ -453,17 +462,14 @@ void helper::print_property_short(int offset, const ic4::Property& property)
 	{
 		auto prop = property.asString();
 
-		if (prop.isAvailable()) {
-			print(offset + 1, "Value: '{}', MaxLength: {}\n",
-				fetch_PropertyMethod_value(prop, &ic4::PropString::getValue),
-				fetch_PropertyMethod_value(prop, &ic4::PropString::maxLength)
-			);
-		}
+		print("Value: '{}', MaxLength: {}",
+			fetch_PropertyMethod_value(prop, &ic4::PropString::getValue),
+			fetch_PropertyMethod_value(prop, &ic4::PropString::maxLength)
+		);
 		break;
 	}
 	case ic4::PropType::Command:
 	{
-		print(offset + 1, "\n");
 		break;
 	}
 	case ic4::PropType::Category:
@@ -475,7 +481,7 @@ void helper::print_property_short(int offset, const ic4::Property& property)
 		{
 			arr.push_back(feature.name());
 		}
-		print(offset + 1, "Features: {}\n", arr);
+		print("Features: {}", arr);
 		break;
 	}
 	case ic4::PropType::Register:
@@ -489,28 +495,26 @@ void helper::print_property_short(int offset, const ic4::Property& property)
 			ic4::Error val_err;
 			auto vec = prop.getValue(val_err);
 			if (val_err.isError()) {
-				value_string = "Value: 'err'";
+				value_string = "'err'";
 			} else {
-				auto orig_size = vec.size();
 				size_t max_entries_to_print = 16;
 				std::string str;
 				if (vec.size() > 16) {
 					vec.resize(16);
 					str = " ...";
 				}
-				value_string = fmt::format("Value: [{:n:02x}{}] Value-Size: {}\n", vec, str, orig_size);
+				value_string = fmt::format("[{:n:02x}{}]", vec, str);
 			}
 		}
 		else
 		{
-			value_string = "";
+			value_string = "'na'";
 		}
-		print(offset + 1, "Size: {} {}\n", reg_size, value_string);
+		print("Size: {} Value: {}", reg_size, value_string);
 		break;
 	}
 	case ic4::PropType::Port:
 	{
-		print("\n");
 		break;
 	}
 	case ic4::PropType::EnumEntry:
@@ -518,13 +522,14 @@ void helper::print_property_short(int offset, const ic4::Property& property)
 		ic4::PropEnumEntry prop = property.asEnumEntry();
 
 		if (prop.isAvailable()) {
-			print(offset + 1, "IntValue: {}\n", fetch_PropertyMethod_value(prop, &ic4::PropEnumEntry::intValue));
+			print("IntValue: {}", fetch_PropertyMethod_value(prop, &ic4::PropEnumEntry::intValue));
+		} else {
+			print("IntValue: 'na'");
 		}
-		print("\n");
 		break;
 	}
 	default:
 		;
 	};
-	print("\n");
+	print("\n\n");
 }

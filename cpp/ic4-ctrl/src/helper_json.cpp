@@ -249,6 +249,15 @@ namespace
 
 		return rval;
 	}
+
+	auto add_json_from_map(nlohmann::ordered_json& rval, ic4::PropertyMap& map, const char* prop_name) -> void
+	{
+		ic4::Error err;
+		auto contents = map.getValueString(prop_name, err);
+		if (!err) {
+			add_json_line_(rval, prop_name, contents);
+		}
+	}
 }
 
 auto helper::to_json_string(const ic4::Property& prop) -> std::string
@@ -285,15 +294,6 @@ auto helper::to_json_string(const std::vector<ic4::Interface>& lst) -> std::stri
 	return root.dump(4);
 }
 
-auto add_json_from_map(nlohmann::ordered_json& rval, ic4::PropertyMap& map, const char* prop_name) -> void
-{
-	ic4::Error err;
-	auto contents = map.getValueString(prop_name, err);
-	if (!err) {
-		add_json_line_(rval, prop_name, contents);
-	}
-}
-
 auto helper::to_json(const ic4::Interface& itf) -> nlohmann::ordered_json
 {
 	nlohmann::ordered_json rval;
@@ -320,7 +320,7 @@ auto helper::to_json(const ic4::DeviceInfo& dev) -> nlohmann::ordered_json
 {
 	nlohmann::ordered_json rval;
 
-	auto& itf = dev.getInterface();
+	auto itf = dev.getInterface();
 
 	auto itf_prop_map = itf.interfacePropertyMap();
 
