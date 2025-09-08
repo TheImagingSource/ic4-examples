@@ -114,6 +114,9 @@ auto helper::print_device_short(int offset, size_t index, ic4::DeviceInfo& dev, 
 			if (auto val = read_string_from_map(itf_prop_map, "GevDeviceIPAddress"); val) {
 				add_info += fmt::format("IPv4: '{}' ", *val);
 			}
+			if (auto val = read_string_from_map(itf_prop_map, "GevDeviceMACAddress"); val) {
+				add_info += fmt::format("MAC: '{}' ", *val);
+			}
 		}
 	}
 	catch (const std::exception&) {
