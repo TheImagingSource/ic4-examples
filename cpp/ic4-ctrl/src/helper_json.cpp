@@ -334,7 +334,11 @@ auto helper::to_json(const ic4::DeviceInfo& dev) -> nlohmann::ordered_json
 	if (select_device_in_interface_DeviceSelector(dev, itf_prop_map))
 	{
 		add_json_from_map(rval, itf_prop_map, "DeviceReachableStatus");
+
+		add_json_from_map(rval, itf_prop_map, "GevDeviceMACAddress");
 		add_json_from_map(rval, itf_prop_map, "GevDeviceIPAddress");
+		add_json_from_map(rval, itf_prop_map, "GevDeviceSubnetMask");
+		add_json_from_map(rval, itf_prop_map, "GevDeviceGateway");
 	}
 	return rval;
 }
