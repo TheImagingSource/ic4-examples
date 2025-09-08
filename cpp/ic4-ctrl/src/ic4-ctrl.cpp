@@ -554,7 +554,7 @@ int main( int argc, char** argv )
 
 	device_cmd->add_flag("--serials", device_cmd_serials, "Return only the serial number of the devices");
 
-	device_cmd->add_flag("--json", json_flag, "A json string is generated.");
+	device_cmd->add_flag("--json", json_flag, "A json string is generated.")->excludes("--serials");
 
 
     auto interface_cmd = app.add_subcommand( "interface",
@@ -576,9 +576,9 @@ int main( int argc, char** argv )
 	);
 	props_cmd->allow_extras();
 	props_cmd->add_flag("--interface", force_interface, "If set the <device-id> is interpreted as an interface-id.");
-	props_cmd->add_flag("--device-driver", props_device_driver, "If set the device instance driver properties are used.");
+	props_cmd->add_flag("--device-driver", props_device_driver, "If set the device instance driver properties are used.")->excludes("--interface");
 	props_cmd->add_flag("-s,--short", props_cmd_short, "If set, a shorter property desc is returned.");
-	props_cmd->add_flag("--json", json_flag, "A json string is generated.");
+	props_cmd->add_flag("--json", json_flag, "A json string is generated.")->excludes("--short");
 	props_cmd->add_option("device-id", arg_device_id,
 		"Specifies the device to open. You can specify an index e.g. '0'.")->required();
 
@@ -586,14 +586,15 @@ int main( int argc, char** argv )
         "Save properties for the specified device 'ic4-ctrl save-prop -f <filename> <device-id>'." );
     save_props_cmd->add_option( "-f,--filename", arg_filename, "Filename to save into." )->required();
     save_props_cmd->add_option( "device-id", arg_device_id, "Specifies the device to open. You can specify an index e.g. '0'." )->required();
-	save_props_cmd->add_flag("--device-driver", props_device_driver, "If set the device instance driver properties are used.");
+	save_props_cmd->add_flag("--interface", force_interface, "If set the <device-id> is interpreted as an interface-id.");
+	save_props_cmd->add_flag("--device-driver", props_device_driver, "If set the device instance driver properties are used.")->excludes("--interface");
 
 	auto load_props_cmd = app.add_subcommand("load-prop",
 		"Load properties for the specified device 'ic4-ctrl load-prop -f <filename> <device-id>'.");
 	load_props_cmd->add_option("-f,--filename", arg_filename, "Filename to save into.")->required();
 	load_props_cmd->add_option("device-id", arg_device_id, "Specifies the device to open. You can specify an index e.g. '0'.")->required();
 	load_props_cmd->add_flag("--interface", force_interface, "If set the <device-id> is interpreted as an interface-id.");
-	load_props_cmd->add_flag("--device-driver", props_device_driver, "If set the device instance driver properties are used.");
+	load_props_cmd->add_flag("--device-driver", props_device_driver, "If set the device instance driver properties are used.")->excludes("--interface");
 
     auto image_cmd = app.add_subcommand( "image", 
         "Save one or more images from the specified device 'ic4-ctrl image -f <filename> --count 3 --timeout 2000 --type bmp <device-id>'."
@@ -605,7 +606,6 @@ int main( int argc, char** argv )
     image_cmd->add_option( "--count", count, "Count of frames to capture." )->default_val( count );
     image_cmd->add_option( "--timeout", timeout, "Timeout in milliseconds." )->default_val( timeout );
     image_cmd->add_option( "--type", image_type, "Image file type to save. [bmp,png,jpeg,tiff]" )->default_val( image_type );
-	image_cmd->add_flag("--interface", force_interface, "If set the <device-id> is interpreted as an interface-id.");
 	image_cmd->add_option("device-id", arg_device_id,
         "Specifies the device to open. You can specify an index e.g. '0'." )->required();
 
