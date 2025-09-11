@@ -343,8 +343,15 @@ public:
 		if (err.isSuccess())
 		{
 			bool first = true;
+			bool any_unavailable = false;
 			for (auto&& entry : entries)
 			{
+				if (!entry.isAvailable(ic4::Error::Ignore()))
+				{
+					any_unavailable = true;
+					continue;
+				}
+
 				if (!first)
 					text += ", ";
 				else
@@ -352,6 +359,24 @@ public:
 				text += QString::fromStdString(entry.name(ic4::Error::Ignore()));
 			}
 			text += "<br/>";
+
+			if (any_unavailable)
+			{
+				text += "Unavailable Values: ";
+				first = true;
+				for (auto&& entry : entries)
+				{
+					if (entry.isAvailable(ic4::Error::Ignore()))
+						continue;
+
+					if (!first)
+						text += ", ";
+					else
+						first = false;
+					text += QString::fromStdString(entry.name(ic4::Error::Ignore()));
+				}
+				text += "<br/>";
+			}
 		}
 		else
 		{
