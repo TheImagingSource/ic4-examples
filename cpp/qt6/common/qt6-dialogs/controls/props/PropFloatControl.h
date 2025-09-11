@@ -97,6 +97,7 @@ namespace ic4::ui
 			if (!propSetValue(new_val, err, &PropFloat::setValue))
 			{
 				QMessageBox::critical(this, {}, err.message().c_str());
+				update_all();
 			}
 		}
 

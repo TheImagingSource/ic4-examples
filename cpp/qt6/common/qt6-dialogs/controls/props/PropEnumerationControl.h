@@ -100,6 +100,7 @@ namespace ic4::ui
 			if (!propSetValue(value, err, &PropEnumeration::setIntValue))
 			{
 				QMessageBox::warning(NULL, "Set property", err.message().c_str());
+				update_all();
 			}
 		}
 

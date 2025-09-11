@@ -38,6 +38,7 @@ namespace ic4::ui
 			if (!propSetValue(new_state == Qt::Checked, err, &PropBoolean::setValue))
 			{
 				QMessageBox::critical(this, {}, err.message().c_str());
+				update_all();
 			}
 		}
 
