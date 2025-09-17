@@ -48,6 +48,10 @@ add_executable( ic4-ctrl
 	"src/helper_json.cpp"
 	"src/print_ic4_object.h"
 	"src/print_ic4_object.cpp"
+	"src/stream_test.h"
+	"src/stream_test.cpp"
+	"src/stream_test_camera.h"
+	"src/stream_test_camera.cpp"
 )
 
 target_link_libraries( ic4-ctrl

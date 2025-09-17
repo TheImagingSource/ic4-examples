@@ -24,6 +24,7 @@
 #include "print_property.h"
 #include "helper_json.h"
 #include "print_ic4_object.h"
+#include "stream_test.h"
 
 static auto find_device( std::string id ) -> ic4::DeviceInfo
 {
@@ -627,6 +628,14 @@ int main( int argc, char** argv )
 
 #endif // _WIN32
 
+	std::vector<std::string> stream_test_device_ids;
+	unsigned int stream_test_interval = 30;
+	bool stream_test_once = false;
+	auto stream_test_cmd = app.add_subcommand("stream-test", "Streams from the specified device and prints statistics 'ic4-ctrl stream-test <device-id-0> <device-id-1> --time 30'." );
+	stream_test_cmd->add_option("device-id", stream_test_device_ids, "List of devices to use.")->required();
+	stream_test_cmd->add_option("-i,--interval", stream_test_interval, "Interval in which to print stream statistics.");
+	stream_test_cmd->add_flag("--once", stream_test_once, "If set, the interval is only run once.");
+
     auto system_cmd = app.add_subcommand( "system",
         "List some information for about the system."
     );
@@ -700,6 +709,17 @@ int main( int argc, char** argv )
         else if( image_cmd->parsed() ) {
             save_image( arg_device_id, arg_filename, count, timeout, image_type );
         }
+		else if (stream_test_cmd->parsed())
+		{
+			std::vector<ic4::DeviceInfo> dev_list;
+			for (auto&& dev_id : stream_test_device_ids) {
+				auto dev = find_device(dev_id);
+				if (dev.is_valid()) {
+					dev_list.push_back(dev);
+				}
+			}
+			ic4ctrl::start_stream_test({ stream_test_interval, stream_test_once }, dev_list);
+		}
 #ifdef _WIN32
         else if( live_cmd->parsed() )
         {
