@@ -26,15 +26,6 @@ static auto read_current_videoformat(ic4::Grabber& grabber) -> std::string
     auto height_val = map[ic4::PropId::Height].getValue();
     auto framerate_val = map[ic4::PropId::AcquisitionFrameRate].getValue();
 
-    if(auto BslResultingAcquisitionFrameRate = map.findFloat("BslResultingAcquisitionFrameRate", ic4::Error::Ignore()); BslResultingAcquisitionFrameRate.is_valid())
-    {
-        ic4::Error err;
-        auto val = BslResultingAcquisitionFrameRate.getValue(err);
-        if (!err)
-        {
-            framerate_val = val;
-        }
-    }
     return fmt::format("{} {}x{}@{:.2f}", pix_format_name, width_val, height_val, framerate_val);
 }
 
