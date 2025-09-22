@@ -631,7 +631,7 @@ int main( int argc, char** argv )
 	std::vector<std::string> stream_test_device_ids;
 	unsigned int stream_test_interval = 30;
 	bool stream_test_once = false;
-	auto stream_test_cmd = app.add_subcommand("stream-test", "Streams from the specified device and prints statistics 'ic4-ctrl stream-test <device-id-0> <device-id-1> --time 30'." );
+	auto stream_test_cmd = app.add_subcommand("stream-test", "Streams from the specified device and prints statistics 'ic4-ctrl stream-test <device-id-0> <device-id-1> --interval 30'." );
 	stream_test_cmd->add_option("device-id", stream_test_device_ids, "List of devices to use.")->required();
 	stream_test_cmd->add_option("-i,--interval", stream_test_interval, "Interval in which to print stream statistics.");
 	stream_test_cmd->add_flag("--once", stream_test_once, "If set, the interval is only run once.");
