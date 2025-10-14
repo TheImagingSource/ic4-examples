@@ -3,7 +3,8 @@ if((NOT Qt6_FOUND) AND (NOT Qt5_FOUND) )
 
     if(WIN32)
         if( "${IC4_PACAKGE_ARCH}" STREQUAL "arm64" )
-            list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.10.0/msvc2022_arm64/")	# currently in beta - added 2025/07/17
+#            list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.10.0/msvc2022_arm64/")	# added 2025/07/17 removed 2025/10/14 due to not working
+            list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.9.3/msvc2022_arm64/")	# added 2025/10/14
             list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.9.1/msvc2022_arm64/")	# added 2025/07/17
             list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.9.0/msvc2022_arm64/")	# added 2025/03/06
         	list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.8.3/msvc2022_arm64/")	# 
@@ -13,7 +14,8 @@ if((NOT Qt6_FOUND) AND (NOT Qt5_FOUND) )
         else()
             # This path probably will not be valid on your system.
             # If cmake complains about not being able to find Qt, point it into your Qt installation directory.
-            list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.10.0/msvc2022_64/")	# (beta) added 2025/07/17
+            list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.10.0/msvc2022_64/")	# added 2025/10/14
+            list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.9.3/msvc2022_64/")	# added 2025/10/14
             list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.9.1/msvc2022_64/")	# added 2025/07/17
             list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.9.0/msvc2022_64/")	# added 2025/03/06
             list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.8.3/msvc2022_64/")	# 6.8.3 - added 2025/03/28
