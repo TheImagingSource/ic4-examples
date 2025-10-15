@@ -309,10 +309,10 @@ bool ic4::ui::FilterPropertiesProxy::filterAcceptsRow(int sourceRow, const QMode
 	if (child.is_category())
 		return false;
 
-	if (!child.prop().isAvailable())
+	if (!child.prop().isAvailable(ic4::Error::Ignore()))
 		return false;
 
-	if (child.prop().visibility() > visibility_)
+	if (child.prop().visibility(ic4::Error::Ignore()) > visibility_)
 		return false;
 
 	if (!filter_regex_.match(child.get_display_name()).hasMatch() && !filter_regex_.match(child.get_prop_name()).hasMatch())

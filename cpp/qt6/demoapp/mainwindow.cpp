@@ -997,6 +997,12 @@ void MainWindow::onImportDeviceSettings()
 			// Remember the device's property map for later use
 			_devicePropertyMap = _grabber.devicePropertyMap(ic4::Error::Ignore());
 
+			// Let the property dialog know a new device was selected
+			if (_propertyDialog != nullptr)
+			{
+				_propertyDialog->updateGrabber(_grabber);
+			}
+
 			// Restart stream
 			if (this->_settings.start_stream_on_open)
 			{
