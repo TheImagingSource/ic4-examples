@@ -1,0 +1,4 @@
+PySide6
+imagingcontrol4 >= 1.4
+imagingcontrol4pyside6
+numpy

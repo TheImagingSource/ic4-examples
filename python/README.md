@@ -63,6 +63,12 @@ Some cameras provide advanced features that can be utilized to solve specific ap
 - Using [EventExposureEnd](/python/advanced-camera-features/EventExposureEnd) to synchronize camera operation to real-world movement
 - Get notified about I/O activity using [EventLine1*Edge](/python/advanced-camera-features/event-line1-edge/) events
 
+## Camera-Specific Examples
+
+This section contains example programs showing camera specific functions
+
+- [DoLP Segmentation](/python/camera-specific/DolP-Segmentation/) shows how to visualize the degree of polarized light with polarisation cameras.
+
 ## Qt6
 
 This section contains

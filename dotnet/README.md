@@ -60,6 +60,12 @@ Some cameras provide advanced features that can be utilized to solve specific ap
 - Using [EventExposureEnd](/dotnet/advanced-camera-features/EventExposureEnd) to synchronize camera operation to real-world movement
 - Get notified about I/O activity using [EventLine1*Edge](/dotnet/advanced-camera-features/EventLine1Edge) events
 
+## Camera-Specific Examples
+
+This section contains example programs showing camera specific functions
+
+- [DoLP Segmentation](/dotnet/camera-specific/DoLPSegmentation) shows how to visualize the degree of polarized light in combination with polarisation cameras.
+
 ## Third-Party Integration
 
 This section contains programs showing how to use data captured in `ImageBuffer` objects with third-party image processing libraries:
@@ -82,3 +88,4 @@ This [example](/dotnet/vb.net/VB%20First%20Steps) shows how to use `ic4dotnet` u
 ## ic4-ctrl
 
 This is a .NET implementation of the `ic4-ctrl` utility distributed with the *IC Imaging Control4 SDK*.
+

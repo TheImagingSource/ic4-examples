@@ -110,6 +110,12 @@ Some cameras provide advanced features that can be utilized to solve specific ap
 - Using [EventExposureEnd](/cpp/advanced-camera-features/event-exposure-end) to synchronize camera operation to real-world movement
 - Get notified about I/O activity using [EventLine1*Edge](/cpp/advanced-camera-features/event-line1-edge) events
 
+## Camera-Specific Examples
+
+This section contains example programs showing camera specific functions
+
+- [DoLP Segmentation](/cpp/camera-specific/dolp-segmentation/) shows how to visualize the degree of polarized light with polarisation cameras.
+
 ## Qt6
 
 The Qt6 section provides a selection of pre-build dialogs that can speed up application development:
