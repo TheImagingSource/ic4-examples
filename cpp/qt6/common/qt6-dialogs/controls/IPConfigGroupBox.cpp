@@ -9,6 +9,7 @@
 #include <QLabel>
 #include <QMessageBox>
 #include <QStyle>
+#include <QKeyEvent>
 
 namespace
 {
@@ -43,6 +44,25 @@ namespace
 		}
 	};
 
+	class ReturnFocusNextLineEdit : public QLineEdit
+	{
+	public:
+		using QLineEdit::QLineEdit;
+	protected:
+		void keyPressEvent(QKeyEvent* event) override
+		{
+			if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter)
+			{
+				if (hasAcceptableInput())
+				{
+					focusNextChild();
+				}
+				return;
+			}
+			QLineEdit::keyPressEvent(event);
+		}
+	};
+
 	QLineEdit* addIPEdit(const ic4::PropertyMap& map, const char* propName, const std::string& defaultValue, const char* label, QFormLayout& layout)
 	{
 		ic4::Error err;
@@ -52,7 +72,7 @@ namespace
 			value = defaultValue;
 		}
 
-		auto* edit = new QLineEdit(QString::fromStdString(value));
+		auto* edit = new ReturnFocusNextLineEdit(QString::fromStdString(value));
 		edit->setEnabled(true);
 
 		auto* ipValidator = new IPV4Validator(edit);
