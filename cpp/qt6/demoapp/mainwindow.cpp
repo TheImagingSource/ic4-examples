@@ -988,11 +988,12 @@ void MainWindow::onImportDeviceSettings()
 		_grabber.deviceClose(ic4::Error::Ignore());
 
 		ic4::Error err;
-		if( !_grabber.deviceOpenFromState(fileName, err) )
+		if (!_grabber.deviceOpenFromState(fileName, err))
 		{
 			QMessageBox::critical(this, {}, err.message().c_str());
 		}
-		else
+
+		if( err.isSuccess() || err.code() == ic4::ErrorCode::Incomplete )
 		{
 			// Remember the device's property map for later use
 			_devicePropertyMap = _grabber.devicePropertyMap(ic4::Error::Ignore());
