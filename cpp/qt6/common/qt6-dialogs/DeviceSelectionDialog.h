@@ -47,4 +47,5 @@ private:
 	FormGroupBox* _devInfoGroup = nullptr;
 	IPConfigGroupBox* _ipConfigGroup = nullptr;
 	SwitchDriverGroupBox* _switchDriverGroup = nullptr;
+	QVBoxLayout* _rightLayout = nullptr;
 };

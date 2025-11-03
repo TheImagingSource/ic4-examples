@@ -103,22 +103,61 @@ namespace
 
 		return edit;
 	}
+
+	QFrame* buildWarningFrame(const QString& message, QIcon icon)
+	{
+		auto* frame = new QFrame();
+		frame->setObjectName("WarningFrame");
+		frame->setStyleSheet(ic4::ui::CustomStyle.IPConfigGroupBoxUnreachableFrame);
+
+		auto* iconLabel = new QLabel();
+		auto iconSize = icon.actualSize(QSize(32, 32));
+		iconLabel->setPixmap(icon.pixmap(iconSize));
+
+		auto* textLabel = new QLabel(message);
+		textLabel->setWordWrap(true);
+
+		auto* hbox = new QHBoxLayout();
+		hbox->setContentsMargins(0, 0, 0, 0);
+		hbox->addWidget(iconLabel, 0);
+		hbox->addWidget(textLabel, 1);
+		frame->setLayout(hbox);
+
+		return frame;
+	}
 }
 
-void IPConfigGroupBox::update(const ic4::DeviceInfo& deviceInfo)
+bool IPConfigGroupBox::update(const ic4::DeviceInfo& deviceInfo)
 {
 	ic4::Error err;
 	ic4::Grabber g;
 	if (!g.deviceOpen(deviceInfo, err))
 	{
-		_layout->addRow(new QLabel("Error: Unable to access device to change IP Configuration settings"));
+		auto* warningFrame = buildWarningFrame(
+			tr(
+				"Error: Unable to access device to change IP Configuration settings. "
+				"The camera might be already opened."
+			),
+			style()->standardIcon(QStyle::SP_MessageBoxCritical)
+		);
+		_layout->addRow(warningFrame);
+
+		return false;
 	}
 	else
 	{
 		auto driverProperties = g.driverPropertyMap(err);
 		if (err.isError())
 		{
-			_layout->addRow(new QLabel("Error: Unable to access device to change IP Configuration settings"));
+			auto* warningFrame = buildWarningFrame(
+				tr(
+					"Error: Unable to access device to change IP Configuration settings. "
+					"The camera might be already opened."
+				),
+				style()->standardIcon(QStyle::SP_MessageBoxCritical)
+			);
+			_layout->addRow(warningFrame);
+			return false;
 		}
 		else
 		{
@@ -154,6 +193,7 @@ void IPConfigGroupBox::update(const ic4::DeviceInfo& deviceInfo)
 			connect(_persistentDefaultGateway, &QLineEdit::textChanged, updateApplyButtonEnabled);
 			connect(_chkPersistentIP, &QCheckBox::stateChanged, updateApplyButtonEnabled);
 		}
+		return true;
 	}
 }
 
@@ -252,28 +292,14 @@ void IPConfigGroupBox::updateUnreachable(ic4::PropertyMap itfPropertyMap)
 {
 	_itfPropertyMap = itfPropertyMap;
 
-	auto* frame = new QFrame();
-	frame->setObjectName("WarningFrame");
-	frame->setStyleSheet(ic4::ui::CustomStyle.IPConfigGroupBoxUnreachableFrame);
-
-	auto* iconLabel = new QLabel();
-	auto icon = style()->standardIcon(QStyle::SP_MessageBoxWarning);
-	auto iconSize = icon.actualSize(QSize(32, 32));
-	iconLabel->setPixmap(icon.pixmap(iconSize));
-
-	auto* textLabel = new QLabel(tr("The device is currently not reachable by unicast messages. "
-		"It has to be reconfigured to be in (one of) the subnet(s) of the network adapter."));
-	textLabel->setWordWrap(true);
-	//label->setStyleSheet("border: 1px solid red; background-color: palette(base); color: red; padding: 4px");
-
-
-	auto* hbox = new QHBoxLayout();
-	hbox->setContentsMargins(0, 0, 0, 0);
-	hbox->addWidget(iconLabel, 0);
-	hbox->addWidget(textLabel, 1);
-	frame->setLayout(hbox);
-
-	_layout->addRow(frame);
+	auto* warningFrame = buildWarningFrame(
+		tr(
+			"The device is currently not reachable by unicast messages. "
+			"It has to be reconfigured to be in (one of) the subnet(s) of the network adapter."
+		),
+		style()->standardIcon(QStyle::SP_MessageBoxWarning)
+	);
+	_layout->addRow(warningFrame);
 
 	addOptionalCommand(_layout, itfPropertyMap, "IPConfigAssignFreeTemporaryIP", "Auto-Assign Temporary Address");
 	addOptionalCommand(_layout, itfPropertyMap, "IPConfigAssignFreePersistentIP", "Auto-Assign Persistent Address");

@@ -164,16 +164,16 @@ void DeviceSelectionDialog::createUI()
 	rightBox->setObjectName("rightBox");
 	rightBox->setStyleSheet(ic4::ui::CustomStyle.DeviceSelectionDlgRightBox);
 
-	auto rightLayout = new QVBoxLayout();
-	rightLayout->setContentsMargins(0, 0, 0, 0);
+	_rightLayout = new QVBoxLayout();
+	_rightLayout->setContentsMargins(0, 0, 0, 0);
 
-	rightLayout->addWidget(_itfInfoGroup, 0);
-	rightLayout->addWidget(_switchDriverGroup, 0);
-	rightLayout->addWidget(_devInfoGroup, 0);
-	rightLayout->addWidget(_ipConfigGroup, 0);
-	rightLayout->addStretch(1);
+	_rightLayout->addWidget(_itfInfoGroup);
+	_rightLayout->addWidget(_switchDriverGroup);
+	_rightLayout->addWidget(_devInfoGroup);
+	_rightLayout->addWidget(_ipConfigGroup);
+	_rightLayout->addStretch(1);
 
-	rightBox->setLayout(rightLayout);
+	rightBox->setLayout(_rightLayout);
 
 	_rightScroll->setWidget(rightBox);
 	_rightScroll->setWidgetResizable(true);
@@ -519,14 +519,24 @@ void DeviceSelectionDialog::onCurrentItemChanged(QTreeWidgetItem* current, QTree
 			buildStringItemIfExists(map, "GevDeviceGateway", "Device Gateway", *_devInfoGroup->formLayout());
 			buildStringItemIfExists(map, "GevDeviceMACAddress", "Device MAC Address", *_devInfoGroup->formLayout());
 
+			// Remove IP config widget from layout for potential reordering
+			_rightLayout->removeWidget(_ipConfigGroup);
+
 			auto reachableStatus = map.getValueString("DeviceReachableStatus", ic4::Error::Ignore());
 			if (reachableStatus.empty() || reachableStatus == "Reachable")
 			{
-				_ipConfigGroup->update(itemData.device);
+				bool canConfigure = _ipConfigGroup->update(itemData.device);
+
+				// If the device is accessible, move IP configuration group below device information group
+				_rightLayout->insertWidget(canConfigure ? 3 : 1, _ipConfigGroup);
 			}
 			else
 			{
 				_ipConfigGroup->updateUnreachable(map);
+
+				// If the device is not accessible, move IP configuration group to the top
+				// to make error visible without scrolling
+				_rightLayout->insertWidget(1, _ipConfigGroup);
 
 				if (_okButton)
 					_okButton->setEnabled(false);

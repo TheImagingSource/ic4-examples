@@ -25,7 +25,7 @@ public:
 	}
 
 public:
-	void update(const ic4::DeviceInfo& deviceInfo);
+	bool update(const ic4::DeviceInfo& deviceInfo);
 	void updateUnreachable(ic4::PropertyMap itfPropertyMap);
 
 private:
