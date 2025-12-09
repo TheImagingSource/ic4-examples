@@ -1102,6 +1102,12 @@ void MainWindow::onToggleFullScreen()
 {
 	if (isFullScreen())
 	{
+        // show all elements before resizing
+        // on some linux systems
+        // the reverse order can cause the app display to freeze
+		menuBar()->show();
+		statusBar()->show();
+		_toolBar->show();
 		if (_preFullscreenMaximized)
 		{
 			showMaximized();
@@ -1110,10 +1116,6 @@ void MainWindow::onToggleFullScreen()
 		{
 			showNormal();
 		}
-
-		menuBar()->show();
-		statusBar()->show();
-		_toolBar->show();
 	}
 	else
 	{
