@@ -20,7 +20,7 @@ class ProcessAndDisplayListener(ic4.QueueSinkListener):
 
         # Create a numpy view onto the buffer
         # This view is only valid while the buffer itself exists,
-        # which is guaranteed by them both not being passed out of this function
+        # which is guaranteed because the view is not passed out of this function.
         buffer_wrap = buffer.numpy_wrap()
 
         # Blur the buffer in place using a rather large kernel
@@ -39,6 +39,11 @@ class ProcessAndDisplayListener(ic4.QueueSinkListener):
 
         # Send the modified buffer to the display
         self.display.display_buffer(buffer)
+
+        # Please note:
+        # Writing to buffer_wrap is unsafe after this point,
+        # because the underlying buffer is shared with the display.
+        # Further updates might only be partially visible.
 
 
 class ProcessAndDisplayNewBufferListener(ic4.QueueSinkListener):
@@ -72,7 +77,7 @@ class ProcessAndDisplayNewBufferListener(ic4.QueueSinkListener):
 
         # Create a numpy view onto the destination buffer
         # This view is only valid while the buffer itself exists,
-        # which is guaranteed by them both not being passed out of this function
+        # which is guaranteed because the view is not passed out of this function.
         dest_buffer_wrap = dest_buffer.numpy_wrap()
 
         # Rotate by 90 degrees from the source into destination buffer
@@ -91,6 +96,11 @@ class ProcessAndDisplayNewBufferListener(ic4.QueueSinkListener):
 
         # Display the rotated buffer
         self.display.display_buffer(dest_buffer)
+
+        # Please note:
+        # Writing to dest_buffer_wrap is unsafe after this point,
+        # because the underlying buffer is shared with the display.
+        # Further updates might only be partially visible.
 
 
 def example_imagebuffer_numpy_opencv_live():
