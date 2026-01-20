@@ -15,6 +15,8 @@
 #include <QMessageBox>
 #include <QAbstractSlider>
 #include <QSignalBlocker>
+#include <QValidator>
+#include <QRegularExpressionValidator>
 
 #include <algorithm>
 
@@ -79,6 +81,52 @@ namespace ic4::ui
 				return format_ip(val);
 			}
 		}
+
+        static int64_t string_to_value(const QString& string, ic4::PropIntRepresentation rep)
+        {
+            switch (rep)
+            {
+                case ic4::PropIntRepresentation::Boolean:
+                {
+                    return string == "True";
+                }
+                case ic4::PropIntRepresentation::HexNumber:
+                {
+                    bool ok;
+                    int64_t val = string.toLong(&ok, 16);
+                    if (!ok)
+                    {
+                        throw std::runtime_error("Not implemented");
+                    }
+                    return val;
+                }
+                case ic4::PropIntRepresentation::PureNumber:
+                case ic4::PropIntRepresentation::Linear:
+                case ic4::PropIntRepresentation::Logarithmic:
+                {
+                    bool ok;
+                    int64_t val = string.toLong(&ok, 10);
+                    if (!ok)
+                    {
+                        throw std::runtime_error("Not implemented");
+                    }
+                    return val;
+                }
+                case ic4::PropIntRepresentation::MACAddress:
+                {
+                    throw std::runtime_error("Not implemented");
+                }
+                case ic4::PropIntRepresentation::IPV4Address:
+                {
+                    QStringList server_octets = string.split(".");
+                    auto s1 = server_octets.at(0).toLong();
+                    auto s2 = server_octets.at(1).toLong();
+                    auto s3 = server_octets.at(2).toLong();
+                    auto s4 = server_octets.at(3).toLong();
+                    return (s1 << 24) | (s2 << 16) | (s3 << 8) | s4;
+                }
+            }
+        }
 
 	private:
 		void set_value_unchecked(int64_t new_val)
@@ -285,7 +333,16 @@ namespace ic4::ui
 				QSignalBlocker blk(spin_);
 				spin_->setValue(new_value);
 			}
-		}
+        }
+
+        void onFocusLost()
+        {
+            if (edit_->hasAcceptableInput())
+            {
+                auto val = string_to_value(edit_->text(), representation_);
+                set_value_unchecked(val);
+            }
+        }
 
 	public:
 		PropIntControl(ic4::PropInteger prop, QWidget* parent, ic4::Grabber* grabber)
@@ -327,8 +384,16 @@ namespace ic4::ui
 				edit_ = new IntLineEdit(this);
 				break;
 			case ic4::PropIntRepresentation::IPV4Address:
-				printf("not implemented: IC4_PROPINTREP_IPV4ADDRESS\n");
 				edit_ = new IntLineEdit(this);
+                QString ipRange = "(((?!25?[6-9])[12]\\d|[1-9])?\\d\\.?\\b)";
+                QRegularExpression ipRegex ("^" + ipRange
+                                 + "\\." + ipRange
+                                 + "\\." + ipRange
+                                 + "\\." + ipRange + "$");
+                QRegularExpressionValidator *ipValidator = new QRegularExpressionValidator(ipRegex, this);
+                edit_->setValidator(ipValidator);
+                connect(edit_, &QLineEdit::editingFinished, this, &PropIntControl::onFocusLost);
+
 				break;
 			}
 
@@ -350,6 +415,7 @@ namespace ic4::ui
 			if (edit_)
 			{
 				edit_->focus_in += [this](auto*) { onPropSelected(); };
+				edit_->focus_in += [this](auto*) { onFocusLost(); };
 			}
 			if (check_)
 			{
