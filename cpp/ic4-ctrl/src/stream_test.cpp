@@ -127,6 +127,10 @@ auto ic4ctrl::start_stream_test(const stream_test_parameter& params, std::vector
 			// skip this here
 		}
 	}
+	if (list.empty()) {
+		fmt::println("Failed to open any camera.");
+		return;
+	}
 
 	fmt::println("Stream stats list:");
 	fmt::println("  dev: device_delivered/device_transmission_error/device_transform_underrun/device_underrun");

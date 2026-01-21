@@ -19,12 +19,12 @@ static auto read_current_videoformat(ic4::Grabber& grabber) -> std::string
 {
     auto map = grabber.devicePropertyMap();
 
-    // try to set a Bayer8 format, or if not available try to set Mono8
-    auto pix_format_name = map[ic4::PropId::PixelFormat].selectedEntry().name();
+    // Ignore errors here, this info is informational only
+    auto pix_format_name = map[ic4::PropId::PixelFormat].selectedEntry(ic4::Error::Ignore()).name();
 
-    auto width_val = map[ic4::PropId::Width].getValue();
-    auto height_val = map[ic4::PropId::Height].getValue();
-    auto framerate_val = map[ic4::PropId::AcquisitionFrameRate].getValue();
+    auto width_val = map[ic4::PropId::Width].getValue(ic4::Error::Ignore());
+    auto height_val = map[ic4::PropId::Height].getValue(ic4::Error::Ignore());
+    auto framerate_val = map[ic4::PropId::AcquisitionFrameRate].getValue(ic4::Error::Ignore());
 
     return fmt::format("{} {}x{}@{:.2f}", pix_format_name, width_val, height_val, framerate_val);
 }
