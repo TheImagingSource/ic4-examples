@@ -335,7 +335,7 @@ namespace ic4::ui
 			}
         }
 
-        void onFocusLost()
+        void onEditFinished()
         {
             if (edit_->hasAcceptableInput())
             {
@@ -392,7 +392,7 @@ namespace ic4::ui
                                  + "\\." + ipRange + "$");
                 QRegularExpressionValidator *ipValidator = new QRegularExpressionValidator(ipRegex, this);
                 edit_->setValidator(ipValidator);
-                connect(edit_, &QLineEdit::editingFinished, this, &PropIntControl::onFocusLost);
+                connect(edit_, &QLineEdit::editingFinished, this, &PropIntControl::onEditFinished);
 
 				break;
 			}
@@ -415,7 +415,6 @@ namespace ic4::ui
 			if (edit_)
 			{
 				edit_->focus_in += [this](auto*) { onPropSelected(); };
-				edit_->focus_in += [this](auto*) { onFocusLost(); };
 			}
 			if (check_)
 			{
