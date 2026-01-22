@@ -103,7 +103,7 @@ private:
 
 	QAction* _DeviceSelectAct = nullptr;
 	QAction* _DevicePropertiesAct = nullptr;
-    QAction* _DeviceDriverPropertiesAct = nullptr;
+	QAction* _DeviceDriverPropertiesAct = nullptr;
 	QAction* _TriggerModeAct = nullptr;
 	QAction* _StartLiveAct = nullptr;
 	QAction* _ShootPhotoAct = nullptr;
@@ -126,16 +126,16 @@ private:
 
 	QTimer* _updateStatisticsTimer = nullptr;
 
-	ic4::PropertyMap _devicePropertyMap;
-	ic4::Grabber _grabber;
 	std::shared_ptr<ic4::Display> _display;
 	std::shared_ptr<ic4::QueueSink> _queuesink;
 	ic4::VideoWriter _videowriter;
+	ic4::PropertyMap _devicePropertyMap;
+	ic4::Grabber _grabber;
 
 	PropertyDialog* _propertyDialog = nullptr;
 
-    bool sinkConnected( ic4::QueueSink& sink, const ic4::ImageType& imageType, size_t min_buffers_required ) final;
-    void framesQueued( ic4::QueueSink& sink ) final;
+	bool sinkConnected( ic4::QueueSink& sink, const ic4::ImageType& imageType, size_t min_buffers_required ) final;
+	void framesQueued( ic4::QueueSink& sink ) final;
 
 	bool _showSettingsMenu = false;
 	bool _preFullscreenMaximized = false;
