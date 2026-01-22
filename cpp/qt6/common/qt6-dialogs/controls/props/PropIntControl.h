@@ -23,7 +23,33 @@
 namespace ic4::ui
 {
 	using IntCheckBox = app::CaptureFocus<QCheckBox>;
-	using IntLineEdit = app::CaptureFocus<QLineEdit>;
+
+	class IntLineEdit : public app::CaptureFocus<QLineEdit>
+	{
+	public:
+		IntLineEdit(QWidget* parent)
+			: app::CaptureFocus<QLineEdit>(parent)
+		{
+		}
+
+		app::Event<> escapePressed;
+	protected:
+		void keyPressEvent(QKeyEvent* e) override
+		{
+			if (e->key() == Qt::Key_Enter || e->key() == Qt::Key_Return)
+			{
+				editingFinished();
+				return;
+			}
+			if (e->key() == Qt::Key_Escape)
+			{
+				escapePressed(nullptr);
+				return;
+			}
+
+			QLineEdit::keyPressEvent(e);
+		}
+	};
 
 	class PropIntControl : public PropControlBase<ic4::PropInteger>
 	{
@@ -74,59 +100,13 @@ namespace ic4::ui
 			case ic4::PropIntRepresentation::Linear:
 			case ic4::PropIntRepresentation::Logarithmic:
 			default:
-				return QString::number(val);			
+				return QString::number(val);
 			case ic4::PropIntRepresentation::MACAddress:
 				return format_mac(val);
 			case ic4::PropIntRepresentation::IPV4Address:
 				return format_ip(val);
 			}
 		}
-
-        static int64_t string_to_value(const QString& string, ic4::PropIntRepresentation rep)
-        {
-            switch (rep)
-            {
-                case ic4::PropIntRepresentation::Boolean:
-                {
-                    return string == "True";
-                }
-                case ic4::PropIntRepresentation::HexNumber:
-                {
-                    bool ok;
-                    int64_t val = string.toLong(&ok, 16);
-                    if (!ok)
-                    {
-                        throw std::runtime_error("Not implemented");
-                    }
-                    return val;
-                }
-                case ic4::PropIntRepresentation::PureNumber:
-                case ic4::PropIntRepresentation::Linear:
-                case ic4::PropIntRepresentation::Logarithmic:
-                {
-                    bool ok;
-                    int64_t val = string.toLong(&ok, 10);
-                    if (!ok)
-                    {
-                        throw std::runtime_error("Not implemented");
-                    }
-                    return val;
-                }
-                case ic4::PropIntRepresentation::MACAddress:
-                {
-                    throw std::runtime_error("Not implemented");
-                }
-                case ic4::PropIntRepresentation::IPV4Address:
-                {
-                    QStringList server_octets = string.split(".");
-                    auto s1 = server_octets.at(0).toLong();
-                    auto s2 = server_octets.at(1).toLong();
-                    auto s3 = server_octets.at(2).toLong();
-                    auto s4 = server_octets.at(3).toLong();
-                    return (s1 << 24) | (s2 << 16) | (s3 << 8) | s4;
-                }
-            }
-        }
 
 	private:
 		void set_value_unchecked(int64_t new_val)
@@ -243,7 +223,7 @@ namespace ic4::ui
 		{
 			ic4::Error err;
 			min_ = prop_.minimum(err);
-			if( err.isError() )
+			if (err.isError())
 			{
 				return show_error();
 			}
@@ -333,16 +313,21 @@ namespace ic4::ui
 				QSignalBlocker blk(spin_);
 				spin_->setValue(new_value);
 			}
-        }
+		}
 
-        void onEditFinished()
-        {
-            if (edit_->hasAcceptableInput())
-            {
-                auto val = string_to_value(edit_->text(), representation_);
-                set_value_unchecked(val);
-            }
-        }
+		void onEditIPFinished()
+		{
+			if (edit_->hasAcceptableInput())
+			{
+				QStringList server_octets = edit_->text().split(".");
+				auto s1 = server_octets.at(0).toULong();
+				auto s2 = server_octets.at(1).toULong();
+				auto s3 = server_octets.at(2).toULong();
+				auto s4 = server_octets.at(3).toULong();
+				uint32_t ip_addr = (s1 << 24) | (s2 << 16) | (s3 << 8) | s4;
+				set_value_unchecked(ip_addr);
+			}
+		}
 
 	public:
 		PropIntControl(ic4::PropInteger prop, QWidget* parent, ic4::Grabber* grabber)
@@ -385,15 +370,17 @@ namespace ic4::ui
 				break;
 			case ic4::PropIntRepresentation::IPV4Address:
 				edit_ = new IntLineEdit(this);
-                QString ipRange = "(((?!25?[6-9])[12]\\d|[1-9])?\\d\\.?\\b)";
-                QRegularExpression ipRegex ("^" + ipRange
-                                 + "\\." + ipRange
-                                 + "\\." + ipRange
-                                 + "\\." + ipRange + "$");
-                QRegularExpressionValidator *ipValidator = new QRegularExpressionValidator(ipRegex, this);
-                edit_->setValidator(ipValidator);
-                connect(edit_, &QLineEdit::editingFinished, this, &PropIntControl::onEditFinished);
-
+				if (!is_readonly)
+				{
+					QString ipRange = "(((?!25?[6-9])[12]\\d|[1-9])?\\d\\.?\\b)";
+					QRegularExpression ipRegex("^" + ipRange
+									 + "\\." + ipRange
+									 + "\\." + ipRange
+									 + "\\." + ipRange + "$");
+					QRegularExpressionValidator* ipValidator = new QRegularExpressionValidator(ipRegex, this);
+					edit_->setValidator(ipValidator);
+					connect(edit_, &QLineEdit::editingFinished, this, &PropIntControl::onEditIPFinished);
+				}
 				break;
 			}
 
@@ -415,6 +402,7 @@ namespace ic4::ui
 			if (edit_)
 			{
 				edit_->focus_in += [this](auto*) { onPropSelected(); };
+				edit_->escapePressed += [this](auto) { update_all(); };
 			}
 			if (check_)
 			{

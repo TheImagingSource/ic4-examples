@@ -66,20 +66,12 @@ namespace app
 		using TBase::TBase;
 	public:
 		mutable app::Event<> focus_in;
-		mutable app::Event<> focus_out;
 	public:
 		void focusInEvent(QFocusEvent* e) override
 		{
 			focus_in(this);
 
 			TBase::focusInEvent(e);
-		}
-
-        void focusOutEvent(QFocusEvent* e) override
-		{
-			focus_out(this);
-
-			TBase::focusOutEvent(e);
 		}
 	};
 }
