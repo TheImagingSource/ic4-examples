@@ -101,8 +101,12 @@ MainWindow::MainWindow(const init_options& params, QWidget* parent)
 		// Try to load the last used device.
 		if (!_grabber.deviceOpenFromState(deviceSetupFile_value, err))
 		{
-			auto message = "Loading last used device failed: " + err.message();
-			QMessageBox::information(this, {}, message.c_str());
+			// Do not treat an unplugged device as an error.
+			if (err.code() != ic4::ErrorCode::DeviceNotFound)
+			{
+				auto message = "Loading last used device failed: " + err.message();
+				QMessageBox::information(this, {}, message.c_str());
+			}
 		}
 
 		onDeviceOpened();
