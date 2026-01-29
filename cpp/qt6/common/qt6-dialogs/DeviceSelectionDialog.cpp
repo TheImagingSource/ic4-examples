@@ -25,10 +25,14 @@
 const QEvent::Type EVENT_DEVICE_LIST_CHANGED = static_cast<QEvent::Type>(QEvent::User + 3);
 const Qt::ItemDataRole ROLE_ITEM_DATA = static_cast<Qt::ItemDataRole>(Qt::UserRole + 1);
 
-DeviceSelectionDialog::DeviceSelectionDialog(QWidget* parent, ic4::Grabber* pgrabber, std::function<bool(const ic4::DeviceInfo&)> filter)
+DeviceSelectionDialog::DeviceSelectionDialog(QWidget* parent,
+	                                         ic4::Grabber* pgrabber,
+											 std::function<bool(const ic4::DeviceInfo&)> filter,
+                                             bool enable_firmware_update)
 	: QDialog(parent)
 	, _filter_func(filter)
 	, _grabber(pgrabber)
+	, _enable_firmware_update(enable_firmware_update)
 {
 	createUI();
 	onRefreshButton();
@@ -70,13 +74,13 @@ void DeviceSelectionDialog::createUI()
 	setWindowTitle("Select Device");
 
 	setMinimumSize(
-		ic4::ui::CustomStyle.DeviceSelectionDlgMinWidth, 
+		ic4::ui::CustomStyle.DeviceSelectionDlgMinWidth,
 		ic4::ui::CustomStyle.DeviceSelectionDlgMinHeight);
 
 	if (ic4::ui::CustomStyle.DeviceSelectionDlgResizeEnabled)
 	{
 		resize(
-			ic4::ui::CustomStyle.DeviceSelectionDlgMinWidth, 
+			ic4::ui::CustomStyle.DeviceSelectionDlgMinWidth,
 			ic4::ui::CustomStyle.DeviceSelectionDlgMinHeight);
 	}
 
@@ -109,42 +113,46 @@ void DeviceSelectionDialog::createUI()
 
 	leftLayout->addWidget(_cameraTree);
 
-	QHBoxLayout* buttons = new QHBoxLayout();
+	// dialog buttons are wrapped in a generic qwidget
+	// this is done to enable/disable them in a simple fashion
+	_buttons = new QWidget(this);
+	QHBoxLayout* buttons_layout = new QHBoxLayout(_buttons);
 
 	//////////////////////////////////////////////////////////
 
 	auto systemInfoButton = new QPushButton(tr("System Info"));
 	connect(systemInfoButton, &QPushButton::pressed, this, &DeviceSelectionDialog::onSystemInfoButton);
-	buttons->addWidget(systemInfoButton);
+	buttons_layout->addWidget(systemInfoButton);
 
 	auto refreshButton = new QPushButton(tr("Refresh (F5)"));
 	connect(refreshButton, &QPushButton::pressed, this, &DeviceSelectionDialog::onRefreshButton);
     refreshButton->setShortcut(QKeySequence::Refresh);
 
-	buttons->addWidget(refreshButton);
+	buttons_layout->addWidget(refreshButton);
 
 	if (_grabber)
 	{
 		auto cancelButton = new QPushButton(tr("Cancel"));
 		connect(cancelButton, &QPushButton::pressed, this, &QDialog::reject);
-		buttons->addWidget(cancelButton);
+		buttons_layout->addWidget(cancelButton);
 
 		_okButton = new QPushButton(tr("OK"));
 		_okButton->setDefault(true);
 		connect(_okButton, &QPushButton::pressed, this, &DeviceSelectionDialog::onOK);
-		buttons->addWidget(_okButton);
+		buttons_layout->addWidget(_okButton);
 	}
 	else
 	{
-		buttons->addSpacing(150);
+		buttons_layout->addSpacing(150);
 
 		auto closeButton = new QPushButton(tr("Close"));
 		closeButton->setDefault(true);
 		connect(closeButton, &QPushButton::pressed, this, &QDialog::reject);
-		buttons->addWidget(closeButton);
+		buttons_layout->addWidget(closeButton);
 	}
 
-	leftLayout->addLayout(buttons);
+	//leftLayout->addLayout(_buttons);
+	leftLayout->addWidget(_buttons);
 	topLayout->addLayout(leftLayout, 1);
 
 	_itfInfoGroup = new FormGroupBox(tr("Interface Information"));
@@ -155,6 +163,14 @@ void DeviceSelectionDialog::createUI()
 	_ipConfigGroup->setVisible(false);
 	_switchDriverGroup = new SwitchDriverGroupBox(tr("Kernel Driver"));
 	_switchDriverGroup->setVisible(false);
+
+	if (_enable_firmware_update)
+	{
+		_firmwareGroup = new FirmwareUpdateBox(tr("Firmware Update"));
+		_firmwareGroup->setVisible(false);
+		connect(_firmwareGroup, &FirmwareUpdateBox::state_changed,
+			    this, &DeviceSelectionDialog::onFirmwareUpdateStateChanged);
+	}
 
 	_rightScroll = new QScrollArea();
 	_rightScroll->setObjectName("rightScroll");
@@ -167,10 +183,14 @@ void DeviceSelectionDialog::createUI()
 	_rightLayout = new QVBoxLayout();
 	_rightLayout->setContentsMargins(0, 0, 0, 0);
 
-	_rightLayout->addWidget(_itfInfoGroup);
-	_rightLayout->addWidget(_switchDriverGroup);
-	_rightLayout->addWidget(_devInfoGroup);
-	_rightLayout->addWidget(_ipConfigGroup);
+	_rightLayout->addWidget(_itfInfoGroup, 0);
+	_rightLayout->addWidget(_switchDriverGroup, 0);
+	_rightLayout->addWidget(_devInfoGroup, 0);
+	_rightLayout->addWidget(_ipConfigGroup, 0);
+	if (_enable_firmware_update)
+	{
+		_rightLayout->addWidget(_firmwareGroup, 0);
+	}
 	_rightLayout->addStretch(1);
 
 	rightBox->setLayout(_rightLayout);
@@ -223,20 +243,20 @@ void DeviceSelectionDialog::enumerateDevices()
 		itf_item->setData(0, ROLE_ITEM_DATA, QVariant::fromValue(InterfaceDeviceItemData{ itf, map, {} }));
 		itf_item->setFirstColumnSpanned(true);
 
-		bool isGigEVisionInterface = itf.transportLayerType(ic4::Error::Ignore()) == ic4::TransportLayerType::GigEVision;
-
 		for (auto&& dev : filtered_itf_devices)
 		{
 			QString strIPAddress;
 
 			int index = std::distance(itf_devices.begin(), std::find(itf_devices.begin(), itf_devices.end(), dev));
 
-			if (isGigEVisionInterface)
+			map.setValue("DeviceSelector", index, ic4::Error::Ignore());
+
 			{
-				ic4::Error inner_err;
-				if (map.setValue("DeviceSelector", index, inner_err))
+				auto node_GevDeviceIPAddress = map.findInteger("GevDeviceIPAddress", ic4::Error::Ignore());
+				if (node_GevDeviceIPAddress.is_valid())
 				{
-					auto ip = map.getValueInt64("GevDeviceIPAddress", inner_err);
+					ic4::Error inner_err;
+					auto ip = node_GevDeviceIPAddress.getValue(inner_err);
 					if (inner_err.isSuccess())
 					{
 						strIPAddress = QString("%1.%2.%3.%4")
@@ -400,7 +420,7 @@ static void synchronizeColumnWidths(std::vector<QFormLayout*> layouts)
 }
 
 void DeviceSelectionDialog::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* /*previous*/)
-{	
+{
 	_rightScroll->hide();
 
 	if (_okButton)
@@ -412,6 +432,11 @@ void DeviceSelectionDialog::onCurrentItemChanged(QTreeWidgetItem* current, QTree
 	_devInfoGroup->clear();
 	_ipConfigGroup->hide();
 	_ipConfigGroup->clear();
+	if (_enable_firmware_update)
+	{
+		_firmwareGroup->hide();
+		_firmwareGroup->clear();
+	}
 	_switchDriverGroup->hide();
 	_switchDriverGroup->clear();
 
@@ -424,8 +449,8 @@ void DeviceSelectionDialog::onCurrentItemChanged(QTreeWidgetItem* current, QTree
 	auto variant = current->data(0, ROLE_ITEM_DATA);
 	auto itemData = variant.value<InterfaceDeviceItemData>();
 
-	bool isGigEVisionInterface = itemData.itf.transportLayerType(ic4::Error::Ignore()) == ic4::TransportLayerType::GigEVision;
-	bool isUSB3VisionInterface = itemData.itf.transportLayerType(ic4::Error::Ignore()) == ic4::TransportLayerType::USB3Vision;
+	bool interface_is_gev = itemData.itf.transportLayerType(ic4::Error::Ignore()) == ic4::TransportLayerType::GigEVision;
+	bool interface_is_u3v = itemData.itf.transportLayerType(ic4::Error::Ignore()) == ic4::TransportLayerType::USB3Vision;
 	ic4::PropertyMap map = itemData.itfPropertyMap;
 
 	if (itemData.isDevice())
@@ -461,7 +486,7 @@ void DeviceSelectionDialog::onCurrentItemChanged(QTreeWidgetItem* current, QTree
 
 	buildStringItemIfExists(map, "InterfaceDisplayName", "Interface Name", *_itfInfoGroup->formLayout());
 
-	if (isGigEVisionInterface)
+	if (interface_is_gev)
 	{
 		auto interfaceIPAddresses = buildInterfaceIPAddressList(map);
 		if (interfaceIPAddresses.count() == 1)
@@ -499,7 +524,7 @@ void DeviceSelectionDialog::onCurrentItemChanged(QTreeWidgetItem* current, QTree
 	{
 		addStringItem("Driver Version", QString::fromStdString(itfTLVersion), *_itfInfoGroup->formLayout());
 	}
-
+	bool show_fw_update = true;
 	if (itemData.isDevice())
 	{
 		_devInfoGroup->show();
@@ -510,7 +535,7 @@ void DeviceSelectionDialog::onCurrentItemChanged(QTreeWidgetItem* current, QTree
 		buildStringItemIfExists(map, "DeviceVersion", "Device Version", *_devInfoGroup->formLayout());
 		buildStringItemIfExists(map, "DeviceUserID", "Device User ID", *_devInfoGroup->formLayout());
 
-		if (isGigEVisionInterface)
+		if (interface_is_gev)
 		{
 			auto devIPAddress = buildIPAddress(map, "GevDeviceIPAddress", "GevDeviceSubnetMask");
 			if (!devIPAddress.isEmpty())
@@ -539,12 +564,15 @@ void DeviceSelectionDialog::onCurrentItemChanged(QTreeWidgetItem* current, QTree
 				_rightLayout->insertWidget(1, _ipConfigGroup);
 
 				if (_okButton)
+				{
 					_okButton->setEnabled(false);
+				}
+				show_fw_update = false;
 			}
 
 			_ipConfigGroup->show();
 		}
-		else if (isUSB3VisionInterface)
+		else if (interface_is_u3v)
 		{
 			auto reachableStatus = map.getValueString("DeviceReachableStatus", ic4::Error::Ignore());
 			if (!reachableStatus.empty() && reachableStatus != "Reachable")
@@ -553,16 +581,110 @@ void DeviceSelectionDialog::onCurrentItemChanged(QTreeWidgetItem* current, QTree
 				_switchDriverGroup->show();
 
 				if (_okButton)
+				{
 					_okButton->setEnabled(false);
+				}
+				show_fw_update = false;
+			}
+		}
+
+		if (_enable_firmware_update)
+		{
+			if (show_fw_update)
+			{
+				_firmwareGroup->update(itemData.device);
+				_firmwareGroup->show();
+			}
+			else
+			{
+				_firmwareGroup->hide();
 			}
 		}
 	}
 
-	synchronizeColumnWidths({ _devInfoGroup->formLayout(), _itfInfoGroup->formLayout(), _ipConfigGroup->formLayout()});
+	synchronizeColumnWidths({ _devInfoGroup->formLayout(),
+							  _itfInfoGroup->formLayout(),
+							  _ipConfigGroup->formLayout()});
 
 	_rightScroll->verticalScrollBar()->setValue(0);
 	_rightScroll->show();
+	if (_enable_firmware_update && !show_fw_update)
+	{
+		_firmwareGroup->hide();
+	}
 }
+
+
+void DeviceSelectionDialog::onFirmwareUpdateStateChanged(FirmwareUpdateState new_state)
+{
+	if (new_state == FirmwareUpdateState::Active)
+	{
+		_ipConfigGroup->setEnable(false);
+		_cameraTree->setEnabled(false);
+		_buttons->setEnabled(false);
+		_fw_update_active = true;
+
+	}
+	else
+	{
+		_ipConfigGroup->setEnable(true);
+		_cameraTree->setEnabled(true);
+		_buttons->setEnabled(true);
+
+		_fw_update_active = false;
+
+		switch (new_state)
+		{
+		case FirmwareUpdateState::ErrorGeneric:
+		case FirmwareUpdateState::ErrorWritingToDevice:
+			QMessageBox::critical(this, tr("Firmware Update FAILED"),
+								  tr("The firmware update failed. The camera may be in an unusable state."));
+			break;
+		case FirmwareUpdateState::Success:
+			QMessageBox::information(this, tr("Firmware Update SUCCESS"),
+									 tr("The firmware update was successful. Please reconnect the camera."));
+			break;
+		case FirmwareUpdateState::ErrorUnsupportedFirmwarePackage:
+			QMessageBox::critical(this, tr("Firmware Update"),
+									 tr("The selected firmware package is not supported by the camera driver."));
+			break;
+		case FirmwareUpdateState::ErrorModelNotSupportedByPackage:
+			QMessageBox::critical(this, tr("Firmware Update"),
+									 tr("The selected firmware package does not contain a firmware for the device."));
+			break;
+		}
+
+		// Refresh was disabled during update, update now
+		QTimer::singleShot(10000, [this] { onRefreshButton(); });
+	}
+}
+
+
+void DeviceSelectionDialog::closeEvent(QCloseEvent* event)
+{
+	// closeEvent gets called for taskbar and similar close calls
+	// we refuse to close when a firmware update is active
+	// ignore the close dialog call
+	if (_fw_update_active)
+	{
+		event->ignore();
+		return;
+	}
+	event->accept();
+}
+
+
+void DeviceSelectionDialog::reject()
+{
+	// reject gets called in dialogs when escape is pressed
+	// we refuse to close when a firmware update is active
+	// ignore the close dialog call
+    if(!_fw_update_active)
+    {
+        QDialog::reject(); //calls the default close.
+    }
+}
+
 
 bool DeviceSelectionDialog::selectPreviousItem(QVariant itemVariant)
 {
@@ -718,6 +840,10 @@ void DeviceSelectionDialog::onSystemInfoButton()
 
 void DeviceSelectionDialog::onRefreshButton()
 {
+	// Do not update device list (and refresh UI) during firmware update
+	if (_fw_update_active)
+		return;
+
 	QVariant previousData;
 
 	auto* item = _cameraTree->currentItem();

@@ -44,25 +44,6 @@ namespace
 		}
 	};
 
-	class ReturnFocusNextLineEdit : public QLineEdit
-	{
-	public:
-		using QLineEdit::QLineEdit;
-	protected:
-		void keyPressEvent(QKeyEvent* event) override
-		{
-			if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter)
-			{
-				if (hasAcceptableInput())
-				{
-					focusNextChild();
-				}
-				return;
-			}
-			QLineEdit::keyPressEvent(event);
-		}
-	};
-
 	QLineEdit* addIPEdit(const ic4::PropertyMap& map, const char* propName, const std::string& defaultValue, const char* label, QFormLayout& layout)
 	{
 		ic4::Error err;
@@ -329,6 +310,33 @@ void IPConfigGroupBox::updateUnreachable(ic4::PropertyMap itfPropertyMap)
 	connect(_forceDefaultGateway, &QLineEdit::textChanged, updateForceButtonEnabled);
 }
 
+void IPConfigGroupBox::setEnable(bool enabled)
+{
+	if (_chkPersistentIP)
+		_chkPersistentIP->setEnabled(enabled);
+	if (_chkDHCP)
+		_chkDHCP->setEnabled(enabled);
+	if (_persistentIPAddress)
+		_persistentIPAddress->setEnabled(enabled);
+	if (_persistentSubnetMask)
+		_persistentSubnetMask->setEnabled(enabled);
+	if (_persistentDefaultGateway)
+		_persistentDefaultGateway->setEnabled(enabled);
+	if (_applyButton)
+		_applyButton->setEnabled(enabled);
+/*
+	if (_forceIPAddress)
+		_forceIPAddress->setEnabled(enabled);
+	if (_forceSubnetMask)
+		_forceSubnetMask->setEnabled(enabled);
+	if (_forceDefaultGateway)
+		_forceDefaultGateway->setEnabled(enabled);
+	if (_forceButton)
+		_forceButton->setEnabled(enabled);
+*/
+}
+
+
 void IPConfigGroupBox::onForceButtonPressed()
 {
 	ic4::Error err;
@@ -396,4 +404,19 @@ void IPConfigGroupBox::addOptionalCommand(QFormLayout* /*layout*/, const ic4::Pr
 			}
 		}
 	);
+}
+
+void IPConfigGroupBox::clearInternal()
+{
+	_chkPersistentIP = nullptr;
+	_chkDHCP = nullptr;
+	_persistentIPAddress = nullptr;
+	_persistentSubnetMask = nullptr;
+	_persistentDefaultGateway = nullptr;
+	_applyButton = nullptr;
+
+	_forceIPAddress = nullptr;
+	_forceSubnetMask = nullptr;
+	_forceDefaultGateway = nullptr;
+	_forceButton = nullptr;
 }

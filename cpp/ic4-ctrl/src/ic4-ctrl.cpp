@@ -25,6 +25,8 @@
 #include "helper_json.h"
 #include "print_ic4_object.h"
 #include "stream_test.h"
+#include "firmware_update.h"
+
 
 static auto find_device( std::string id ) -> ic4::DeviceInfo
 {
@@ -42,22 +44,22 @@ static auto find_device( std::string id ) -> ic4::DeviceInfo
     for( auto&& dev : list )
     {
         if( dev.uniqueName() == id ) {
-			return dev;
-		}
+            return dev;
+        }
     }
     for( auto&& dev : list )
     {
         if( dev.modelName() == id ) {
-			return dev;
-		}
+            return dev;
+        }
     }
-	for (auto&& dev : list)
-	{
-		if (dev.userID(ic4::Error::Ignore()) == id) {
-			return dev;
-		}
-	}
-	int64_t index = 0;
+    for (auto&& dev : list)
+    {
+        if (dev.userID(ic4::Error::Ignore()) == id) {
+            return dev;
+        }
+    }
+    int64_t index = 0;
     if( helper::from_chars_helper( id, index ) )
     {
         if( index < 0 || index >= static_cast<int64_t>(list.size()) )
@@ -79,14 +81,14 @@ static auto find_interface( std::string id ) -> ic4::Interface
     for( auto&& dev : list )
     {
         if( dev.interfaceDisplayName() == id ) {
-			return dev;
+            return dev;
         }
     }
     for( auto&& dev : list )
     {
         if( dev.transportLayerName() == id ) {
-			return dev;
-		}
+            return dev;
+        }
     }
     int64_t index = 0;
     if( helper::from_chars_helper( id, index ) )
@@ -101,87 +103,87 @@ static auto find_interface( std::string id ) -> ic4::Interface
 
 static auto list_all_by_connection() -> void
 {
-	ic4::DeviceEnum devEnum;
-	auto itf_list = devEnum.enumInterfaces();
-	if (itf_list.empty()) {
-		print(1, "No GenTL providers found\n");
-		return;
-	}
+    ic4::DeviceEnum devEnum;
+    auto itf_list = devEnum.enumInterfaces();
+    if (itf_list.empty()) {
+        print(1, "No GenTL providers found\n");
+        return;
+    }
 
-	std::vector<std::string> transport_layer_list;
-	std::map<std::string, size_t> device_to_index;
+    std::vector<std::string> transport_layer_list;
+    std::map<std::string, size_t> device_to_index;
 
-	size_t index = 0;
-	for (auto&& e : devEnum.enumDevices())
-	{
-		device_to_index[e.uniqueName()] = index++;
-	}
+    size_t index = 0;
+    for (auto&& e : devEnum.enumDevices())
+    {
+        device_to_index[e.uniqueName()] = index++;
+    }
 
 
-	for (auto&& e : itf_list)
-	{
-		auto tl_name = e.transportLayerName();
-		if (std::none_of(transport_layer_list.begin(), transport_layer_list.end(), [&tl_name](auto& p) { return tl_name == p; }))
-		{
-			transport_layer_list.push_back(e.transportLayerName());
-		}
-	}
-	for (auto&& transportLayerName : transport_layer_list)
-	{
-		print(0, "TransportLayer: {}\n", transportLayerName);
-		for (size_t i = 0; i < itf_list.size(); ++i)
-		{
-			auto& itf = itf_list.at(i);
-			if (transportLayerName == itf.transportLayerName())
-			{
-				helper::print_interface_short(1, i, itf);
+    for (auto&& e : itf_list)
+    {
+        auto tl_name = e.transportLayerName();
+        if (std::none_of(transport_layer_list.begin(), transport_layer_list.end(), [&tl_name](auto& p) { return tl_name == p; }))
+        {
+            transport_layer_list.push_back(e.transportLayerName());
+        }
+    }
+    for (auto&& transportLayerName : transport_layer_list)
+    {
+        print(0, "TransportLayer: {}\n", transportLayerName);
+        for (size_t i = 0; i < itf_list.size(); ++i)
+        {
+            auto& itf = itf_list.at(i);
+            if (transportLayerName == itf.transportLayerName())
+            {
+                helper::print_interface_short(1, i, itf);
 
-				print("\n");
+                print("\n");
 
-				auto dev_list = itf.enumDevices();
-				if (dev_list.empty()) {
-					print(3, "No devices\n");
-				}
-				else
-				{
-					for (auto&& device : dev_list) {
-						helper::print_device_short(3, device_to_index[device.uniqueName()], device, false);
-					}
-				}
-				print("\n");
-			}
-		}
-		print("\n");
-	}
+                auto dev_list = itf.enumDevices();
+                if (dev_list.empty()) {
+                    print(3, "No devices\n");
+                }
+                else
+                {
+                    for (auto&& device : dev_list) {
+                        helper::print_device_short(3, device_to_index[device.uniqueName()], device, false);
+                    }
+                }
+                print("\n");
+            }
+        }
+        print("\n");
+    }
 }
 
 static auto list_devices(bool serials_only, bool prop_cmd_json) -> void
 {
-	ic4::DeviceEnum devEnum;
-	auto list = devEnum.enumDevices();
+    ic4::DeviceEnum devEnum;
+    auto list = devEnum.enumDevices();
 
-	if (serials_only) {
-		for (auto&& e : list) {
-			print("{} ", e.serial());
-		}
-	}
-	else if (prop_cmd_json) {
-		print("{}\n", helper::to_json_string(list));
-	}
-	else
-	{
-		if (list.empty()) {
-			print(0, "No devices found\n");
-			return;
-		}
+    if (serials_only) {
+        for (auto&& e : list) {
+            print("{} ", e.serial());
+        }
+    }
+    else if (prop_cmd_json) {
+        print("{}\n", helper::to_json_string(list));
+    }
+    else
+    {
+        if (list.empty()) {
+            print(0, "No devices found\n");
+            return;
+        }
 
-		print(0, "{:^5} {:24} {:8} {:16} {}\n", "Index", "ModelName", "Serial", "UserID", "TransportLayer");
-		int index = 0;
-		for (auto&& dev : list) {
-			helper::print_device_short(0, index, dev, true);
-			index += 1;
-		}
-	}
+        print(0, "{:^5} {:24} {:8} {:16} {}\n", "Index", "ModelName", "Serial", "UserID", "TransportLayer");
+        int index = 0;
+        for (auto&& dev : list) {
+            helper::print_device_short(0, index, dev, true);
+            index += 1;
+        }
+    }
 }
 
 
@@ -190,81 +192,81 @@ static auto list_interfaces(bool prop_cmd_json) -> void
     ic4::DeviceEnum devEnum;
     auto list = devEnum.enumInterfaces();
 
-	if (prop_cmd_json) {
-		print("{}\n", helper::to_json_string(list));
-	}
-	else
-	{
-		if (list.empty()) {
-			print(1, "No Interfaces found\n");
-		}
-		else
-		{
-			std::set<std::string> transport_layer_list;
+    if (prop_cmd_json) {
+        print("{}\n", helper::to_json_string(list));
+    }
+    else
+    {
+        if (list.empty()) {
+            print(1, "No Interfaces found\n");
+        }
+        else
+        {
+            std::set<std::string> transport_layer_list;
 
-			for (auto&& e : list) {
-				transport_layer_list.insert(e.transportLayerName());
-			}
-			for (auto&& transportLayerName : transport_layer_list)
-			{
-				print(0, "TransportLayer: {}\n", transportLayerName);
-				for (size_t i = 0; i < list.size(); ++i)
-				{
-					auto& itf = list.at(i);
-					if (transportLayerName == itf.transportLayerName())
-					{
-						helper::print_interface_short(1, i, itf);
-					}
-				}
-				print("\n");
-			}
-		}
-	}
+            for (auto&& e : list) {
+                transport_layer_list.insert(e.transportLayerName());
+            }
+            for (auto&& transportLayerName : transport_layer_list)
+            {
+                print(0, "TransportLayer: {}\n", transportLayerName);
+                for (size_t i = 0; i < list.size(); ++i)
+                {
+                    auto& itf = list.at(i);
+                    if (transportLayerName == itf.transportLayerName())
+                    {
+                        helper::print_interface_short(1, i, itf);
+                    }
+                }
+                print("\n");
+            }
+        }
+    }
 }
 
 static void print_interface(std::string id, bool props_cmd_json)
 {
-	if (id.empty()) {
-		return list_interfaces(props_cmd_json);
-	}
+    if (id.empty()) {
+        return list_interfaces(props_cmd_json);
+    }
 
-	auto dev = find_interface(id);
-	if (!dev.is_valid()) {
-		throw std::runtime_error(fmt::format("Failed to find device for id '{}'\n", id));
-	}
+    auto dev = find_interface(id);
+    if (!dev.is_valid()) {
+        throw std::runtime_error(fmt::format("Failed to find device for id '{}'\n", id));
+    }
 
-	if (props_cmd_json)
-	{
-		print("{}\n", helper::to_json(dev).dump(4));
-	}
-	else
-	{
-		helper::print_json(0, helper::to_json(dev));
-	}
+    if (props_cmd_json)
+    {
+        print("{}\n", helper::to_json(dev).dump(4));
+    }
+    else
+    {
+        helper::print_json(0, helper::to_json(dev));
+    }
 }
 
 static void print_device( std::string id, bool device_cmd_serials, bool props_cmd_json)
 {
-	if (id.empty()) {
-		return list_devices(device_cmd_serials, props_cmd_json);
-	}
+    if (id.empty()) {
+        return list_devices(device_cmd_serials, props_cmd_json);
+    }
     auto dev = find_device( id );
     if( !dev.is_valid() ) {
         throw std::runtime_error( fmt::format( "Failed to find device for id '{}'\n", id ) );
     }
 
-	if (device_cmd_serials)
-	{
-		print("{} ", dev.serial());
-	}
-	else if (props_cmd_json)
-	{
-		print("{}\n", helper::to_json(dev).dump(4));
-	}
-	else
-	{
-		helper::print_json(0, helper::to_json(dev));
-	}
+    if (device_cmd_serials)
+    {
+        print("{} ", dev.serial());
+    }
+    else if (props_cmd_json)
+    {
+        print("{}\n", helper::to_json(dev).dump(4));
+    }
+    else
+    {
+        helper::print_json(0, helper::to_json(dev));
+    }
 }
 
 static auto split_prop_entry( const std::string& prop_string ) -> std::pair<std::string,std::string>
@@ -289,42 +291,42 @@ static void set_property_from_assign_entry( ic4::PropertyMap& property_map, cons
 }
 
 static auto print_property_single(ic4::Property& prop, bool cmd_short, bool cmd_json) {
-	if (cmd_json) {
-		print("{}\n", helper::to_json_string(prop));
-	}
-	else if (cmd_short) {
-		helper::print_property_short(0, prop);
-	} else {
-		helper::print_property(0, prop);
-	}
+    if (cmd_json) {
+        print("{}\n", helper::to_json_string(prop));
+    }
+    else if (cmd_short) {
+        helper::print_property_short(0, prop);
+    } else {
+        helper::print_property(0, prop);
+    }
 }
 
 static auto print_property(const ic4::PropertyMap& map, bool cmd_short, bool cmd_json)
 {
-	if (cmd_json) {
-		print("{}\n", helper::to_json_string(map));
-	}
-	else if (cmd_short)
-	{
-		for (auto&& prop : map.all())
-		{
-			helper::print_property_short(0, prop);
-		}
-	}
-	else
-	{
-		for (auto&& prop : map.all())
-		{
-			helper::print_property(0, prop);
-		}
-	}
+    if (cmd_json) {
+        print("{}\n", helper::to_json_string(map));
+    }
+    else if (cmd_short)
+    {
+        for (auto&& prop : map.all())
+        {
+            helper::print_property_short(0, prop);
+        }
+    }
+    else
+    {
+        for (auto&& prop : map.all())
+        {
+            helper::print_property(0, prop);
+        }
+    }
 }
 
 static void exec_prop_cmd( ic4::PropertyMap& map, const std::vector<std::string>& lst, bool cmd_short, bool cmd_json )
 {
     if( lst.empty() )
     {
-		print_property(map, cmd_short, cmd_json);
+        print_property(map, cmd_short, cmd_json);
     }
     else
     {
@@ -339,9 +341,9 @@ static void exec_prop_cmd( ic4::PropertyMap& map, const std::vector<std::string>
             {
                 auto property = map.find( entry );
                 if( property.is_valid() ) {
-					print_property_single(property, cmd_short, cmd_json);
-				}
-				else {
+                    print_property_single(property, cmd_short, cmd_json);
+                }
+                else {
                     print( "Failed to find property for name: '{}'\n", entry );
                 }
             }
@@ -351,51 +353,51 @@ static void exec_prop_cmd( ic4::PropertyMap& map, const std::vector<std::string>
 
 struct selected_prop_map
 {
-	ic4::Grabber g;
-	ic4::PropertyMap map;
+    ic4::Grabber g;
+    ic4::PropertyMap map;
 };
 
 static auto select_prop_map(std::string id, bool force_interface, bool device_driver_props) -> selected_prop_map
 {
-	selected_prop_map rval;
-	if (force_interface) {
-		auto dev = find_interface(id);
-		if (!dev.is_valid()) {
-			throw std::runtime_error(fmt::format("Failed to find interface for id '{}'", id));
-		}
-		rval.map = dev.interfacePropertyMap();
-	}
-	else
-	{
-		auto dev = find_device(id);
-		if (!dev.is_valid()) {
-			throw std::runtime_error(fmt::format("Failed to find device for id '{}'", id));
-		}
+    selected_prop_map rval;
+    if (force_interface) {
+        auto dev = find_interface(id);
+        if (!dev.is_valid()) {
+            throw std::runtime_error(fmt::format("Failed to find interface for id '{}'", id));
+        }
+        rval.map = dev.interfacePropertyMap();
+    }
+    else
+    {
+        auto dev = find_device(id);
+        if (!dev.is_valid()) {
+            throw std::runtime_error(fmt::format("Failed to find device for id '{}'", id));
+        }
 
-		rval.g.deviceOpen(dev);
+        rval.g.deviceOpen(dev);
 
-		if (device_driver_props) {
-			rval.map = rval.g.driverPropertyMap();
-		}
-		else {
-			rval.map = rval.g.devicePropertyMap();
-		}
-	}
-	return rval;
+        if (device_driver_props) {
+            rval.map = rval.g.driverPropertyMap();
+        }
+        else {
+            rval.map = rval.g.devicePropertyMap();
+        }
+    }
+    return rval;
 }
 
 static void save_properties(ic4::PropertyMap& map, std::string filename)
 {
-	map.serialize(filename);
+    map.serialize(filename);
 }
 
 static void load_properties(ic4::PropertyMap& map, std::string filename)
 {
-	ic4::Error err;
-	map.deSerialize(filename, err);
-	if (err) {
-		print("Failed to load file '{}' due to error: {}", filename, err.message());
-	}
+    ic4::Error err;
+    map.deSerialize(filename, err);
+    if (err) {
+        print("Failed to load file '{}' due to error: {}", filename, err.message());
+    }
 }
 
 static void save_image( std::string id, std::string filename, int count, int timeout_in_ms, std::string image_type )
@@ -454,7 +456,7 @@ static void save_image( std::string id, std::string filename, int count, int tim
 static void show_live( std::string id )
 {
     auto dev = find_device( id );
-	if (!dev.is_valid()) {
+    if (!dev.is_valid()) {
         print( "Failed to find device for id '{}'", id );
         return;
     }
@@ -481,12 +483,12 @@ static void show_live( std::string id )
 
 static void show_prop_page(ic4::PropertyMap& map, bool show_guru)
 {
-	ic4gui::PropertyDialogOptions opt = {};
-	if (show_guru) {
-		opt.initial_visibility = ic4::PropVisibility::Guru;
-	}
+    ic4gui::PropertyDialogOptions opt = {};
+    if (show_guru) {
+        opt.initial_visibility = ic4::PropVisibility::Guru;
+    }
 
-	ic4gui::showPropertyDialog(0, map, opt);
+    ic4gui::showPropertyDialog(0, map, opt);
 }
 
 #endif // _WIN32
@@ -494,29 +496,29 @@ static void show_prop_page(ic4::PropertyMap& map, bool show_guru)
 static void show_version()
 {
     std::string  str = ic4::getVersionInfo( ic4::VersionInfoFlags::Version);
-	if (str.empty())
-	{
-		print("Unable to retrieve version information.");
-		return;
-	}
-	str += " ";
-	str += ic4::getVersionInfo(ic4::VersionInfoFlags::BuildID);
+    if (str.empty())
+    {
+        print("Unable to retrieve version information.");
+        return;
+    }
+    str += " ";
+    str += ic4::getVersionInfo(ic4::VersionInfoFlags::BuildID);
     print("ic4-ctrl {}\n", str);
 }
 
 static void show_system_info()
 {
-	std::string str = ic4::getVersionInfo(ic4::VersionInfoFlags::Default);
-	if (str.empty())
-	{
-		print("Unable to retrieve version information.");
-		return;
-	}
-	print(0, "\n{}\n", str);
+    std::string str = ic4::getVersionInfo(ic4::VersionInfoFlags::Default);
+    if (str.empty())
+    {
+        print("Unable to retrieve version information.");
+        return;
+    }
+    print(0, "\n{}\n", str);
 
-	auto env_var = helper::get_env_var("GENICAM_GENTL64_PATH");
-	print(0, "Environment:\n");
-	print(1, "GENICAM_GENTL64_PATH: {}\n", env_var);
+    auto env_var = helper::get_env_var("GENICAM_GENTL64_PATH");
+    print(0, "Environment:\n");
+    print(1, "GENICAM_GENTL64_PATH: {}\n", env_var);
 }
 
 int main( int argc, char** argv )
@@ -529,17 +531,17 @@ int main( int argc, char** argv )
     app.add_option( "--gentl-path", gentl_path, "GenTL path environment variable to set." )->default_val( gentl_path );
 
     std::string arg_device_id;
-	bool version_flag = false;
+    bool version_flag = false;
     bool force_interface = false;
-	bool props_device_driver = false;
-	bool device_cmd_serials = false;
-	bool props_cmd_short = false;
-	bool json_flag = false;
-	std::string arg_filename;
+    bool props_device_driver = false;
+    bool device_cmd_serials = false;
+    bool props_cmd_short = false;
+    bool json_flag = false;
+    std::string arg_filename;
 
-	app.add_flag("--version", version_flag, "Display program version information and exit");
+    app.add_flag("--version", version_flag, "Display program version information and exit");
 
-	auto help = app.add_subcommand("help", "Print this help text and exit.")->silent();
+    auto help = app.add_subcommand("help", "Print this help text and exit.")->silent();
 
     auto list_cmd = app.add_subcommand( "list",
         "List available devices and interfaces by connection."
@@ -553,9 +555,9 @@ int main( int argc, char** argv )
     device_cmd->add_option( "device-id", arg_device_id,
         "If specified only information for this device is printed, otherwise all device are listed. You can specify an index e.g. '0'." );
 
-	device_cmd->add_flag("--serials", device_cmd_serials, "Return only the serial number of the devices");
+    device_cmd->add_flag("--serials", device_cmd_serials, "Return only the serial number of the devices");
 
-	device_cmd->add_flag("--json", json_flag, "A json string is generated.")->excludes("--serials");
+    device_cmd->add_flag("--json", json_flag, "A json string is generated.")->excludes("--serials");
 
 
     auto interface_cmd = app.add_subcommand( "interface",
@@ -566,7 +568,7 @@ int main( int argc, char** argv )
     interface_cmd->add_option( "interface-id", arg_device_id,
         "If specified only information for this interface is printed, otherwise all interfaces are listed. You can specify an index e.g. '0'." );
 
-	interface_cmd->add_flag("--json", json_flag, "A json string is generated.");
+    interface_cmd->add_flag("--json", json_flag, "A json string is generated.");
 
 
     auto props_cmd = app.add_subcommand( "prop",
@@ -574,28 +576,28 @@ int main( int argc, char** argv )
         "\tTo list all device properties 'ic4-ctrl prop <device-id>'.\n"
         "\tTo list specific device properties 'ic4-ctrl prop <device-id> ExposureAuto ExposureTime'.\n"
         "\tTo set specific device properties 'ic4-ctrl prop <device-id> ExposureAuto=Off ExposureTime=0.5'."
-	);
-	props_cmd->allow_extras();
-	props_cmd->add_flag("--interface", force_interface, "If set the <device-id> is interpreted as an interface-id.");
-	props_cmd->add_flag("--device-driver", props_device_driver, "If set the device instance driver properties are used.")->excludes("--interface");
-	props_cmd->add_flag("-s,--short", props_cmd_short, "If set, a shorter property desc is returned.");
-	props_cmd->add_flag("--json", json_flag, "A json string is generated.")->excludes("--short");
-	props_cmd->add_option("device-id", arg_device_id,
-		"Specifies the device to open. You can specify an index e.g. '0'.")->required();
+    );
+    props_cmd->allow_extras();
+    props_cmd->add_flag("--interface", force_interface, "If set the <device-id> is interpreted as an interface-id.");
+    props_cmd->add_flag("--device-driver", props_device_driver, "If set the device instance driver properties are used.")->excludes("--interface");
+    props_cmd->add_flag("-s,--short", props_cmd_short, "If set, a shorter property desc is returned.");
+    props_cmd->add_flag("--json", json_flag, "A json string is generated.")->excludes("--short");
+    props_cmd->add_option("device-id", arg_device_id,
+        "Specifies the device to open. You can specify an index e.g. '0'.")->required();
 
-	auto save_props_cmd = app.add_subcommand( "save-prop", 
+    auto save_props_cmd = app.add_subcommand( "save-prop",
         "Save properties for the specified device 'ic4-ctrl save-prop -f <filename> <device-id>'." );
     save_props_cmd->add_option( "-f,--filename", arg_filename, "Filename to save into." )->required();
     save_props_cmd->add_option( "device-id", arg_device_id, "Specifies the device to open. You can specify an index e.g. '0'." )->required();
-	save_props_cmd->add_flag("--interface", force_interface, "If set the <device-id> is interpreted as an interface-id.");
-	save_props_cmd->add_flag("--device-driver", props_device_driver, "If set the device instance driver properties are used.")->excludes("--interface");
+    save_props_cmd->add_flag("--interface", force_interface, "If set the <device-id> is interpreted as an interface-id.");
+    save_props_cmd->add_flag("--device-driver", props_device_driver, "If set the device instance driver properties are used.")->excludes("--interface");
 
-	auto load_props_cmd = app.add_subcommand("load-prop",
-		"Load properties for the specified device 'ic4-ctrl load-prop -f <filename> <device-id>'.");
-	load_props_cmd->add_option("-f,--filename", arg_filename, "Filename to save into.")->required();
-	load_props_cmd->add_option("device-id", arg_device_id, "Specifies the device to open. You can specify an index e.g. '0'.")->required();
-	load_props_cmd->add_flag("--interface", force_interface, "If set the <device-id> is interpreted as an interface-id.");
-	load_props_cmd->add_flag("--device-driver", props_device_driver, "If set the device instance driver properties are used.")->excludes("--interface");
+    auto load_props_cmd = app.add_subcommand("load-prop",
+        "Load properties for the specified device 'ic4-ctrl load-prop -f <filename> <device-id>'.");
+    load_props_cmd->add_option("-f,--filename", arg_filename, "Filename to save into.")->required();
+    load_props_cmd->add_option("device-id", arg_device_id, "Specifies the device to open. You can specify an index e.g. '0'.")->required();
+    load_props_cmd->add_flag("--interface", force_interface, "If set the <device-id> is interpreted as an interface-id.");
+    load_props_cmd->add_flag("--device-driver", props_device_driver, "If set the device instance driver properties are used.")->excludes("--interface");
 
     auto image_cmd = app.add_subcommand( "image", 
         "Save one or more images from the specified device 'ic4-ctrl image -f <filename> --count 3 --timeout 2000 --type bmp <device-id>'."
@@ -607,7 +609,7 @@ int main( int argc, char** argv )
     image_cmd->add_option( "--count", count, "Count of frames to capture." )->default_val( count );
     image_cmd->add_option( "--timeout", timeout, "Timeout in milliseconds." )->default_val( timeout );
     image_cmd->add_option( "--type", image_type, "Image file type to save. [bmp,png,jpeg,tiff]" )->default_val( image_type );
-	image_cmd->add_option("device-id", arg_device_id,
+    image_cmd->add_option("device-id", arg_device_id,
         "Specifies the device to open. You can specify an index e.g. '0'." )->required();
 
 #ifdef _WIN32
@@ -616,25 +618,37 @@ int main( int argc, char** argv )
     live_cmd->add_option( "device-id", arg_device_id,
         "Specifies the device to open. You can specify an index e.g. '0'." )->required();
 
-	bool show_default_guru = false;
+    bool show_default_guru = false;
     auto show_prop_page_cmd = app.add_subcommand( "show-prop", "Display the property page for the device or interface id. 'ic4-ctrl show-prop <id>'." );
     show_prop_page_cmd->add_option( "device-id", arg_device_id,
         "Specifies the device to open. You can specify an index e.g. '0'." )->required();
     show_prop_page_cmd->add_flag( "--interface", force_interface,
         "If set the <device-id> is interpreted as an interface-id." );
-	show_prop_page_cmd->add_flag("--device-driver", props_device_driver, "If set the device instance driver properties are used.");
-	show_prop_page_cmd->add_flag("-g,--guru", show_default_guru,
-		"Start the dialog with Visibility set to ic4::PropVisibility::Guru.");
+    show_prop_page_cmd->add_flag("--device-driver", props_device_driver, "If set the device instance driver properties are used.");
+    show_prop_page_cmd->add_flag("-g,--guru", show_default_guru,
+        "Start the dialog with Visibility set to ic4::PropVisibility::Guru.");
 
 #endif // _WIN32
 
-	std::vector<std::string> stream_test_device_ids;
-	unsigned int stream_test_interval = 30;
-	bool stream_test_once = false;
-	auto stream_test_cmd = app.add_subcommand("stream-test", "Streams from the specified device and prints statistics 'ic4-ctrl stream-test <device-id-0> <device-id-1> --interval 30'." );
-	stream_test_cmd->add_option("device-id", stream_test_device_ids, "List of devices to use.")->required();
-	stream_test_cmd->add_option("-i,--interval", stream_test_interval, "Interval in which to print stream statistics.");
-	stream_test_cmd->add_flag("--once", stream_test_once, "If set, the interval is only run once.");
+    std::vector<std::string> stream_test_device_ids;
+    unsigned int stream_test_interval = 30;
+    bool stream_test_once = false;
+    auto stream_test_cmd = app.add_subcommand("stream-test", "Streams from the specified device and prints statistics 'ic4-ctrl stream-test <device-id-0> <device-id-1> --interval 30'." );
+    stream_test_cmd->add_option("device-id", stream_test_device_ids, "List of devices to use.")->required();
+    stream_test_cmd->add_option("-i,--interval", stream_test_interval, "Interval in which to print stream statistics.");
+    stream_test_cmd->add_flag("--once", stream_test_once, "If set, the interval is only run once.");
+
+    std::vector<std::string> firmware_device_ids;
+    std::string firmware_file;
+    std::string firmware_model_overwrite = "";
+    bool firmware_assume_yes = false;
+    auto firmware_update_cmd = app.add_subcommand("firmware-update", "Update the device firmware.");
+    firmware_update_cmd->add_flag("--yes", firmware_assume_yes, "Do not ask, assume yes.");
+    firmware_update_cmd->add_option("-f,--file", firmware_file, "Firmware package that shall be used")->required()->check(CLI::ExistingFile);
+    firmware_update_cmd->add_option("device-id", firmware_device_ids, "List of devices to use.")->required();
+    auto firmware_model_opt = firmware_update_cmd->add_option("--model", firmware_model_overwrite, "Camera model that shall be written.");
+    firmware_model_opt->group("");
+
 
     auto system_cmd = app.add_subcommand( "system",
         "List some information for about the system."
@@ -667,59 +681,81 @@ int main( int argc, char** argv )
 
     try
     {
-		if (help->count() != 0)
-		{
-			app.exit(CLI::CallForAllHelp());
-			return 0;
-		}
-
-		if (version_flag || version_cmd->parsed()) {
-			show_version();
-		}
-		else if (system_cmd->parsed()) {
-			show_system_info();
-		}
-		else if( list_cmd->parsed() )
+        if (help->count() != 0)
         {
-			list_all_by_connection();
+            app.exit(CLI::CallForAllHelp());
+            return 0;
+        }
+
+        if (version_flag || version_cmd->parsed())
+        {
+            show_version();
+        }
+        else if (system_cmd->parsed())
+        {
+            show_system_info();
+        }
+        else if( list_cmd->parsed() )
+        {
+            list_all_by_connection();
         }
         else if( device_cmd->parsed() )
         {
-			print_device(arg_device_id, device_cmd_serials, json_flag);
+            print_device(arg_device_id, device_cmd_serials, json_flag);
         }
         else if( interface_cmd->parsed() )
         {
-			print_interface(arg_device_id, json_flag);
+            print_interface(arg_device_id, json_flag);
         }
         else if( props_cmd->parsed() )
         {
-			auto prop_map = select_prop_map(arg_device_id, force_interface, props_device_driver);
+            auto prop_map = select_prop_map(arg_device_id, force_interface, props_device_driver);
             exec_prop_cmd(prop_map.map, props_cmd->remaining(), props_cmd_short, json_flag);
         }
         else if( save_props_cmd->parsed() )
         {
-			auto prop_map = select_prop_map(arg_device_id, force_interface, props_device_driver);
-			save_properties(prop_map.map, arg_filename);
+            auto prop_map = select_prop_map(arg_device_id, force_interface, props_device_driver);
+            save_properties(prop_map.map, arg_filename);
         }
-		else if (load_props_cmd->parsed())
-		{
-			auto prop_map = select_prop_map(arg_device_id, force_interface, props_device_driver);
-			load_properties(prop_map.map, arg_filename);
-		}
-        else if( image_cmd->parsed() ) {
+        else if (load_props_cmd->parsed())
+        {
+            auto prop_map = select_prop_map(arg_device_id, force_interface, props_device_driver);
+            load_properties(prop_map.map, arg_filename);
+        }
+        else if (image_cmd->parsed())
+        {
             save_image( arg_device_id, arg_filename, count, timeout, image_type );
         }
-		else if (stream_test_cmd->parsed())
-		{
-			std::vector<ic4::DeviceInfo> dev_list;
-			for (auto&& dev_id : stream_test_device_ids) {
-				auto dev = find_device(dev_id);
-				if (dev.is_valid()) {
-					dev_list.push_back(dev);
-				}
-			}
-			ic4ctrl::start_stream_test({ stream_test_interval, stream_test_once }, dev_list);
-		}
+        else if (stream_test_cmd->parsed())
+        {
+            std::vector<ic4::DeviceInfo> dev_list;
+            for (auto&& dev_id : stream_test_device_ids) {
+                auto dev = find_device(dev_id);
+                if (dev.is_valid()) {
+                    dev_list.push_back(dev);
+                }
+            }
+            ic4ctrl::start_stream_test({ stream_test_interval, stream_test_once }, dev_list);
+        }
+        else if (firmware_update_cmd->parsed())
+        {
+            std::vector<ic4::DeviceInfo> dev_list;
+            for (auto&& dev_id : firmware_device_ids)
+            {
+                auto dev = find_device(dev_id);
+                if (dev.is_valid()) {
+                    dev_list.push_back(dev);
+                }
+                else
+                {
+                    fmt::println("Device identifier \"{}\" is not valid!", dev_id);
+                    fmt::println("No firmware written until all given identier are valid devices.");
+                    return 1;
+                }
+            }
+            ic4ctrl::write_firmware_update(firmware_file, firmware_model_overwrite, firmware_assume_yes, dev_list);
+
+        }
 #ifdef _WIN32
         else if( live_cmd->parsed() )
         {
@@ -727,8 +763,8 @@ int main( int argc, char** argv )
         }
         else if( show_prop_page_cmd->parsed() )
         {
-			auto prop_map = select_prop_map(arg_device_id, force_interface, props_device_driver);
-			show_prop_page(prop_map.map, show_default_guru);
+            auto prop_map = select_prop_map(arg_device_id, force_interface, props_device_driver);
+            show_prop_page(prop_map.map, show_default_guru);
         }
 #endif // _WIN32
         else
@@ -742,7 +778,7 @@ int main( int argc, char** argv )
         fmt::print( stderr, "Error: {}\n", ex.what() );
     }
 
-	ic4::exitLibrary();
+    ic4::exitLibrary();
 
-	return 0;
+    return 0;
 }

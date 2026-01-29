@@ -52,6 +52,8 @@ add_executable( ic4-ctrl
 	"src/stream_test.cpp"
 	"src/stream_test_camera.h"
 	"src/stream_test_camera.cpp"
+    "src/firmware_update.h"
+    "src/firmware_update.cpp"
 )
 
 target_link_libraries( ic4-ctrl

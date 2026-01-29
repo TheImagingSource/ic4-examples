@@ -28,21 +28,23 @@ public:
 	bool update(const ic4::DeviceInfo& deviceInfo);
 	void updateUnreachable(ic4::PropertyMap itfPropertyMap);
 
+	void setEnable(bool);
+
 private:
 	ic4::DeviceInfo _deviceInfo;
 	ic4::PropertyMap _itfPropertyMap;
 
-	QCheckBox* _chkPersistentIP;
-	QCheckBox* _chkDHCP;
-	QLineEdit* _persistentIPAddress;
-	QLineEdit* _persistentSubnetMask;
-	QLineEdit* _persistentDefaultGateway;
-	QPushButton* _applyButton;
+	QCheckBox* _chkPersistentIP = nullptr;
+	QCheckBox* _chkDHCP = nullptr;
+	QLineEdit* _persistentIPAddress = nullptr;
+	QLineEdit* _persistentSubnetMask = nullptr;
+	QLineEdit* _persistentDefaultGateway = nullptr;
+	QPushButton* _applyButton = nullptr;
 
-	QLineEdit* _forceIPAddress;
-	QLineEdit* _forceSubnetMask;
-	QLineEdit* _forceDefaultGateway;
-	QPushButton* _forceButton;
+	QLineEdit* _forceIPAddress = nullptr;
+	QLineEdit* _forceSubnetMask = nullptr;
+	QLineEdit* _forceDefaultGateway = nullptr;
+	QPushButton* _forceButton = nullptr;
 
 private:
 	void onStatusChangedCheckPersistentIP(int checkState);
@@ -51,4 +53,6 @@ private:
 	void onForceButtonPressed();
 
 	void addOptionalCommand(QFormLayout* layout, const ic4::PropertyMap& itfPropertyMap, const char* cmdName, const QString& label);
+
+	void clearInternal() override;
 };

@@ -14,6 +14,8 @@ add_library(qt6-dialogs STATIC
     ${QT6DIALOGS_RESOURCES}
     controls/Event.h
     controls/FormGroupBox.h
+    controls/FirmwareUpdateBox.h
+    controls/FirmwareUpdateBox.cpp
     controls/IPConfigGroupBox.cpp
     controls/IPConfigGroupBox.h
     controls/PropertyInfoBox.h

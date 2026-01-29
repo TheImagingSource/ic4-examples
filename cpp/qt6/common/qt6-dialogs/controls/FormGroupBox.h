@@ -6,15 +6,37 @@
 #include <QVBoxLayout>
 #include <QFormLayout>
 #include <QLabel>
+#include <QLineEdit>
+#include <QKeyEvent>
 
 #include "PropertyControls.h"
+
+
+static void clearLayout(QLayout* layout, bool delete_widgets)
+{
+    while (QLayoutItem* item = layout->takeAt(0))
+    {
+        if (delete_widgets)
+        {
+            if (QWidget* widget = item->widget())
+			{
+                widget->deleteLater();
+			}
+        }
+        if (QLayout* childLayout = item->layout())
+		{
+            clearLayout(childLayout, delete_widgets);
+		}
+        delete item;
+    }
+}
 
 class FormGroupBox : public QFrame
 {
 	Q_OBJECT
 
 public:
-	FormGroupBox(const QString& title)
+	explicit FormGroupBox(const QString& title)
 	{
 		auto vbox = new QVBoxLayout();
 		vbox->setContentsMargins(0, 0, 0, 8);
@@ -41,14 +63,33 @@ public:
 public:
 	void clear()
 	{
-		while (_layout->count() != 0)
-		{
-			QLayoutItem* forDeletion = _layout->takeAt(0);
-			delete forDeletion->widget();
-			delete forDeletion;
-		}
+		clearLayout(_layout, true);
+		clearInternal();
 	}
 
 protected:
 	QFormLayout* _layout;
+
+	virtual void clearInternal()
+	{
+	};
+};
+
+class ReturnFocusNextLineEdit : public QLineEdit
+{
+public:
+	using QLineEdit::QLineEdit;
+protected:
+	void keyPressEvent(QKeyEvent* event) override
+	{
+		if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter)
+		{
+			if (hasAcceptableInput())
+			{
+				focusNextChild();
+			}
+			return;
+		}
+		QLineEdit::keyPressEvent(event);
+	}
 };

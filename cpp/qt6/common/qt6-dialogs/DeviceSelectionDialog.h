@@ -2,6 +2,7 @@
 
 #include "controls/IPConfigGroupBox.h"
 #include "controls/SwitchDriverGroupBox.h"
+#include "controls/FirmwareUpdateBox.h"
 
 #include <QDialog>
 #include <QTreeWidget>
@@ -18,7 +19,10 @@ class DeviceSelectionDialog : public QDialog
 	Q_OBJECT
 
 public:
-	DeviceSelectionDialog(QWidget* parent, ic4::Grabber* pgrabber, std::function<bool(const ic4::DeviceInfo&)> filter = nullptr);
+	DeviceSelectionDialog(QWidget* parent,
+						  ic4::Grabber* pgrabber,
+						  std::function<bool(const ic4::DeviceInfo&)> filter = nullptr,
+						  bool enable_firmware_update = false);
 
 protected:
 	void customEvent(QEvent* event) override;
@@ -28,7 +32,10 @@ private slots:
 	void onSystemInfoButton();
 	void onRefreshButton();
 	void onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous);
+	void onFirmwareUpdateStateChanged(FirmwareUpdateState);
 
+	void closeEvent(QCloseEvent* event) override;
+	void reject() override;
 
 private:
 	void createUI();
@@ -41,11 +48,17 @@ private:
 	ic4::DeviceEnum _enumerator;
 	QTreeWidget* _cameraTree = nullptr;
 	QPushButton* _okButton = nullptr;
+	QWidget* _buttons = nullptr;
 
 	QScrollArea* _rightScroll = nullptr;
 	FormGroupBox* _itfInfoGroup = nullptr;
 	FormGroupBox* _devInfoGroup = nullptr;
 	IPConfigGroupBox* _ipConfigGroup = nullptr;
-	SwitchDriverGroupBox* _switchDriverGroup = nullptr;
+    SwitchDriverGroupBox *_switchDriverGroup = nullptr;
+	FirmwareUpdateBox* _firmwareGroup = nullptr;
+
 	QVBoxLayout* _rightLayout = nullptr;
+
+	bool _enable_firmware_update = false;
+	bool _fw_update_active = false;
 };

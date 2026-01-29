@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
 	conf.defaultErrorHandlerBehavior = ic4::ErrorHandlerBehavior::Throw;
 	ic4::initLibrary(conf);
 
-	DeviceSelectionDialog dlg(nullptr, nullptr);
+	DeviceSelectionDialog dlg(nullptr, nullptr, nullptr, true);
 	dlg.setWindowTitle("");
 	dlg.show();
 
