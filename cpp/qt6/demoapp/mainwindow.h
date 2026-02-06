@@ -80,7 +80,7 @@ protected:
 	bool eventFilter(QObject* obj, QEvent* event) override;
 
 private:
-	void customEvent(QEvent* event);
+	void customEvent(QEvent* event) override;
 	void savePhoto(const ic4::ImageBuffer& imagebuffer);
 
 	void prepareNewDeviceOpen();

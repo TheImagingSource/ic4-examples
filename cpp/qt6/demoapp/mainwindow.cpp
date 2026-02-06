@@ -480,6 +480,8 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
 			// Forward Alt-F4 to main window
 			close();
 			break;
+		default:
+			break;
 		}
 	}
 

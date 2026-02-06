@@ -652,6 +652,9 @@ void DeviceSelectionDialog::onFirmwareUpdateStateChanged(FirmwareUpdateState new
 			QMessageBox::critical(this, tr("Firmware Update"),
 									 tr("The selected firmware package does not contain a firmware for the device."));
 			break;
+		case FirmwareUpdateState::Active:
+		case FirmwareUpdateState::Inactive:
+			break; // do nothing
 		}
 
 		// Refresh was disabled during update, update now

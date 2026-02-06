@@ -158,7 +158,7 @@ namespace ic4::ui
 
 		void drawBranches(QPainter* painter,
 			const QRect& rect,
-			const QModelIndex& index) const;
+			const QModelIndex& index) const override;
 
 	};
 
