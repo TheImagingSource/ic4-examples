@@ -34,13 +34,19 @@ namespace ic4examples::PropId
 
 void FirmwareUpdateBox::update(const ic4::DeviceInfo& deviceInfo)
 {
-	ic4::Grabber g;
-	if (!g.deviceOpen(deviceInfo, ic4::Error::Ignore()))
+	bool disableAccessibilityCheck = (QGuiApplication::queryKeyboardModifiers() & Qt::KeyboardModifier::ShiftModifier);
+
+	// Partially programmed devices might be not accessible using ic4; still allow firmware upgrade if necessary
+	if (!disableAccessibilityCheck)
 	{
-		auto* label = new QLabel("The device is currently not accessible for firmware updates.");
-		label->setWordWrap(true);
-		_layout->addRow(label);
-		return;
+		ic4::Grabber g;
+		if (!g.deviceOpen(deviceInfo, ic4::Error::Ignore()))
+		{
+			auto* label = new QLabel("The device is currently not accessible for firmware updates.");
+			label->setWordWrap(true);
+			_layout->addRow(label);
+			return;
+		}
 	}
 
     _deviceInfo = deviceInfo;
