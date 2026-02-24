@@ -285,6 +285,9 @@ void FirmwareUpdateBox::onWriteFWButtonPressed()
 		setStatusText(QString("Failed to start firmware update: %1").arg(QString::fromStdString(err.message())));
 		unregisterAllEventNotifications();
 	}
+
+	// Make sure to reset override so that the next update can auto-select again
+	_itfPropertyMap.setValue(ic4examples::PropId::FirmwareUpdateModelOverride, "", ic4::Error::Ignore());
 }
 
 void FirmwareUpdateBox::onOpenFileDialog()
