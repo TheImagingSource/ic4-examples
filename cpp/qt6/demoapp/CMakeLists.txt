@@ -40,4 +40,22 @@ if (WIN32)
     ic4_copy_runtime_to_target(ic4-demoapp)
 
     add_windeployqt_custom_command(ic4-demoapp) # Adds a POST_BUILD call to windeployqt.exe 
+
+elseif(APPLE)
+
+    set_target_properties(ic4-demoapp PROPERTIES MACOSX_BUNDLE ON )
+
+    set(myApp_ICON "${CMAKE_CURRENT_SOURCE_DIR}/images/tis.ico")
+    target_sources(ic4-demoapp PRIVATE ${myApp_ICON})
+    set_source_files_properties(${myApp_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
+
+    set_target_properties(ic4-demoapp PROPERTIES 
+        MACOSX_BUNDLE_BUNDLE_NAME "ic4-demoapp"
+        MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}"
+        MACOSX_BUNDLE_COPYRIGHT "Copyright The Imaging Source Europe GmbH"
+        MACOSX_BUNDLE_GUI_IDENTIFIER "com.tis.ic4-demoapp"
+        MACOSX_BUNDLE_ICON_FILE "tis.ico"
+        MACOSX_BUNDLE_LONG_VERSION_STRING "${PROJECT_FULL_VERSION}"
+    )
+
 endif()

@@ -23,7 +23,7 @@ target_link_libraries(ic4-device-manager PRIVATE Qt${QT_VERSION_MAJOR}::Widgets 
 
 set_target_properties(ic4-device-manager PROPERTIES CXX_STANDARD 17 )
 
-if (WIN32)
+if(WIN32)
 
     set_target_properties(ic4-device-manager PROPERTIES WIN32_EXECUTABLE ON )
 
@@ -31,4 +31,26 @@ if (WIN32)
 
     add_windeployqt_custom_command(ic4-device-manager) # Adds a POST_BUILD call to windeployqt.exe 
 
-endif ()
+elseif(APPLE)
+
+    set_target_properties(ic4-device-manager PROPERTIES MACOSX_BUNDLE ON )
+
+    set(myApp_ICON "${CMAKE_CURRENT_SOURCE_DIR}/images/tis.ico")
+    target_sources(ic4-device-manager PRIVATE ${myApp_ICON})
+    set_source_files_properties(${myApp_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
+
+    set_target_properties(ic4-device-manager PROPERTIES 
+        MACOSX_BUNDLE_ICON_FILE "tis.ico"
+        MACOSX_BUNDLE_BUNDLE_NAME "com.tis.ic4-device-manager"
+    )
+
+    set_target_properties(ic4-device-manager PROPERTIES 
+        MACOSX_BUNDLE_BUNDLE_NAME "ic4-device-manager"
+        MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}"
+        MACOSX_BUNDLE_COPYRIGHT "Copyright The Imaging Source Europe GmbH"
+        MACOSX_BUNDLE_GUI_IDENTIFIER "com.tis.ic4-device-manager"
+        MACOSX_BUNDLE_ICON_FILE "tis.ico"
+        MACOSX_BUNDLE_LONG_VERSION_STRING "${PROJECT_FULL_VERSION}"
+    )
+
+endif()
