@@ -23,8 +23,12 @@ namespace ic4::ui
 			// use stylesheet in qss - breaks checkbox images used in qss!
 			//check_->setStyleSheet("QCheckBox::indicator { width: 16px; height: 16px; }");
 
-			connect(check_, &QCheckBox::stateChanged, this, &PropBooleanControl::check);
-
+// QCheckBox deprecates stateChanged in 6.7
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+			connect(check_, &QCheckBox::checkStateChanged, this, &PropBooleanControl::check);
+#else
+            connect(check_, &QCheckBox::stateChanged, this, &PropBooleanControl::check);
+#endif
 			update_all();
 
 			layout_->addWidget(check_);

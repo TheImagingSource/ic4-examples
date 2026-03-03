@@ -152,7 +152,12 @@ bool IPConfigGroupBox::update(const ic4::DeviceInfo& deviceInfo)
 			_chkDHCP = addCheckBox(driverProperties, "GevDeviceIPConfigDHCPEnable", "Enable DHCP", *_layout);
 			addCheckBox(driverProperties, "GevDeviceIPConfigLinkLocalAddressEnable", "Enable Link-Local Address", *_layout);
 
+// QCheckBox deprecates stateChanged in 6.7
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+            connect(_chkPersistentIP, &QCheckBox::checkStateChanged, this, &IPConfigGroupBox:: onStatusChangedCheckPersistentIP);
+#else
 			connect(_chkPersistentIP, &QCheckBox::stateChanged, this, &IPConfigGroupBox::onStatusChangedCheckPersistentIP);
+#endif
 			onStatusChangedCheckPersistentIP(_chkPersistentIP->checkState());
 
 			_applyButton = new QPushButton(tr("Apply Permanent IP Configuration"));
@@ -171,9 +176,15 @@ bool IPConfigGroupBox::update(const ic4::DeviceInfo& deviceInfo)
 
 			connect(_persistentIPAddress, &QLineEdit::textChanged, updateApplyButtonEnabled);
 			connect(_persistentSubnetMask, &QLineEdit::textChanged, updateApplyButtonEnabled);
-			connect(_persistentDefaultGateway, &QLineEdit::textChanged, updateApplyButtonEnabled);
-			connect(_chkPersistentIP, &QCheckBox::stateChanged, updateApplyButtonEnabled);
-		}
+            connect(_persistentDefaultGateway, &QLineEdit::textChanged, updateApplyButtonEnabled);
+
+// QCheckBox deprecates stateChanged in 6.7
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+			connect(_chkPersistentIP, &QCheckBox::checkStateChanged, updateApplyButtonEnabled);
+#else
+            connect(_chkPersistentIP, &QCheckBox::stateChanged, updateApplyButtonEnabled);
+#endif
+        }
 		return true;
 	}
 }
