@@ -12,7 +12,7 @@ void SwitchDriverGroupBox::update(const ic4::DeviceInfo& deviceInfo)
 
 	auto* frame = new QFrame();
 	frame->setObjectName("WarningFrame");
-	frame->setStyleSheet("QFrame#WarningFrame { border: 1px solid red; background-color: palette(base); color: red; padding: 4px }");
+	frame->setStyleSheet(ic4::ui::CustomStyle.SwitchDriverGroupBoxWarningFrame);
 
 	auto* iconLabel = new QLabel();
 	auto icon = style()->standardIcon(QStyle::SP_MessageBoxWarning);

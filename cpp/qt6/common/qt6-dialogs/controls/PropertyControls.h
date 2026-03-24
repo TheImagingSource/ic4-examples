@@ -64,6 +64,10 @@ namespace ic4::ui
 		QString IPConfigGroupBoxUnreachableFrame = "QFrame#WarningFrame { "
 			"border: 1px solid red; background-color: palette(base); color: red; padding: 4px }";
 
+		QString SwitchDriverGroupBoxWarningFrame = "QFrame#WarningFrame { border: 1px solid red;"
+			"background-color: palette(base); color: red; padding: 4px }";
+
+
 		QString DeviceSelectionDlgRightScrollStyle = "QScrollArea#rightScroll "
 			"{ border-width: 1; border-style: solid; border-color: palette(base); }";
 
