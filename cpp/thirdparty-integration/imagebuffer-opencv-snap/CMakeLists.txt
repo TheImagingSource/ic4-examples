@@ -1,14 +1,12 @@
 
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.23)
 
 project("imagebuffer-opencv-snap")
 
-find_package( OpenCV CONFIG )
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
-if( NOT OpenCV_FOUND )
-	message(FATAL_ERROR "OpenCV not found")
-endif()
 
+find_package( OpenCV REQUIRED )
 find_package( ic4 REQUIRED )
 
 add_executable( imagebuffer-opencv-snap 
@@ -19,7 +17,6 @@ target_include_directories( imagebuffer-opencv-snap
 	PRIVATE "../../common"
 )
 target_link_libraries( imagebuffer-opencv-snap
-	PRIVATE ic4::core
 	PRIVATE ic4::core
 	PRIVATE opencv_core
 	PRIVATE opencv_imgproc
