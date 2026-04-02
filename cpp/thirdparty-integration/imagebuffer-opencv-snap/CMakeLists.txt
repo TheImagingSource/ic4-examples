@@ -3,9 +3,6 @@ cmake_minimum_required(VERSION 3.23)
 
 project("imagebuffer-opencv-snap")
 
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-
-
 find_package( OpenCV REQUIRED )
 find_package( ic4 REQUIRED )
 
