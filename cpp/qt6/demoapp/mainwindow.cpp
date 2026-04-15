@@ -73,6 +73,8 @@ MainWindow::MainWindow(const init_options& params, QWidget* parent)
 		QApplication::postEvent(this, new QEvent(DEVICE_LOST_EVENT));
 	});
 
+	QString message_box_text;
+
 	// Create the display for the live video
 	try
 	{
@@ -81,7 +83,7 @@ MainWindow::MainWindow(const init_options& params, QWidget* parent)
 	}
 	catch (const ic4::IC4Exception& ex)
 	{
-		QMessageBox::information(this, {}, ex.what());
+		message_box_text += ex.what();
 	}
 
 	std::filesystem::path deviceSetupFile_value;
@@ -104,8 +106,14 @@ MainWindow::MainWindow(const init_options& params, QWidget* parent)
 			// Do not treat an unplugged device as an error.
 			if (err.code() != ic4::ErrorCode::DeviceNotFound)
 			{
-				auto message = "Loading last used device failed: " + err.message();
-				QMessageBox::information(this, {}, message.c_str());
+				// do not use QMessageBox::information or similar!
+				// doing so causes weird behavior on some platforms
+				// preventing normal behavior of dialogs or fullscreen 
+				if (!message_box_text.isEmpty())
+				{
+					message_box_text += "\n\n";
+				}
+				message_box_text += "Loading last used device failed: " + err.message();
 			}
 		}
 
@@ -122,9 +130,26 @@ MainWindow::MainWindow(const init_options& params, QWidget* parent)
 		}
 		catch (const ic4::IC4Exception& ex)
 		{
-			auto message = "Loading last codec configuration failed: " + std::string(ex.what());
-			QMessageBox::information(this, {}, message.c_str());
+			if (!message_box_text.isEmpty())
+			{
+				message_box_text += "\n\n";
+			}
+			message_box_text += "Loading last codec configuration failed: " + std::string(ex.what());
 		}
+	}
+
+	// only display a single message box for error not multiple
+	if (!message_box_text.isEmpty())
+	{
+		QString title = tr("Error during start-up");
+
+		QMessageBox *mbox = new QMessageBox();
+		mbox->setIcon(QMessageBox::Information);
+		mbox->setWindowTitle(title);
+		mbox->setText(title);
+		mbox->setInformativeText(message_box_text);
+
+		mbox->show();
 	}
 
 	updateControls();
