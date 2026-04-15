@@ -86,38 +86,56 @@ MainWindow::MainWindow(const init_options& params, QWidget* parent)
 		message_box_text += ex.what();
 	}
 
-	std::filesystem::path deviceSetupFile_value;
-	if (!params.deviceSetupFile.has_value())
-	{
-		deviceSetupFile_value = _devicefile;
-	}
-	else
-	{
-		deviceSetupFile_value = params.deviceSetupFile.value();
-	}
-
-	if (std::filesystem::is_regular_file(deviceSetupFile_value))
+	if (params.deviceId)
 	{
 		ic4::Error err;
 
-		// Try to load the last used device.
-		if (!_grabber.deviceOpenFromState(deviceSetupFile_value, err))
+		auto device_to_open = params.deviceId.value();
+		if (!_grabber.deviceOpen(device_to_open, err))
 		{
-			// Do not treat an unplugged device as an error.
-			if (err.code() != ic4::ErrorCode::DeviceNotFound)
+			if (!message_box_text.isEmpty())
 			{
-				// do not use QMessageBox::information or similar!
-				// doing so causes weird behavior on some platforms
-				// preventing normal behavior of dialogs or fullscreen
-				if (!message_box_text.isEmpty())
-				{
-					message_box_text += "\n\n";
-				}
-				message_box_text += "Loading last used device failed: " + QString(err.message().c_str());
+				message_box_text += "\n\n";
 			}
+			message_box_text += "Trying to open device '" + QString(device_to_open.c_str()) + "' failed: " + QString(err.message().c_str());
+		}
+		onDeviceOpened();
+	}
+	else
+	{
+		std::filesystem::path deviceSetupFile_value;
+		if (!params.deviceSetupFile.has_value())
+		{
+			deviceSetupFile_value = _devicefile;
+		}
+		else
+		{
+			deviceSetupFile_value = params.deviceSetupFile.value();
 		}
 
-		onDeviceOpened();
+		if (std::filesystem::is_regular_file(deviceSetupFile_value))
+		{
+			ic4::Error err;
+
+			// Try to load the last used device.
+			if (!_grabber.deviceOpenFromState(deviceSetupFile_value, err))
+			{
+				// Do not treat an unplugged device as an error.
+				if (err.code() != ic4::ErrorCode::DeviceNotFound)
+				{
+					// do not use QMessageBox::information or similar!
+					// doing so causes weird behavior on some platforms
+					// preventing normal behavior of dialogs or fullscreen
+					if (!message_box_text.isEmpty())
+					{
+						message_box_text += "\n\n";
+					}
+					message_box_text += "Loading last used device failed: " + QString(err.message().c_str());
+				}
+			}
+
+			onDeviceOpened();
+		}
 	}
 
 	if (std::filesystem::is_regular_file(_codecconfigfile))

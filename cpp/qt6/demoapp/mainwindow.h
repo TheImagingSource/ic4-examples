@@ -36,6 +36,9 @@ public:
 		bool show_settings_menu = false;
 
 		bool start_full_screen = false;
+		
+		// If this is set, we try to open this device when opening the program. Note: Incompatible to deviceSetupFile
+		std::optional<std::string> deviceId;
 	};
 		
 	explicit MainWindow(const init_options& params, QWidget* parent = nullptr);

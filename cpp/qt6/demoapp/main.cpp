@@ -55,6 +55,8 @@ int main(int argc, char* argv[])
 		QCommandLineOption cli_option_fullscreen("fullscreen", "Start in full screen mode.");
 		parser.addOption(cli_option_fullscreen);
 
+		QCommandLineOption cli_option_device_id("device-id","Sets the device id to open.", "id");
+		parser.addOption(cli_option_device_id);
 
 		QString help_text = parser.helpText();
 
@@ -100,6 +102,14 @@ int main(int argc, char* argv[])
 		}
 		init.show_settings_menu = parser.isSet(cli_option_settings);
 		init.start_full_screen = parser.isSet(cli_option_fullscreen);
+		if (parser.isSet(cli_option_device_id))
+		{
+			if (init.deviceSetupFile) {
+				std::fputs("'--device-id and --device-file options are incompatible", stderr);
+				return 1;
+			}
+			init.deviceId = parser.value(cli_option_device_id).toStdString();
+		}
 	}
 
 	ic4::InitLibraryConfig conf = {};
