@@ -63,9 +63,9 @@ int main()
 
 		// For testing, we use the same device key, group key, and group mask for both the broadcast packet and
 		// all cameras.
-		const long DEVICE_KEY = 0x00000123;
-		const long GROUP_KEY = 0x00000456;
-		const long GROUP_MASK = 0x00000001;
+		const int DEVICE_KEY = 0x00000123;
+		const int GROUP_KEY = 0x00000456;
+		const int GROUP_MASK = 0x00000001;
 
 		/// Configure the broadcast packet that will be sent by the driver.
 		itf.interfacePropertyMap().setValue(ic4::PropId::ActionDeviceKey, DEVICE_KEY);

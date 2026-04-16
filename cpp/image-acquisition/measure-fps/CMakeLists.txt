@@ -12,3 +12,5 @@ add_executable( measure-fps
 target_include_directories( measure-fps PRIVATE		"../../common" )
 target_link_libraries( measure-fps 		PRIVATE		ic4::core )
 set_target_properties( measure-fps 		PROPERTIES	CXX_STANDARD 14 )
+
+ic4_copy_runtime_to_target(measure-fps)
