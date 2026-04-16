@@ -30,7 +30,7 @@ int main()
 		return -2;
 	}
 
-	auto& map = grabber.devicePropertyMap();
+	auto map = grabber.devicePropertyMap();
 
 	// Try loading default UserSet to reset device to defaults
 	// This reverses settings like TriggerMode=On, which would prevent this demo from running as expected
