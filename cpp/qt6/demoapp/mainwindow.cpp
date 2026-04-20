@@ -856,6 +856,7 @@ void MainWindow::savePhoto(const ic4::ImageBuffer& imagebuffer)
 	dialog.setFileMode(QFileDialog::AnyFile);
 	dialog.setAcceptMode(QFileDialog::AcceptSave);
 	dialog.setDirectory(savePictureDirectory);
+	dialog.setOption(QFileDialog::DontUseNativeDialog);
 
 	if (dialog.exec())
 	{
@@ -903,6 +904,7 @@ void MainWindow::onStartCaptureVideo()
 	dialog.setFileMode(QFileDialog::AnyFile);
 	dialog.setAcceptMode(QFileDialog::AcceptSave);
 	dialog.setDirectory(saveVideoDirectory);
+	dialog.setOption(QFileDialog::DontUseNativeDialog);
 
 	if (dialog.exec())
 	{
@@ -975,6 +977,7 @@ void MainWindow::onExportDeviceSettings()
 	dialog.setFileMode(QFileDialog::AnyFile);
 	dialog.setAcceptMode(QFileDialog::AcceptSave);
 	dialog.setDirectory(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
+	dialog.setOption(QFileDialog::DontUseNativeDialog);
 
 	if (dialog.exec())
 	{
@@ -1001,6 +1004,7 @@ void MainWindow::onImportDeviceSettings()
 	dialog.setFileMode(QFileDialog::AnyFile);
 	dialog.setAcceptMode(QFileDialog::AcceptOpen);
 	dialog.setDirectory(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
+	dialog.setOption(QFileDialog::DontUseNativeDialog);
 
 	if (dialog.exec())
 	{
