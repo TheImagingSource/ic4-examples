@@ -108,12 +108,12 @@ MainWindow::MainWindow(const init_options& params, QWidget* parent)
 			{
 				// do not use QMessageBox::information or similar!
 				// doing so causes weird behavior on some platforms
-				// preventing normal behavior of dialogs or fullscreen 
+				// preventing normal behavior of dialogs or fullscreen
 				if (!message_box_text.isEmpty())
 				{
 					message_box_text += "\n\n";
 				}
-				message_box_text += "Loading last used device failed: " + err.message();
+				message_box_text += "Loading last used device failed: " + QString(err.message().c_str());
 			}
 		}
 
@@ -134,7 +134,7 @@ MainWindow::MainWindow(const init_options& params, QWidget* parent)
 			{
 				message_box_text += "\n\n";
 			}
-			message_box_text += "Loading last codec configuration failed: " + std::string(ex.what());
+			message_box_text += "Loading last codec configuration failed: " + QString(ex.what());
 		}
 	}
 
