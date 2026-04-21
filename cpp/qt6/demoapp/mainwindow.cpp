@@ -856,7 +856,10 @@ void MainWindow::savePhoto(const ic4::ImageBuffer& imagebuffer)
 	dialog.setFileMode(QFileDialog::AnyFile);
 	dialog.setAcceptMode(QFileDialog::AcceptSave);
 	dialog.setDirectory(savePictureDirectory);
+#ifdef __linux__
+	// On some systems, the native dialog does not work correctly
 	dialog.setOption(QFileDialog::DontUseNativeDialog);
+#endif
 
 	if (dialog.exec())
 	{
@@ -904,7 +907,9 @@ void MainWindow::onStartCaptureVideo()
 	dialog.setFileMode(QFileDialog::AnyFile);
 	dialog.setAcceptMode(QFileDialog::AcceptSave);
 	dialog.setDirectory(saveVideoDirectory);
+#ifdef __linux__
 	dialog.setOption(QFileDialog::DontUseNativeDialog);
+#endif
 
 	if (dialog.exec())
 	{
@@ -977,7 +982,9 @@ void MainWindow::onExportDeviceSettings()
 	dialog.setFileMode(QFileDialog::AnyFile);
 	dialog.setAcceptMode(QFileDialog::AcceptSave);
 	dialog.setDirectory(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
+#ifdef __linux__
 	dialog.setOption(QFileDialog::DontUseNativeDialog);
+#endif
 
 	if (dialog.exec())
 	{
@@ -1004,7 +1011,9 @@ void MainWindow::onImportDeviceSettings()
 	dialog.setFileMode(QFileDialog::AnyFile);
 	dialog.setAcceptMode(QFileDialog::AcceptOpen);
 	dialog.setDirectory(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
+#ifdef __linux__
 	dialog.setOption(QFileDialog::DontUseNativeDialog);
+#endif
 
 	if (dialog.exec())
 	{
