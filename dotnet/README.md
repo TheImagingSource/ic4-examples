@@ -77,7 +77,7 @@ This section contains programs showing how to use data captured in `ImageBuffer`
 This section shows the Windows Forms integration of IC Imaging Control 4 using the `ic4dotnet.System.Windows.Forms` assembly. It contains:
 
 - A simple Demo Application [for .NET Framework 4.5](/dotnet/winforms/framework45)
-- A simple Demo Application [for .NET 6 or later](/dotnet/winforms/DialogApp-net6)
+- A simple Demo Application [for .NET 8 or later](/dotnet/winforms/DialogApp-net8)
 - An application showing how to draw a [Graphic Overlay](/dotnet/winforms/GraphicOverlay) on top of live video display
 - [HighSpeedCapture](/dotnet/winforms/HighSpeedCapture) is an example program showing how to use many image buffers to capture image data into memory for potentially slow processing tasks.
 
