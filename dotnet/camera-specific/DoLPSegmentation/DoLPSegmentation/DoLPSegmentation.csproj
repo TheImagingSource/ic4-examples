@@ -12,8 +12,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="ic4dotnet" Version="1.5.0.3306" />
-    <PackageReference Include="ic4dotnet.System.Windows.Forms" Version="1.5.0.3306" />
+    <PackageReference Include="ic4dotnet" Version="1.5.3.3316" />
+    <PackageReference Include="ic4dotnet.System.Windows.Forms" Version="1.5.3.3316" />
   </ItemGroup>
 
 </Project>
