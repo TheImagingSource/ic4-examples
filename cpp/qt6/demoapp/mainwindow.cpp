@@ -241,6 +241,20 @@ void MainWindow::createUI()
 	_recordstopact->setEnabled(false);
 	connect(_recordstopact, &QAction::triggered, this, &MainWindow::onStopCaptureVideo);
 
+	// Video writer type selection
+	_cboVideoWriter = new QComboBox(this);
+	_cboVideoWriter->addItem("H.264", QVariant::fromValue(ic4::VideoWriterType::MP4_H264));
+	_cboVideoWriter->addItem("H.265", QVariant::fromValue(ic4::VideoWriterType::MP4_H265));
+	_cboVideoWriter->addItem("Uncompressed", QVariant::fromValue(ic4::VideoWriterType::AVI_Uncompressed));
+	connect(_cboVideoWriter,
+		&QComboBox::currentIndexChanged,
+		[this](int index)
+		{
+			auto writerType = _cboVideoWriter->itemData(index).value<ic4::VideoWriterType>();
+			_videowriter = ic4::VideoWriter(writerType);
+		}
+	);
+
 	// Codec Properties
 	_codecpropertyact = new QAction(selector.loadIcon(":/images/gear.png"), tr("&Codec properties"), this);
 	_codecpropertyact->setStatusTip(tr("Configure the video codec"));
@@ -414,6 +428,7 @@ void MainWindow::createUI()
 	_toolBar->addAction(_recordstartact);
 	_toolBar->addAction(_recordpauseact);
 	_toolBar->addAction(_recordstopact);
+	_toolBar->addWidget(_cboVideoWriter);
 	_toolBar->addAction(_codecpropertyact);
 
 	// prevent context menu on menu/tool bars
@@ -898,7 +913,15 @@ void MainWindow::onStartCaptureVideo()
 		return;
 	}
 
-	const QStringList filters({ "MP4 Video Files (*.mp4)" });
+	auto extension = _videowriter.defaultExtension();
+
+	const QStringList filters(
+		{
+			QString("%1 Video Files (*.%2)")
+				.arg(QString::fromStdString(extension).toUpper())
+				.arg(QString::fromStdString(extension))
+		}
+	);
 
 	static auto saveVideoDirectory = QStandardPaths::writableLocation(QStandardPaths::MoviesLocation);
 
@@ -931,6 +954,7 @@ void MainWindow::onStartCaptureVideo()
 			_capturetovideo = true;
 			_videocapturepause = _recordpauseact->isChecked();
 			_recordstopact->setEnabled(true);
+			_cboVideoWriter->setEnabled(false);
 		}
 		catch (const ic4::IC4Exception& iex)
 		{
@@ -961,6 +985,7 @@ void MainWindow::onStopCaptureVideo()
 	_videowriter.finishFile();
 	_recordstartact->setChecked(false);
 	_recordstopact->setEnabled(false);
+	_cboVideoWriter->setEnabled(true);
 }
 
 void MainWindow::onCodecProperties()

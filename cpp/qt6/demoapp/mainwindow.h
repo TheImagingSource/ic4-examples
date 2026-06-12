@@ -7,6 +7,7 @@
 #include <QtGui>
 #include <QAction>
 #include <QLabel>
+#include <QComboBox>
 
 #include <mutex>
 #include <atomic>
@@ -117,8 +118,9 @@ private:
 	QAction* _toggle_visibility_full_screen_menu_bar = nullptr;
 	QAction* _toggle_visibility_full_screen_tool_bar = nullptr;
 	QAction* _toggle_visibility_full_screen_status_bar = nullptr;
-
 	QAction* _closeDeviceAct = nullptr;
+
+	QComboBox* _cboVideoWriter = nullptr;
 
 	QLabel* _sbStatisticsLabel = nullptr;
 	QLabel* _sbFpsLabel = nullptr;
