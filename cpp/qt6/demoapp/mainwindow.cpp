@@ -44,7 +44,7 @@
 
 MainWindow::MainWindow(const init_options& params, QWidget* parent)
 	: QMainWindow(parent)
-	, _videowriter(ic4::VideoWriterType::MP4_H264)
+	, _videowriter(ic4::VideoWriterType::MP4_H264, ic4::Error::Ignore())
 {
 	_settings.read();
 
