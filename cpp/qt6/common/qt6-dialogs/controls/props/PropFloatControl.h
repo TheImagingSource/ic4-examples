@@ -33,8 +33,31 @@ namespace ic4::ui
 		{
 			connect(this, &QDoubleSpinBox::editingFinished, this, &FormattingDoubleSpinBox::onEditingFinished);
 		}
+
+		// Optional display hook called by textFromValue()
+		std::function<QString(double value, ic4::PropDisplayNotation notation, int precision, const QLocale& locale)> on_text_from_value;
+
+		// Optional parsing hook called by valueFromText() during the normal Qt edit commit
+		std::function<std::optional<double>(QString)> on_value_from_text;
+
+		// Optional validation override
+		std::function<QValidator::State(QString&, int&)> on_validate_text;
+
+		// Optional stepping implementation
+		std::function<double(double, int)> on_step_by;
 	protected:
 		QString textFromValue(double value) const override;
+		double valueFromText(const QString& text) const override;
+
+		QValidator::State validate(QString& text, int& pos) const override
+		{
+			if (on_validate_text)
+			{
+				return on_validate_text(text, pos);
+			}
+
+			return QDoubleSpinBox::validate(text, pos);
+		}
 
 		void onEditingFinished()
 		{
@@ -72,16 +95,30 @@ namespace ic4::ui
 
 			QDoubleSpinBox::keyPressEvent(e);
 		}
+
+		void stepBy(int steps) override
+		{
+			if (on_step_by)
+			{
+				double new_value = on_step_by(value(), steps);
+				setValue(new_value);
+			}
+			else
+			{
+				QDoubleSpinBox::stepBy(steps);
+			}
+		}
 	};
 
 	using FloatSlider = app::CaptureFocus<QSlider>;
 
 	class PropFloatControl : public PropControlBase<ic4::PropFloat>
 	{
-	private:
+	protected:
 		FloatSlider* slider_ = nullptr;
 		FormattingDoubleSpinBox* spin_ = nullptr;
 
+	private:
 		double min_;
 		double max_;
 		ic4::PropFloatRepresentation representation_;
@@ -89,6 +126,15 @@ namespace ic4::ui
 		static const int SLIDER_MIN = 0;
 		static const int SLIDER_MAX = 200;
 		static const int SLIDER_TICKS = SLIDER_MAX - SLIDER_MIN;
+
+	protected:
+		virtual double snap_slider_value(double val, double min, double max, double total_slider_ticks) const
+		{
+			(void)min;
+			(void)max;
+			(void)total_slider_ticks;
+			return val;
+		}
 
 	private:
 		void set_value_unchecked(double new_val)
@@ -120,8 +166,10 @@ namespace ic4::ui
 			double val = g(f(min_) + range_len / SLIDER_TICKS * new_pos);
 
 			double clamped_val = std::clamp(val, min_, max_);
+			double snapped_val = snap_slider_value(clamped_val, min_, max_, SLIDER_TICKS);
+			double snapped_clamped_val = std::clamp(snapped_val, min_, max_);
 
-			set_value_unchecked(clamped_val);
+			set_value_unchecked(snapped_clamped_val);
 		}
 
 		int slider_position(double val)
@@ -308,6 +356,22 @@ namespace ic4::ui
 
 	inline QString FormattingDoubleSpinBox::textFromValue(double value) const
 	{
+		if (on_text_from_value)
+		{
+			return on_text_from_value(value, notation_, precision_, locale());
+		}
+
 		return PropFloatControl::textFromValue(value, notation_, precision_, locale());
+	}
+
+	inline double FormattingDoubleSpinBox::valueFromText(const QString& text) const
+	{
+		if (on_value_from_text)
+		{
+			auto maybe_val = on_value_from_text(text);
+			return maybe_val ? *maybe_val : value();
+		}
+
+		return QDoubleSpinBox::valueFromText(text);
 	}
 }
