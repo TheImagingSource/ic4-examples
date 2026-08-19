@@ -93,6 +93,7 @@ These examples show how to
 - [enumerate](/cpp/device-handling/device-enumeration) devices and interfaces
 - Get [device-list-changed](/cpp/device-handling/device-list-changed/) notifications
 - Handle [device-lost](/cpp/device-handling/device-lost) events
+- [Reopen](/cpp/device-handling/device-reconnect) the same camera after it was disconnected
 
 ## Image Acquisition
 
