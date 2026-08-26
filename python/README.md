@@ -47,6 +47,7 @@ These examples show how to
 - [enumerate](/python/device-handling/device-enumeration) devices and interfaces
 - Get [device-list-changed](/python/device-handling/device-list-changed/) notifications
 - Handle [device-lost](/python/device-handling/device-lost) events
+- [Reopen](/python/device-handling/device-reconnect) the same camera after it was disconnected
 
 ## Image Acquisition
 
