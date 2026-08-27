@@ -91,7 +91,7 @@ def example_lut():
         # For this example, we are going to use and modify the 'Luminance' lookup table only.
         # Color cameras also have the option to use one lookup table per color channel ('Red', 'Green', 'Blue').
         # Please note that using per-channel and luminance lookup tables can be mutually exclusive.
-        # Some camera might not even have a LUT_SELECTOR -- in this case the error is ignored.
+        # Some cameras might not even have a LUT_SELECTOR -- in this case the error is ignored.
         map.try_set_value(ic4.PropId.LUT_SELECTOR, "Luminance")
 
         # The lookup table is accessed by first writing the index of the table into LUTIndex,
