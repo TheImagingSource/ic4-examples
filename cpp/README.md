@@ -110,6 +110,7 @@ Some cameras provide advanced features that can be utilized to solve specific ap
 - Reading camera-provided metadata from image buffers using [chunkdata](/cpp/advanced-camera-features/connect-chunkdata)
 - Using [EventExposureEnd](/cpp/advanced-camera-features/event-exposure-end) to synchronize camera operation to real-world movement
 - Get notified about I/O activity using [EventLine1*Edge](/cpp/advanced-camera-features/event-line1-edge) events
+- Use the in-camera [Lookup Table](/cpp/advanced-camera-features/lut-control) feature to apply a custom tone curve
 
 ## Camera-Specific Examples
 
