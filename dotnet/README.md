@@ -46,6 +46,7 @@ These examples show how to
 - [enumerate](/dotnet/device-handling/DeviceEnumeration) devices and interfaces
 - Get [device-list-changed](/dotnet/device-handling/DeviceListChanged/) notifications
 - Handle [device-lost](/dotnet/device-handling/DeviceLost) events
+- [Reopen](/dotnet/device-handling/DeviceReconnect) the same camera after it was disconnected
 
 ## Image Acquisition
 
