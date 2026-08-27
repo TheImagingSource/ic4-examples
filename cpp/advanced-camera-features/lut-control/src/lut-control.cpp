@@ -97,7 +97,8 @@ int main()
 		// For this example, we are going to use and modify the 'Luminance' lookup table only.
 		// Color cameras also have the option to use one lookup table per color channel ('Red', 'Green', 'Blue').
 		// Please note that using per-channel and luminance lookup tables can be mutually exclusive.
-		map.setValue(ic4::PropId::LUTSelector, "Luminance");
+		// Some cameras might not even have a LUTSelector -- in this case the error is ignored.
+		map.setValue(ic4::PropId::LUTSelector, "Luminance", ic4::Error::Ignore());
 
 		// The lookup table is accessed by first writing the index of the table into LUTIndex,
 		// and then writing the table entry using LUTValue.
