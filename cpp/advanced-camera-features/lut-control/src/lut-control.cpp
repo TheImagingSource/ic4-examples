@@ -153,17 +153,19 @@ int main()
 
 		// Prepare a S-curve LUT that enhances contrast
 		double K = 10;
+
+		auto sigmoid = [](double z)
+			{
+				return 1.0 / (1.0 + std::exp(-z));
+			};
+
+		double lo = sigmoid(-K / 2.0);
+		double hi = sigmoid(K / 2.0);
+
 		for (int i = 0; i <= index_max; ++i)
 		{
-			double t = i / 256.0;
+			double t = i / static_cast<double>(index_max);
 
-			auto sigmoid = [](double z)
-				{
-					return 1.0 / (1.0 + std::exp(-z));
-				};
-
-			double lo = sigmoid(-K / 2.0);
-			double hi = sigmoid(K / 2.0);
 			double val = (sigmoid(K * (t - 0.5)) - lo) / (hi - lo);
 
 			lut_index.setValue(i);
