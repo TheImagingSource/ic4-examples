@@ -64,6 +64,7 @@ Some cameras provide advanced features that can be utilized to solve specific ap
 - Using [EventExposureEnd](/python/advanced-camera-features/EventExposureEnd) to synchronize camera operation to real-world movement
 - Get notified about I/O activity using [EventLine1*Edge](/python/advanced-camera-features/event-line1-edge/) events
 - Use the in-camera [Lookup Table](/python/advanced-camera-features/lut-control) feature to apply a custom tone curve
+- [Configure](/python/device-handling/camera-configuration) camera parameters like resolution, frame rate or sensor settings
 
 ## Camera-Specific Examples
 
