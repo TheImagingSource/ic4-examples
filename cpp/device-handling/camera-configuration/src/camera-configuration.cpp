@@ -10,6 +10,14 @@
 // This program opens a video capture device and performs simple camera configuration,
 // demonstrating use of functions on ic4::PropertyMap.
 // 
+// The example program
+// - Configures maximum resolution
+// - Sets maximum frame rate
+// - Disables trigger mode
+// - Disables auto gain, and sets gain to minimum
+// - Enables auto exposure
+// - Enables auto white balance
+// 
 // Camera properties are set using functions on PropertyMap:
 // - setValue sets a property value
 // - setValueMaximum sets an int or float property to its maximum value
