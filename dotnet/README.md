@@ -61,6 +61,7 @@ Some cameras provide advanced features that can be utilized to solve specific ap
 - Using [EventExposureEnd](/dotnet/advanced-camera-features/EventExposureEnd) to synchronize camera operation to real-world movement
 - Get notified about I/O activity using [EventLine1*Edge](/dotnet/advanced-camera-features/EventLine1Edge) events
 - Use the in-camera [Lookup Table](/dotnet/advanced-camera-features/LUTControl) feature to apply a custom tone curve
+- [Configure](/dotnet/device-handling/CameraConfiguration) camera parameters like resolution, frame rate or sensor settings
 
 ## Camera-Specific Examples
 
