@@ -15,6 +15,7 @@ add_subdirectory( device-handling/device-enumeration )
 add_subdirectory( device-handling/device-list-changed )
 add_subdirectory( device-handling/device-lost )
 add_subdirectory( device-handling/device-reconnect )
+add_subdirectory( device-handling/camera-configuration )
 
 add_subdirectory( image-acquisition/record-mp4-h264 )
 add_subdirectory( image-acquisition/save-bmp-on-trigger )

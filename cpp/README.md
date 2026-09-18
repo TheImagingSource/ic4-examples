@@ -94,6 +94,7 @@ These examples show how to
 - Get [device-list-changed](/cpp/device-handling/device-list-changed/) notifications
 - Handle [device-lost](/cpp/device-handling/device-lost) events
 - [Reopen](/cpp/device-handling/device-reconnect) the same camera after it was disconnected
+- [Configure](/cpp/device-handling/camera-configuration) camera parameters like resolution, frame rate or sensor settings
 
 ## Image Acquisition
 
