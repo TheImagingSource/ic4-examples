@@ -10,6 +10,7 @@ add_subdirectory( advanced-camera-features/connect-chunkdata )
 add_subdirectory( advanced-camera-features/event-exposure-end )
 add_subdirectory( advanced-camera-features/event-line1-edge )
 add_subdirectory( advanced-camera-features/lut-control )
+add_subdirectory( advanced-camera-features/multicast )
 
 add_subdirectory( device-handling/device-enumeration )
 add_subdirectory( device-handling/device-list-changed )
