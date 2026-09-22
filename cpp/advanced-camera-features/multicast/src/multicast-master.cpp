@@ -3,15 +3,23 @@
 
 #include <console-helper.h>
 
-#include <thread>
-#include <chrono>
 #include <regex>
 
 /*
- * This example program demonstrates how to set up multicast image transmission using GigE Vision cameras
+ * These example program demonstrates how to set up multicast image transmission using GigE Vision cameras
+ * - multicast-master is started first opens the camera and configures it for multicast operation.
+ *   It owns the camera and is the only program that can configure camera parameters.
+ *   The master can be operated both with a data stream activated or in headless mode (without receiving image data)
+ * - multicast-monitor is started second and subscribes to the multicast group to (also) receive the camera's image data.
  * 
- * When operating in multicast mode, one client 'owns' the camera and can control it, while other clients
- * can subscribe to the multicast group and receive a copy of the image data stream.
+ * This file contains the multicast-master program.
+ * There are two optional features that are currently disabled behind a if(false) block:
+ * - MTU auto-negotiation can be disabled, if the computer running the monitor program has a lower possible MTU than the
+ *   computer running the master program
+ * - The master can be configured to only control the camera but not actually receive data for itself.
+ * 
+ * Please note:
+ * It is possible to run master and monitor programs on the same computer.
  */
 
 // Multicast only works with GigE Vision devices
@@ -21,11 +29,13 @@ std::vector<ic4::DeviceInfo> enum_gige_devices()
 
 	for (auto&& dev : ic4::DeviceEnum::enumDevices())
 	{
+		// Skip non-GigE devices
 		if (dev.getInterface().transportLayerType() != ic4::TransportLayerType::GigEVision)
 		{
 			continue;
 		}
 
+		// Skip "-Monitor" entries and only show the regular device entry
 		auto serial = dev.serial();
 		if (serial.substr(serial.size() - 8) == "-Monitor")
 		{
@@ -38,6 +48,7 @@ std::vector<ic4::DeviceInfo> enum_gige_devices()
 	return result;
 }
 
+// Make sure the camera firmware supports multicast operation
 bool checkFirmwareVersion(ic4::Grabber& grabber)
 {
 	auto device_version = grabber.devicePropertyMap().getValueString(ic4::PropId::DeviceVersion);
@@ -83,13 +94,7 @@ int main(int argc, char* argv[])
 	// Automatically call exitLibrary when returning from main
 	std::atexit(ic4::exitLibrary);
 
-#ifdef IC4_MULTICAST_MASTER
 	std::cout << "Started in master mode." << std::endl;
-#elif defined IC4_MULTICAST_MONITOR
-	std::cout << "Started in monitor mode." << std::endl;
-#else
-#error Either IC4_MULTICAST_MASTER or IC4_MULTICAST_MONITOR has to be defined
-#endif
 
 	auto device_list = enum_gige_devices();
 	auto it = ic4_examples::console::select_from_list(device_list);
@@ -98,11 +103,7 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	// Remember the selected device for later
-	ic4::DeviceInfo dev = *it;
-
-	ic4::Grabber grabber;
-
+	// Define a simple queue sink that prints frame numbers of received images
 	auto print_frames_sink = ic4::QueueSink::create(
 		[](ic4::QueueSink& qs)
 		{
@@ -114,8 +115,8 @@ int main(int argc, char* argv[])
 
 	try
 	{
-#ifdef IC4_MULTICAST_MASTER
-		grabber.deviceOpen(dev);
+		// Open the monitor device in a new Grabber
+		ic4::Grabber grabber(*it);
 
 		// Make sure the device supports multicast
 		if (!checkFirmwareVersion(grabber))
@@ -125,13 +126,19 @@ int main(int argc, char* argv[])
 		}
 
 		// For multicast operation, the master has to manually configure stream options
-		//´on both the device's and driver's property maps:
+		// on both the device's and driver's property maps:
 		auto driver_map = grabber.driverPropertyMap();
 		auto device_map = grabber.devicePropertyMap();
 
-		// Disable packet-size auto-negotiation and set it to fixed 1500
-		driver_map.setValue("GevStreamNegotiatePacketSize", false);
-		device_map.setValue("GevSCPSPacketSize", 1500);
+		// Optional:
+		// If the monitor(s) have limited network access, it might be necessary to
+		// limit MTU to a conservative value
+		if (false)
+		{
+			// Disable packet-size auto-negotiation and set it to fixed 1500
+			driver_map.setValue("GevStreamNegotiatePacketSize", false);
+			device_map.setValue("GevSCPSPacketSize", 1500);
+		}
 
 		// Override destination address:port data with multicast address
 		driver_map.setValue("GevStreamDestinationOverride", true);
@@ -140,46 +147,28 @@ int main(int argc, char* argv[])
 
 		std::cout << "Starting master stream. Press ENTER to quit." << std::endl;
 
-		// Start a stream, printing information about received images
-		grabber.streamSetup(print_frames_sink);
+		// Optional:
+		// Enable headless mode, where master controls the camera,
+		// but does not receive image data
+		if (false)
+		{
+			// Write destination address:port into the camera
+			driver_map.executeCommand("GevStreamWriteDestinationSetup");
+
+			// Mark Transport-Layer as locked, allowing access to AcquisitionStart
+			device_map.setValue(ic4::PropId::TLParamsLocked, true);
+
+			// Let the camera start acquisition
+			device_map.executeCommand("AcquisitionStart");
+		}
+		else
+		{
+			// Start a stream, printing information about received images
+			grabber.streamSetup(print_frames_sink);
+		}
 
 		// Wait for ENTER key
 		std::cin.get();
-
-#elif defined IC4_MULTICAST_MONITOR
-
-		// Activate generation monitor device entries on the interface of the selected device
-		auto itf = dev.getInterface();
-		auto itf_map = itf.interfacePropertyMap();
-		itf_map.setValue("SpawnMonitorDevices", true);
-
-		try
-		{
-			// The serial number of the monitor device instance has "-Monitor" appended to it
-			auto monitor_serial = dev.serial() + "-Monitor";
-
-			// Open the monitor device
-			grabber.deviceOpen(monitor_serial);
-
-			std::cout << "Starting monitor stream. Press ENTER to quit." << std::endl;
-
-			// Start a stream, printing information about received images
-			grabber.streamSetup(print_frames_sink);
-
-			// Wait for ENTER key
-			std::cin.get();
-
-			// Disable monitor devices again
-			itf_map.setValue("SpawnMonitorDevices", false);
-		}
-		catch(const ic4::IC4Exception&)
-		{
-			// Disable monitor devices again even if there is an exception
-			itf_map.setValue("SpawnMonitorDevices", false);
-
-			throw;
-		}
-#endif
 	}
 	catch (const std::exception& ex)
 	{

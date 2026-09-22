@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <type_traits>
 
 #include <ic4/ic4.h>
 
@@ -96,6 +97,36 @@ namespace ic4_examples
 				std::cout << ex.what() << std::endl;
 				return interface_list.end();
 			}
+		}
+
+		namespace detail
+		{
+			template<typename TFunc>
+			struct scope_exit
+			{
+				template <typename TFunctionPointer>
+				explicit scope_exit(TFunctionPointer&& fn)
+					: exit_function_(std::forward<TFunctionPointer>(fn))
+				{
+				}
+				~scope_exit()
+				{
+					exit_function_();
+				}
+
+				scope_exit(const scope_exit&) = delete;
+				scope_exit(scope_exit&&) noexcept = delete;
+				scope_exit& operator=(const scope_exit&) = delete;
+				scope_exit& operator=(scope_exit&&) noexcept = delete;
+
+				TFunc exit_function_;
+			};
+		}
+
+		template <typename TFunc>
+		[[nodiscard]] auto make_scope_exit(TFunc&& fn)
+		{
+			return detail::scope_exit<std::decay_t<TFunc>>(std::forward<TFunc>(fn));
 		}
 	}
 }
