@@ -12,14 +12,13 @@
  *   The master can be operated both with a data stream activated or in headless mode (without receiving image data)
  * - multicast-monitor is started second and subscribes to the multicast group to (also) receive the camera's image data.
  * 
+ * master and monitor programs can be run on the same computer.
+ * 
  * This file contains the multicast-master program.
  * There are two optional features that are currently disabled behind a if(false) block:
  * - MTU auto-negotiation can be disabled, if the computer running the monitor program has a lower possible MTU than the
  *   computer running the master program
  * - The master can be configured to only control the camera but not actually receive data for itself.
- * 
- * Please note:
- * It is possible to run master and monitor programs on the same computer.
  */
 
 // Multicast only works with GigE Vision devices
