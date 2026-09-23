@@ -101,7 +101,7 @@ namespace Multicast
                     deviceMap.SetValue(ic4.PropId.TLParamsLocked, 1);
 
                     // Let the camera start acquisition
-                    deviceMap.ExecuteCommand("AcquisitionStart");
+                    deviceMap.ExecuteCommand(ic4.PropId.AcquisitionStart);
                 }
                 else
                 {

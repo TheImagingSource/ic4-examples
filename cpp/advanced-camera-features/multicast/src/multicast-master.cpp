@@ -155,10 +155,10 @@ int main(int argc, char* argv[])
 			driver_map.executeCommand("GevStreamWriteDestinationSetup");
 
 			// Mark Transport-Layer as locked, allowing access to AcquisitionStart
-			device_map.setValue(ic4::PropId::TLParamsLocked, true);
+			device_map.setValue(ic4::PropId::TLParamsLocked, 1);
 
 			// Let the camera start acquisition
-			device_map.executeCommand("AcquisitionStart");
+			device_map.executeCommand(ic4::PropId::AcquisitionStart);
 		}
 		else
 		{

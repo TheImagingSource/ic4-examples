@@ -146,10 +146,10 @@ def example_multicast_master():
             driver_map.execute_command("GevStreamWriteDestinationSetup")
 
             # Mark Transport-Layer as locked, allowing access to AcquisitionStart
-            device_map.set_value(ic4.PropId.TL_PARAMS_LOCKED, True)
+            device_map.set_value(ic4.PropId.TL_PARAMS_LOCKED, 1)
 
             # Let the camera start acquisition
-            device_map.execute_command("AcquisitionStart")
+            device_map.execute_command(ic4.PropId.ACQUISITION_START)
         else:
             # Start a stream, printing information about received images
             listener = PrintFramesListener()
