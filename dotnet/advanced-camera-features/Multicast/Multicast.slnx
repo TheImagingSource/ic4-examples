@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="../../common/ConsoleHelper/ConsoleHelper.csproj" />
+  <Project Path="MulticastMaster/MulticastMaster.csproj" />
+  <Project Path="MulticastMonitor/MulticastMonitor.csproj" />
+</Solution>
