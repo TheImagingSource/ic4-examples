@@ -12,6 +12,7 @@ add_subdirectory( advanced-camera-features/event-line1-edge )
 add_subdirectory( advanced-camera-features/lut-control )
 add_subdirectory( advanced-camera-features/multicast )
 add_subdirectory( advanced-camera-features/usersets )
+add_subdirectory( advanced-camera-features/ip-configuration )
 
 add_subdirectory( device-handling/device-enumeration )
 add_subdirectory( device-handling/device-list-changed )
