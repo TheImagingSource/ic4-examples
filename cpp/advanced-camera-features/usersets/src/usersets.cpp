@@ -8,7 +8,7 @@
 #include <cassert>
 
 /*
- * This example program demonstrates the user of the UserSet features present in most modern cameras
+ * This example program demonstrates the use of the UserSet features present in most modern cameras.
  * 
  * UserSets provide a mechanism to store the camera configuration in the camera's non-volatile memory.
  * 
@@ -114,8 +114,8 @@ int main()
 		grabber.deviceClose();
 
 		// Try to re-discover the device after reset
-		// Please note: We cannot use grabber.deviceOpen(*it) because *it refers
-		// the the previously-discovered device instance.
+		// Please note: We cannot use grabber.deviceOpen(*it) here, because *it refers
+		// to the previously-discovered device instance.
 		std::cout << "Waiting for the camera to re-appear after DeviceReset..." << std::endl;
 		using TClock = std::chrono::steady_clock;
 		auto wait_timeout = TClock::now() + std::chrono::seconds(60);

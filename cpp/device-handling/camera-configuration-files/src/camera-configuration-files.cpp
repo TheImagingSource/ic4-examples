@@ -9,7 +9,7 @@
 
 /* This program demonstrate how to save and load device settings to and from configuration files and memory buffers.
  * 
- * It program can be though of as 2 sections, demonstrating different modes of device settings serialization:
+ * The example is split into 2 sections, demonstrating different modes of device settings serialization:
  * 
  * Section 1 demonstrates how to store the Grabber's device state and reopen the device from the state file:
  * - Save the Grabber's device state to a settings file
