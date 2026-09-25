@@ -35,7 +35,7 @@ void print_usage()
 	std::cout << "\t<IP> is either" << std::endl;
 	std::cout << "\t\t'auto' to use Link-Local Auto-IP (LLA)" << std::endl;
 	std::cout << "\t\t'dhcp' to enable DHCP" << std::endl;
-	std::cout << "\t\tan IP Address in the format 123.45.6.789 that is configured to be used persistently" << std::endl;
+	std::cout << "\t\tan IP Address in the format 192.168.0.27 that is configured to be used persistently" << std::endl;
 	std::cout << "\t\tnot present -- in this case the program prints the current IP configuration of <IDENTIFIER>" << std::endl;
 
 	std::cout << "\t<SUBNET> is the subnet mask to be used if <IP> is an IP Address. (Optional, default is 0.0.0.0)" << std::endl;
