@@ -48,6 +48,7 @@ These examples show how to
 - Handle [device-lost](/dotnet/device-handling/DeviceLost) events
 - [Reopen](/dotnet/device-handling/DeviceReconnect) the same camera after it was disconnected
 - [Configure](/dotnet/device-handling/CameraConfiguration) camera parameters like resolution, frame rate or sensor settings
+- [Save and restore](/c/device-handling/CameraConfigurationFiles) camera parameters in files ore memory
 
 ## Image Acquisition
 
@@ -63,6 +64,8 @@ Some cameras provide advanced features that can be utilized to solve specific ap
 - Get notified about I/O activity using [EventLine1*Edge](/dotnet/advanced-camera-features/EventLine1Edge) events
 - Use the in-camera [Lookup Table](/dotnet/advanced-camera-features/LUTControl) feature to apply a custom tone curve
 - Use [multicast](/dotnet/advanced-camera-features/Multicast) to receive image data from a GigE Vision camera on multiple hosts
+- Store device configuration in on-camera [UserSets](/dotnet/advanced-camera-features/UserSets)
+- Change the [IP Configuration](/dotnet/advanced-camera-features/IPConfiguration) of a GigE Vision camera
 
 ## Camera-Specific Examples
 
