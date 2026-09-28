@@ -115,6 +115,7 @@ Some cameras provide advanced features that can be utilized to solve specific ap
 - Use the in-camera [Lookup Table](/cpp/advanced-camera-features/lut-control) feature to apply a custom tone curve
 - Use [multicast](/cpp/advanced-camera-features/multicast) to receive image data from a GigE Vision camera on multiple hosts
 - Store device configuration in on-camera [UserSets](/cpp/advanced-camera-features/usersets)
+- Change the [IP Configuration](/cpp/advanced-camera-features/ip-configuration) of a GigE Vision camera
 
 ## Camera-Specific Examples
 
