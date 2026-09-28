@@ -49,6 +49,7 @@ These examples show how to
 - Handle [device-lost](/python/device-handling/device-lost) events
 - [Reopen](/python/device-handling/device-reconnect) the same camera after it was disconnected
 - [Configure](/python/device-handling/camera-configuration) camera parameters like resolution, frame rate or sensor settings
+- [Save and restore](/python/device-handling/camera-configuration-files) camera parameters in files ore memory
 
 ## Image Acquisition
 
@@ -66,6 +67,8 @@ Some cameras provide advanced features that can be utilized to solve specific ap
 - Get notified about I/O activity using [EventLine1*Edge](/python/advanced-camera-features/event-line1-edge/) events
 - Use the in-camera [Lookup Table](/python/advanced-camera-features/lut-control) feature to apply a custom tone curve
 - Use [multicast](/python/advanced-camera-features/multicast) to receive image data from a GigE Vision camera on multiple hosts
+- Store device configuration in on-camera [UserSets](/python/advanced-camera-features/usersets)
+- Change the [IP Configuration](/python/advanced-camera-features/ip-configuration) of a GigE Vision camera
 
 ## Camera-Specific Examples
 
