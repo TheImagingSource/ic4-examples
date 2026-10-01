@@ -243,9 +243,14 @@ void MainWindow::createUI()
 
 	// Video writer type selection
 	_cboVideoWriter = new QComboBox(this);
-	_cboVideoWriter->addItem("H.264", QVariant::fromValue(ic4::VideoWriterType::MP4_H264));
-	_cboVideoWriter->addItem("H.265", QVariant::fromValue(ic4::VideoWriterType::MP4_H265));
-	_cboVideoWriter->addItem("Uncompressed", QVariant::fromValue(ic4::VideoWriterType::AVI_Uncompressed));
+
+	// test for availability of writer types before adding them
+	if( ic4::VideoWriter(ic4::VideoWriterType::MP4_H264, ic4::Error::Ignore()) )
+		_cboVideoWriter->addItem("H.264", QVariant::fromValue(ic4::VideoWriterType::MP4_H264));
+	if (ic4::VideoWriter(ic4::VideoWriterType::MP4_H265, ic4::Error::Ignore()))
+		  _cboVideoWriter->addItem("H.265", QVariant::fromValue(ic4::VideoWriterType::MP4_H265));
+	if( ic4::VideoWriter(ic4::VideoWriterType::AVI_Uncompressed, ic4::Error::Ignore()) )
+		  _cboVideoWriter->addItem("Uncompressed", QVariant::fromValue(ic4::VideoWriterType::AVI_Uncompressed));
 	connect(_cboVideoWriter,
 		&QComboBox::currentIndexChanged,
 		[this](int index)
