@@ -7,6 +7,8 @@
 
 #endif
 
+#include "../../common/console-helper.h"
+
 #include <CLI/CLI.hpp>
 #include <fmt/core.h>
 #include <fmt/ranges.h>
@@ -237,7 +239,6 @@ static auto list_devices(bool serials_only, bool prop_cmd_json) -> void
         }
     }
 }
-
 
 static auto list_interfaces(bool prop_cmd_json) -> void
 {
@@ -545,6 +546,50 @@ static void show_prop_page(ic4::PropertyMap& map, bool show_guru)
 
 #endif // _WIN32
 
+auto make_revertable_set_discover(bool show_all_devices) -> auto
+{
+	std::function<void()> revert_func;
+	if (show_all_devices)
+	{
+		auto itf_list = ic4::DeviceEnum::enumInterfaces();
+
+		std::vector<std::function<void()>> rval;
+		// we build a list of revert operations to set the system back
+		for (auto&& itf : itf_list)
+		{
+			if (auto show_switch = itf.interfacePropertyMap().findBoolean("DiscoverShowAllDevices", ic4::Error::Ignore()); show_switch)
+			{
+				if (show_switch.getValue(ic4::Error::Ignore()) == false)
+				{
+					if (show_switch.setValue(true, ic4::Error::Ignore())) {
+						rval.push_back([itf, show_switch]() mutable { show_switch.setValue(false, ic4::Error::Ignore()); });
+					}
+				}
+
+			}
+		}
+
+
+		// wait a short time for all devices to be enumerated
+		if (!rval.empty())
+		{
+			std::this_thread::sleep_for(std::chrono::seconds(6));
+		}
+
+		for (auto&& itf : itf_list)
+		{
+			itf.interfacePropertyMap().executeCommand("DeviceUpdateList", ic4::Error::Ignore());
+		}
+
+		revert_func = [rval] { for (auto& f : rval) { f(); } };
+	}
+	else
+	{
+		revert_func = []{};
+	}
+	return ic4_examples::console::make_scope_exit(revert_func);
+}
+
 static void show_version()
 {
     std::string  str = ic4::getVersionInfo( ic4::VersionInfoFlags::Version);
@@ -589,6 +634,7 @@ int main( int argc, char** argv )
     bool device_cmd_serials = false;
     bool props_cmd_short = false;
     bool json_flag = false;
+	bool discover_show_all = false;
     std::string arg_filename;
 
     app.add_flag("--version", version_flag, "Display program version information and exit");
@@ -599,6 +645,7 @@ int main( int argc, char** argv )
         "List available devices and interfaces by connection."
     );
 	list_cmd->add_flag("--json", json_flag, "List all devices and interfaces by connection as a json string.");
+	list_cmd->add_flag("--discover-show-all", discover_show_all, "Enables the discover all option before listing the devices.");
 
     auto device_cmd = app.add_subcommand( "device",
         "List devices or show information for a single device.\n"
@@ -749,6 +796,7 @@ int main( int argc, char** argv )
         }
         else if( list_cmd->parsed() )
         {
+			auto scope_guard = make_revertable_set_discover(discover_show_all);
 			if (json_flag) {
 				list_all_by_connection_json();
 			} else {
@@ -810,7 +858,6 @@ int main( int argc, char** argv )
                 }
             }
             ic4ctrl::write_firmware_update(firmware_file, firmware_model_overwrite, firmware_assume_yes, dev_list);
-
         }
 #ifdef _WIN32
         else if( live_cmd->parsed() )
