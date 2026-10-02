@@ -50,10 +50,11 @@ elseif(APPLE)
     set_source_files_properties(${myApp_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
 
     set_target_properties(ic4-demoapp PROPERTIES 
-        MACOSX_BUNDLE_BUNDLE_NAME "ic4-demoapp"
         MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}"
         MACOSX_BUNDLE_COPYRIGHT "Copyright The Imaging Source Europe GmbH"
-        MACOSX_BUNDLE_GUI_IDENTIFIER "com.tis.ic4-demoapp"
+        MACOSX_BUNDLE_GUI_IDENTIFIER "com.theimagingsource.ic4-demoapp"
+        MACOSX_BUNDLE_BUNDLE_NAME "com.theimagingsource.ic4-demoapp"
+
         MACOSX_BUNDLE_ICON_FILE "tis.ico"
         MACOSX_BUNDLE_LONG_VERSION_STRING "${PROJECT_FULL_VERSION}"
     )
