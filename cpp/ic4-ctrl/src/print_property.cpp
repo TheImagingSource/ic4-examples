@@ -368,7 +368,7 @@ void helper::print_property_short(int offset, const ic4::Property& property)
 			}
 
 			print("Value: {} {} {}",
-				fetch_PropertyMethod_value(prop, &ic4::PropInteger::getValue),
+				fetch_PropertyMethod_value(prop, &ic4::PropInteger::getValue, rep),
 				prop.unit(),
 				range_string
 			);
