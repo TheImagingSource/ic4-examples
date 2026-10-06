@@ -559,7 +559,6 @@ int main( int argc, char** argv )
 
     device_cmd->add_flag("--json", json_flag, "A json string is generated.")->excludes("--serials");
 
-
     auto interface_cmd = app.add_subcommand( "interface",
         "List devices or a show information for a single interface.\n"
         "\tTo list all interfaces: `ic4-ctrl interface`\n"
@@ -651,7 +650,7 @@ int main( int argc, char** argv )
 
 
     auto system_cmd = app.add_subcommand( "system",
-        "List some information for about the system."
+        "List some information about the system."
     );
 
     auto version_cmd = app.add_subcommand( "version",
@@ -748,8 +747,8 @@ int main( int argc, char** argv )
                 }
                 else
                 {
-                    fmt::println("Device identifier \"{}\" is not valid!", dev_id);
-                    fmt::println("No firmware written until all given identier are valid devices.");
+                    fmt::println("Device identifier '{}' is not valid!", dev_id);
+                    fmt::println("No firmware written until all given identifier are valid devices.");
                     return 1;
                 }
             }
