@@ -73,6 +73,12 @@ auto helper::print_interface_short(int offset, size_t index, ic4::Interface& itf
 		add_info += fmt::format(" IPv4={::}", read_IPAddressList(map, ipaddr, false));
 	}
 
+	auto gevmac = map.findInteger("GevInterfaceMACAddress", ic4::Error::Ignore());
+	if (gevmac.is_valid())
+	{
+		add_info += fmt::format(" MAC={}", helper::get_value_as_string(gevmac));
+	}
+
 	print(offset, "{:^2} {:64}\n", index, itf.interfaceDisplayName());
 	if (!add_info.empty()) {
 		print(offset + 1, "{}\n", add_info);

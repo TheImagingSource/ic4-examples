@@ -6,6 +6,7 @@
 #include <fmt/ranges.h>
 #include <nlohmann/json.hpp>
 #include "print_ic4_object.h"
+#include "print_property.h"
 
 namespace
 {
@@ -312,7 +313,10 @@ auto helper::to_json(const ic4::Interface& itf) -> nlohmann::ordered_json
 	{
 		add_json_line_(rval, "GevInterfaceSubnet", helper::read_IPAddressList(map, ipaddr, true));
 	}
-
+	auto GevInterfaceMACAddress = map.getValueString("GevInterfaceMACAddress", ic4::Error::Ignore());
+	if (!GevInterfaceMACAddress.empty()) {
+		add_json_line_(rval, "GevInterfaceMACAddress", GevInterfaceMACAddress);
+	}
 	return rval;
 }
 
@@ -333,12 +337,18 @@ auto helper::to_json(const ic4::DeviceInfo& dev) -> nlohmann::ordered_json
 
 	if (select_device_in_interface_DeviceSelector(dev, itf_prop_map))
 	{
+		add_json_from_map(rval, itf_prop_map, "DeviceVendorName");
+
 		add_json_from_map(rval, itf_prop_map, "DeviceReachableStatus");
 
 		add_json_from_map(rval, itf_prop_map, "GevDeviceMACAddress");
 		add_json_from_map(rval, itf_prop_map, "GevDeviceIPAddress");
 		add_json_from_map(rval, itf_prop_map, "GevDeviceSubnetMask");
 		add_json_from_map(rval, itf_prop_map, "GevDeviceGateway");
+
+		add_json_from_map(rval, itf_prop_map, "DeviceUSBVendorID");
+		add_json_from_map(rval, itf_prop_map, "DeviceUSBProductID");
+
 	}
 	return rval;
 }
