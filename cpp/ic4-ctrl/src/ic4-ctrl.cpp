@@ -159,10 +159,12 @@ static auto list_all_by_connection() -> void
 
 static auto list_all_by_connection_json() -> void
 {
+	nlohmann::ordered_json root = nlohmann::ordered_json::array();
+
 	ic4::DeviceEnum devEnum;
 	auto itf_list = devEnum.enumInterfaces();
 	if (itf_list.empty()) {
-		print(1, "No GenTL providers found\n");
+		print("{}\n", root.dump(4));
 		return;
 	}
 
@@ -184,8 +186,6 @@ static auto list_all_by_connection_json() -> void
 			transport_layer_list.push_back(e.transportLayerName());
 		}
 	}
-
-	nlohmann::ordered_json root;
 
 	for (auto&& transportLayerName : transport_layer_list)
 	{

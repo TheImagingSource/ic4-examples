@@ -269,7 +269,7 @@ auto helper::to_json_string(const ic4::Property& prop) -> std::string
 
 auto helper::to_json_string(const ic4::PropertyMap& map) -> std::string
 {
-	nlohmann::ordered_json root;
+	nlohmann::ordered_json root = nlohmann::ordered_json::array();
 	for (auto&& e : map.all()) {
 		root.push_back(to_json_(e));
 	}
@@ -278,7 +278,7 @@ auto helper::to_json_string(const ic4::PropertyMap& map) -> std::string
 
 auto helper::to_json_string(const std::vector<ic4::DeviceInfo>& lst) -> std::string
 {
-	nlohmann::ordered_json root;
+	nlohmann::ordered_json root = nlohmann::ordered_json::array();
 	for (auto&& entry : lst) {
 		root.push_back(to_json(entry));
 	}
@@ -288,7 +288,7 @@ auto helper::to_json_string(const std::vector<ic4::DeviceInfo>& lst) -> std::str
 
 auto helper::to_json_string(const std::vector<ic4::Interface>& lst) -> std::string
 {
-	nlohmann::ordered_json root;
+	nlohmann::ordered_json root = nlohmann::ordered_json::array();
 	for (auto&& entry : lst) {
 		root.push_back(to_json(entry));
 	}
