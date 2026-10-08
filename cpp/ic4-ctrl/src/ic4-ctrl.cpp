@@ -157,6 +157,58 @@ static auto list_all_by_connection() -> void
     }
 }
 
+static auto list_all_by_connection_json() -> void
+{
+	ic4::DeviceEnum devEnum;
+	auto itf_list = devEnum.enumInterfaces();
+	if (itf_list.empty()) {
+		print(1, "No GenTL providers found\n");
+		return;
+	}
+
+	std::vector<std::string> transport_layer_list;
+	std::map<std::string, size_t> device_to_index;
+
+	size_t index = 0;
+	for (auto&& e : devEnum.enumDevices())
+	{
+		device_to_index[e.uniqueName()] = index++;
+	}
+
+
+	for (auto&& e : itf_list)
+	{
+		auto tl_name = e.transportLayerName();
+		if (std::none_of(transport_layer_list.begin(), transport_layer_list.end(), [&tl_name](auto& p) { return tl_name == p; }))
+		{
+			transport_layer_list.push_back(e.transportLayerName());
+		}
+	}
+
+	nlohmann::ordered_json root;
+
+	for (auto&& transportLayerName : transport_layer_list)
+	{
+		for (size_t i = 0; i < itf_list.size(); ++i)
+		{
+			auto& itf = itf_list.at(i);
+			if (transportLayerName == itf.transportLayerName())
+			{
+				auto itf_json = helper::to_json(itf);
+				auto& devs = itf_json["devices"] = nlohmann::ordered_json::array();
+
+				auto dev_list = itf.enumDevices();
+				for (auto&& device : dev_list) {
+					devs.push_back(helper::to_json(device));
+				}
+
+				root.push_back(itf_json);
+			}
+		}
+	}
+	print("{}\n", root.dump(4));
+}
+
 static auto list_devices(bool serials_only, bool prop_cmd_json) -> void
 {
     ic4::DeviceEnum devEnum;
@@ -546,6 +598,7 @@ int main( int argc, char** argv )
     auto list_cmd = app.add_subcommand( "list",
         "List available devices and interfaces by connection."
     );
+	list_cmd->add_flag("--json", json_flag, "List all devices and interfaces by connection as a json string.");
 
     auto device_cmd = app.add_subcommand( "device",
         "List devices or show information for a single device.\n"
@@ -696,7 +749,11 @@ int main( int argc, char** argv )
         }
         else if( list_cmd->parsed() )
         {
-            list_all_by_connection();
+			if (json_flag) {
+				list_all_by_connection_json();
+			} else {
+				list_all_by_connection();
+			}
         }
         else if( device_cmd->parsed() )
         {
