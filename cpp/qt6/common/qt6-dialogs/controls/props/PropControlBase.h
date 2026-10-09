@@ -87,6 +87,7 @@ namespace ic4::ui
 		~PropControlBase()
 		{
 			prop_.eventRemoveNotification(notify_, ic4::Error::Ignore());
+			QApplication::removePostedEvents(this, UPDATE_ALL);
 		}
 
 	public:
