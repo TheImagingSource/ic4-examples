@@ -20,6 +20,7 @@
 #include <set>
 #include <string>
 #include <stdexcept>
+#include <thread>
 
 #include "ic4-ctrl-helper.h"
 #include "ic4_enum_to_string.h"
