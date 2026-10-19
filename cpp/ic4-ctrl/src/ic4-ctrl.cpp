@@ -440,6 +440,57 @@ static auto select_prop_map(std::string id, bool force_interface, bool device_dr
     return rval;
 }
 
+static void print_diagnostics_status(const std::string& PropertyMapType, ic4::PropertyMap& map)
+{
+	print(0, "Checking {} diagnostics list:\n\n", PropertyMapType);
+	auto DiagnosticSelector = map.findEnumeration("DiagnosticSelector", ic4::Error::Ignore());
+	auto DiagnosticStatus = map.findEnumeration("DiagnosticStatus", ic4::Error::Ignore());
+
+	if (!DiagnosticSelector || !DiagnosticStatus) {
+		print(1, "No warning checks available.\n");
+	}
+	else
+	{
+		for (auto&& selectorEntry : DiagnosticSelector.entries())
+		{
+			if (selectorEntry.isAvailable())
+			{
+				DiagnosticSelector.selectEntry(selectorEntry);
+
+				print(1, "DisplayName: '{}', Name: {}\n", selectorEntry.displayName(), selectorEntry.name());
+				auto sel = DiagnosticStatus.selectedEntry();
+				print(2, "Status: {}\n", sel.name() );
+				print(2, "Description: \"{}\"\n\n", selectorEntry.description());
+			}
+		}
+	}
+}
+
+static void check_diagnostics_status(std::string id, bool is_interface)
+{
+	if (is_interface)
+	{
+		auto itf = find_interface(id);
+		if (!itf.is_valid()) {
+			throw std::runtime_error(fmt::format("Failed to find interface for id '{}'", id));
+		}
+		print_diagnostics_status("interfacePropertyMap", itf.interfacePropertyMap());
+	}
+	else
+	{
+		auto dev = find_device(id);
+		if (!dev.is_valid()) {
+			throw std::runtime_error(fmt::format("Failed to find device for id '{}'", id));
+		}
+
+		ic4::Grabber g;
+		g.deviceOpen(dev, ic4::Error::Throw());
+
+		print_diagnostics_status("driverPropertyMap", g.driverPropertyMap());
+		print_diagnostics_status("devicePropertyMap", g.devicePropertyMap());
+	}
+}
+
 static void save_properties(ic4::PropertyMap& map, std::string filename)
 {
     map.serialize(filename);
@@ -749,9 +800,14 @@ int main( int argc, char** argv )
     auto firmware_model_opt = firmware_update_cmd->add_option("--model", firmware_model_overwrite, "Camera model that shall be written.");
     firmware_model_opt->group("");
 
+	auto check_diagnostics_cmd = app.add_subcommand("check-diagnostics",
+		"Prints the Diagnostics status of the specified interface/device."
+	);
+	check_diagnostics_cmd->add_flag("--interface", force_interface, "If set the <device-id> is interpreted as an interface-id.");
+	check_diagnostics_cmd->add_option("device-id", arg_device_id, "Specifies the device to open. You can specify an index e.g. '0'.")->required();
 
-    auto system_cmd = app.add_subcommand( "system",
-        "List some information about the system."
+	auto system_cmd = app.add_subcommand("system",
+		"List some information about the system."
     );
 
     auto version_cmd = app.add_subcommand( "version",
@@ -860,6 +916,10 @@ int main( int argc, char** argv )
             }
             ic4ctrl::write_firmware_update(firmware_file, firmware_model_overwrite, firmware_assume_yes, dev_list);
         }
+		else if(check_diagnostics_cmd->parsed())
+		{
+			check_diagnostics_status(arg_device_id, force_interface);
+		}
 #ifdef _WIN32
         else if( live_cmd->parsed() )
         {
