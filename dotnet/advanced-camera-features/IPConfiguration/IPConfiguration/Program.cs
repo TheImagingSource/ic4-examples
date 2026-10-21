@@ -62,17 +62,7 @@ namespace IPConfiguration
                     var grabber = new Grabber();
 
                     // Open the device specified by <IDENTIFIER>.
-                    // Use "select" as the identifier to choose a device interactively.
-                    if (args[0] == "select")
-                    {
-                        var selectedDevice = ConsoleHelper.PresentUserChoice(DeviceEnum.Devices, "Select device:");
-
-                        grabber.DeviceOpen(selectedDevice);
-                    }
-                    else
-                    {
-                        grabber.DeviceOpen(args[0]);
-                    }
+                    grabber.DeviceOpen(args[0]);
 
                     // Query device info to get access to later print model name and serial number
                     var info = grabber.DeviceInfo;
