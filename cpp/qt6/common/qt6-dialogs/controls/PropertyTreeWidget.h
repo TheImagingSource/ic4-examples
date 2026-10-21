@@ -376,20 +376,24 @@ namespace ic4::ui
 					"font-size: 13px;"
 					"}");
 				filter_text_->setText(settings.initialFilter);
-                filter_text_->setPlaceholderText("Search Properties (Ctrl-F)");
-                filter_text_->setClearButtonEnabled(true);
+#ifdef __APPLE__
+				filter_text_->setPlaceholderText("Search Properties (Cmd-F)");
+#else
+				filter_text_->setPlaceholderText("Search Properties (Ctrl-F)");
+#endif
+				filter_text_->setClearButtonEnabled(true);
 
-                QShortcut *sC = new QShortcut(QKeySequence::Find, this);
+				QShortcut *sC = new QShortcut(QKeySequence::Find, this);
 
-                QObject::connect(sC,  &QShortcut::activated,
-                                 [this] ()
-                                 {
-                                     this->filter_text_->setFocus(Qt::FocusReason::ShortcutFocusReason);
-                                 });
+				QObject::connect(sC,  &QShortcut::activated,
+								 [this] ()
+								 {
+									 this->filter_text_->setFocus(Qt::FocusReason::ShortcutFocusReason);
+								 });
 
 				T::connect(filter_text_, &QLineEdit::textChanged, this, [this](const QString&) { update_visibility(); });
 				top->addWidget(filter_text_);
-	
+
 				layout->addLayout(top);
 				update_visibility();
 			}
