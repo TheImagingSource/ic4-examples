@@ -440,7 +440,7 @@ static auto select_prop_map(std::string id, bool force_interface, bool device_dr
     return rval;
 }
 
-static void print_diagnostics_status(const std::string& PropertyMapType, ic4::PropertyMap& map)
+static void print_diagnostics_status(const std::string& PropertyMapType, ic4::PropertyMap map)
 {
 	print(0, "Checking {} diagnostics list:\n\n", PropertyMapType);
 	auto DiagnosticSelector = map.findEnumeration("DiagnosticSelector", ic4::Error::Ignore());
