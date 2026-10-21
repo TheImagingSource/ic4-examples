@@ -5,6 +5,7 @@
 
 #include <thread>
 #include <chrono>
+#include <cmath>
 
 /*
  * This example program demonstrates how to use the cameras LUT (lookup table) feature to modify the tone curve of the captured images.

@@ -52,7 +52,7 @@ bool checkFirmwareVersion(ic4::Grabber& grabber)
 {
 	auto device_version = grabber.devicePropertyMap().getValueString(ic4::PropId::DeviceVersion);
 
-	auto pattern = std::regex::basic_regex("Rev (\\d+)");
+	auto pattern = std::regex("Rev (\\d+)");
 	std::smatch match;
 
 	if (std::regex_search(device_version, match, pattern))

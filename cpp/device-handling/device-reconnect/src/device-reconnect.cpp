@@ -21,7 +21,7 @@
  * and opens it again.
  */
 
-std::atomic<bool> g_abort_reconnect = false;
+std::atomic<bool> g_abort_reconnect(false);
 std::string g_device_unique_name;
 
 static void device_lost_handler(ic4::Grabber& grabber)
