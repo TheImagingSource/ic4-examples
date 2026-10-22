@@ -109,6 +109,8 @@ int main()
 
 		// Reboot the camera
 		map.executeCommand(ic4::PropId::DeviceReset);
+		// DeviceReset is possibly an asynchronous operation
+		std::this_thread::sleep_for(std::chrono::seconds(3));
 
 		// We have to call deviceClose before deviceOpen
 		grabber.deviceClose();
@@ -138,6 +140,8 @@ int main()
 
 		// Revert camera startup behavior back to default
 		map.setValue(ic4::PropId::UserSetDefault, "Default");
+
+		std::cout << "All tests passed" << std::endl;
 	}
 	catch (const std::exception& ex)
 	{

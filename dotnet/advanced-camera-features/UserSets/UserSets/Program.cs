@@ -3,6 +3,7 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using System.Timers;
 
 namespace UserSets
 {
@@ -94,6 +95,8 @@ namespace UserSets
 
                 // Reboot the camera
                 map.ExecuteCommand(PropId.DeviceReset);
+                // DeviceReset is possibly an asynchronous operation
+                Thread.Sleep(3000);
 
                 // We have to call DeviceClose before DeviceOpen
                 var uniqueName = selectedDevice.UniqueName;
@@ -107,12 +110,14 @@ namespace UserSets
 
                 while (true)
                 {
-                    var found = ic4.DeviceEnum.Devices.Any(di => di.UniqueName == uniqueName);
-
-                    if (found)
+                    try
                     {
                         grabber.DeviceOpen(uniqueName);
                         break;
+                    }
+                    catch(IC4Exception)
+                    {
+                        // Ignore
                     }
 
                     if (DateTime.UtcNow > waitTimeout)
@@ -132,6 +137,8 @@ namespace UserSets
 
                 // Revert camera startup behavior back to default
                 map.SetValue(PropId.UserSetDefault, "Default");
+
+                Console.WriteLine("All tests passed");
             }
             catch (Exception ex)
             {

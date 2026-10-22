@@ -100,6 +100,8 @@ def example_user_sets():
 
         # Reboot the camera
         map.execute_command("DeviceReset")
+        # DeviceReset is possibly an asynchronous operation
+        time.sleep(2)
 
         # We have to call device_close before device_open
         unique_name = selected_device.unique_name
@@ -129,6 +131,8 @@ def example_user_sets():
 
         # Revert camera startup behavior back to default
         map.set_value("UserSetDefault", "Default")
+
+        print("All tests passed")
 
         return 0
 
