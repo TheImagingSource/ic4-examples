@@ -26,9 +26,12 @@ add_subdirectory( image-acquisition/save-bmp-on-trigger )
 add_subdirectory( image-acquisition/save-jpeg-file )
 add_subdirectory( image-acquisition/measure-fps )
 
-add_subdirectory( qt6 )
-
 find_package( OpenCV CONFIG )
 if( OpenCV_FOUND )
 	add_subdirectory( thirdparty-integration/imagebuffer-opencv-snap )
+endif()
+
+
+if(NOT ${IC4_SKIP_PREBUILD})
+	add_subdirectory( qt6 )
 endif()

@@ -5,7 +5,7 @@ project("ic4-ctrl")
 
 find_package( ic4 REQUIRED )
 
-if (NOT DISABLE_FETCHCONTENT_PACKAGES)
+if (NOT ${DISABLE_FETCHCONTENT_PACKAGES})
 	include(FetchContent)
 
 	FetchContent_Declare(
