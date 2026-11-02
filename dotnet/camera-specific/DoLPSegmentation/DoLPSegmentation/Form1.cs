@@ -68,20 +68,21 @@ namespace DoLP_Segmentation
                 int height = buffer.ImageType.Height;
                 var pixelformat = buffer.ImageType.PixelFormat;
 
-                var destBuffer = _bufferPool.GetBuffer(new ImageType(width, height, PixelFormat.BGRa8));
-
-                // Decide on the transformation function based on the source format
-                if (buffer.ImageType.PixelFormat == ic4.PixelFormat.PolarizedADIMono8)
+                using (var destBuffer = _bufferPool.GetBuffer(new ImageType(width, height, PixelFormat.BGRa8)))
                 {
-                    ThresholdPolarizedADIMono8(buffer, destBuffer, _DoLPThreshold, _IntensityThreshold);
-                }
-                else
-                {
-                    ThresholdPolarizedADIRGB8(buffer, destBuffer, _DoLPThreshold, _IntensityThreshold);
-                }
+                    // Decide on the transformation function based on the source format
+                    if (buffer.ImageType.PixelFormat == ic4.PixelFormat.PolarizedADIMono8)
+                    {
+                        ThresholdPolarizedADIMono8(buffer, destBuffer, _DoLPThreshold, _IntensityThreshold);
+                    }
+                    else
+                    {
+                        ThresholdPolarizedADIRGB8(buffer, destBuffer, _DoLPThreshold, _IntensityThreshold);
+                    }
 
-                // Display the processed buffer
-                ic4Display.DisplayBuffer(destBuffer);
+                    // Display the processed buffer
+                    ic4Display.DisplayBuffer(destBuffer);
+                }
             }
         }
 

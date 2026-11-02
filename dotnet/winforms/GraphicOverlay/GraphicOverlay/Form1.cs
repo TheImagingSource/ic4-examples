@@ -8,7 +8,7 @@ namespace  Graphic_Overlay
         private readonly ic4.Grabber grabber = new();
         public Form1()
         {
-            InitializeComponent();            
+            InitializeComponent();
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -147,12 +147,13 @@ namespace  Graphic_Overlay
             using var buffer = e.Sink.PopOutputBuffer();
 
             // Create a System.Drawing.Bitmap which shares the memory
-            // of the image buffer.                
+            // of the image buffer.
             using var bitmap = buffer.CreateBitmapWrap();
 
             // Now draw a line
             using var g = Graphics.FromImage(bitmap);
-            g.DrawLine(new Pen(Color.Red, 3), 10, 10, 200, 200);
+            using var pen = new Pen(Color.Red, 3);
+            g.DrawLine(pen, 10, 10, 200, 200);
 
             // Now draw the image with the line in IC Imaging Display Control
             // This works fine, because buffer and bitmap share the same
