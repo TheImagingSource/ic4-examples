@@ -204,7 +204,13 @@ void FirmwareUpdateBox::onWriteFWButtonPressed()
         }
     };
 
-    selectDeviceOnInterface();
+    if (!selectDeviceOnInterface())
+    {
+        QMessageBox::critical(this, tr("Firmware Update Error"),
+                                    tr("Failed to locate the selected device in the interface's property map."),
+                                    QMessageBox::Ok);
+        return;
+    }
 
     ic4::Error err;
 
