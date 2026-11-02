@@ -658,7 +658,7 @@ void DeviceSelectionDialog::onFirmwareUpdateStateChanged(FirmwareUpdateState new
 		}
 
 		// Refresh was disabled during update, update now
-		QTimer::singleShot(10000, [this] { onRefreshButton(); });
+		QTimer::singleShot(10000, this, [this] { onRefreshButton(); });
 	}
 }
 
