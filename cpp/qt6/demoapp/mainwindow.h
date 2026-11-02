@@ -131,6 +131,8 @@ private:
 
 	QTimer* _updateStatisticsTimer = nullptr;
 
+	ic4demoapp::FpsCounter _fpsCounter;
+
 	std::shared_ptr<ic4::Display> _display;
 	std::shared_ptr<ic4::QueueSink> _queuesink;
 	ic4::VideoWriter _videowriter;
@@ -144,8 +146,6 @@ private:
 
 	bool _showSettingsMenu = false;
 	bool _preFullscreenMaximized = false;
-
-	ic4demoapp::FpsCounter _fpsCounter;
 };
 
 #endif // MAINWINDOW_H
