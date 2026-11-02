@@ -86,7 +86,7 @@ int main()
 			[&](ic4::Property&)
 			{
 				ic4::Error err; // Use error object to not throw from callback
-				auto timestamp = eventLine1FallingEdgeTimestamp.getValue(err);
+				auto timestamp = eventLine1RisingEdgeTimestamp.getValue(err);
 				if (err.isError())
 				{
 					std::cerr << "Failed to query EventLine1RisingEdgeTimestamp: " << err.message() << std::endl;
