@@ -11,6 +11,6 @@ add_executable( record-mp4-h264
 
 target_include_directories( record-mp4-h264 PRIVATE		"../../common" )
 target_link_libraries( record-mp4-h264 		PRIVATE		ic4::core )
-set_target_properties( record-mp4-h264 		PROPERTIES	CXX_STANDARD 14 )
+set_target_properties( record-mp4-h264 		PROPERTIES	CXX_STANDARD 17 )
 
 ic4_copy_runtime_to_target(record-mp4-h264)

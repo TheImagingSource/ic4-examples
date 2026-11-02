@@ -110,6 +110,11 @@ int main()
 		return -4;
 	}
 
+	// We have to call streamStop before exiting the function, because we have the listener defined as a stack variable.
+	auto stopStream = ic4_examples::console::make_scope_exit([&grabber] {
+		grabber.streamStop(ic4::Error::Ignore());
+	});
+
 	// Query the sink's output image type
 	// The image type is required when starting the video recording
 	auto image_type = sink->outputImageType(err);
@@ -167,10 +172,6 @@ int main()
 		std::cout << "Wrote " << listener.num_frames_written() << " frames." << std::endl;
 		std::cout << std::endl;
 	}
-
-	// We have to call streamStop before exiting the function, because we have the listener defined as a stack variable.
-	grabber.streamStop();
-	grabber.deviceClose();
 
 	return 0;
 }

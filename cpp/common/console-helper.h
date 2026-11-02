@@ -123,6 +123,7 @@ namespace ic4_examples
 			};
 		}
 
+		// Caution: Using this function requires C++ standard to be at least 17
 		template <typename TFunc>
 		[[nodiscard]] auto make_scope_exit(TFunc&& fn)
 		{
