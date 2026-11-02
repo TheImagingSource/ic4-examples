@@ -1,6 +1,7 @@
 
 #include <cstdint>
 #include <chrono>
+#include <mutex>
 
 namespace ic4demoapp
 {
@@ -15,6 +16,8 @@ namespace ic4demoapp
 	public:
 		void notify_frame()
 		{
+			std::lock_guard<std::mutex> lock(mutex_);
+
 			if (count_ < 0)
 			{
 				prev_update_ = std::chrono::high_resolution_clock::now();
@@ -29,6 +32,8 @@ namespace ic4demoapp
 
 		double current()
 		{
+			std::lock_guard<std::mutex> lock(mutex_);
+
 			if (count_ < 0)
 				return 0;
 
@@ -50,6 +55,7 @@ namespace ic4demoapp
 			}
 		}
 
+		std::mutex mutex_;
 		std::chrono::duration<uint64_t> update_interval_;
 
 		int64_t count_ = -1;
