@@ -11,6 +11,6 @@ add_executable( connect-chunkdata
 
 target_include_directories( connect-chunkdata	PRIVATE		"../../common" )
 target_link_libraries( connect-chunkdata		PRIVATE		ic4::core )
-set_target_properties( connect-chunkdata		PROPERTIES	CXX_STANDARD 14 )
+set_target_properties( connect-chunkdata		PROPERTIES	CXX_STANDARD 17 )
 
 ic4_copy_runtime_to_target(connect-chunkdata)

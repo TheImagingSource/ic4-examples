@@ -124,6 +124,11 @@ int main()
 
 		grabber.streamSetup(sink);
 
+		// We have to call streamStop before exiting the function, because we have the listener defined as a stack variable.
+		auto stopStream = ic4_examples::console::make_scope_exit([&grabber] {
+			grabber.streamStop(ic4::Error::Ignore());
+		});
+
 		std::cout << "Stream for 3 seconds" << std::endl;
 		std::this_thread::sleep_for(std::chrono::seconds(3));
 
@@ -138,10 +143,6 @@ int main()
 
 		std::cout << "Continue streaming for 3 seconds" << std::endl;
 		std::this_thread::sleep_for(std::chrono::seconds(3));
-
-		// Stopping the stream is mandatory because we have the listener defined as a stack variable.
-		// Just having everything go out of scope, the listener would be destroyed first and lead to undefined behavior.
-		grabber.streamStop();
 
 		return 0;
 	}
