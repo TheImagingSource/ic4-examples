@@ -13,13 +13,14 @@ class Program
     // Helper function to let the grabber stream for a bit to let auto functions reach a useful state
     static void CalibrateBrightness(Grabber grabber)
     {
-        using var sink = new SnapSink();
+        using (var sink = new SnapSink())
+        {
+            grabber.StreamSetup(sink);
 
-        grabber.StreamSetup(sink);
+            Thread.Sleep(TimeSpan.FromSeconds(2));
 
-        Thread.Sleep(TimeSpan.FromSeconds(2));
-
-        grabber.StreamStop();
+            grabber.StreamStop();
+        }
     }
 
 
@@ -27,17 +28,19 @@ class Program
     static void SaveSingleImage(Grabber grabber, string path)
     {
         // Setup a sink and data stream to snap an image
-        using var sink = new SnapSink();
+        using (var sink = new SnapSink())
+        {
+            grabber.StreamSetup(sink);
 
-        grabber.StreamSetup(sink);
+            using (var buffer = sink.SnapSingle(TimeSpan.FromSeconds(1)))
+            {
+                buffer.SaveAsJpeg(path);
+            }
 
-        using var buffer = sink.SnapSingle(TimeSpan.FromSeconds(1));
+            grabber.StreamStop();
 
-        buffer.SaveAsJpeg(path);
-
-        grabber.StreamStop();
-
-        Console.WriteLine($"Saved {path}");
+            Console.WriteLine($"Saved {path}");
+        }
     }
 
 
@@ -155,10 +158,7 @@ class Program
             // Prepare a S-curve LUT that enhances contrast
             double K = 10;
 
-            static double Sigmoid(double z)
-            {
-                return 1.0 / (1.0 + Math.Exp(-z));
-            }
+            Func<double, double> Sigmoid = (z) => 1.0 / (1.0 + Math.Exp(-z));
 
             double lo = Sigmoid(-K / 2.0);
             double hi = Sigmoid(K / 2.0);
