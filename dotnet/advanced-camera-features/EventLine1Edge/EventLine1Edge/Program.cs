@@ -73,12 +73,12 @@ namespace DeviceEvents
                     // Register notification for Line1RisingEdge
                     eventLine1RisingEdge.Notification += (s, e) =>
                     {
-                        Console.WriteLine($"Line1 Falling Edge\t(Timestamp = {eventLine1RisingEdgeTimestamp.Value})");
+                        Console.WriteLine($"Line1 Rising Edge\t(Timestamp = {eventLine1RisingEdgeTimestamp.Value})");
                     };
                     // Register notification for Line1FallingEdge
                     eventLine1FallingEdge.Notification += (s, e) =>
                     {
-                        Console.WriteLine($"Line1 Rising Edge\t(Timestamp = {eventLine1FallingEdgeTimestamp.Value})");
+                        Console.WriteLine($"Line1 Falling Edge\t(Timestamp = {eventLine1FallingEdgeTimestamp.Value})");
                     };
 
                     Console.WriteLine();
