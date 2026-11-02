@@ -121,6 +121,7 @@ void CMFCDemoAppView::OnCaptureStillImage()
 	if(err.isError())
 	{
 		::AfxMessageBox(Win32StringUtil::wstringFromUtf8(err.message()).c_str());
+		return;
 	}
 
 	static TCHAR szFilter[] =
