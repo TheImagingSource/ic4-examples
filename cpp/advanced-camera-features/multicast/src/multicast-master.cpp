@@ -36,7 +36,7 @@ std::vector<ic4::DeviceInfo> enum_gige_devices()
 
 		// Skip "-Monitor" entries and only show the regular device entry
 		auto serial = dev.serial();
-		if (serial.substr(serial.size() - 8) == "-Monitor")
+		if (serial.size() >= 8 && serial.substr(serial.size() - 8) == "-Monitor")
 		{
 			continue;
 		}
