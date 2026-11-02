@@ -255,7 +255,7 @@ int main()
 		auto map = grabber.devicePropertyMap();
 
 		// Reset all camera settings to default so that prior configuration does not interfere with this program
-		map.setValue(ic4::PropId::UserSetDefault, "Default");
+		map.setValue(ic4::PropId::UserSetSelector, "Default");
 		map.executeCommand(ic4::PropId::UserSetLoad);
 
 		// Configure a constant exposure time
