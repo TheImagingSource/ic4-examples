@@ -71,10 +71,20 @@ static void runTest(ic4::Grabber& grabber, RealWorld& realWorld, int numCycles, 
 {
 	auto map = grabber.devicePropertyMap();
 
+	// Retain the token so the handler is unregistered on every exit path,
+	// before the local map captured by reference goes out of scope.
+	ic4::Property::NotificationToken notificationToken = nullptr;
+	auto unregisterNotification = ic4_examples::console::make_scope_exit([eventExposureEnd, &notificationToken] {
+		if (notificationToken != nullptr)
+		{
+			eventExposureEnd->eventRemoveNotification(notificationToken, ic4::Error::Ignore());
+		}
+	});
+
 	if (eventExposureEnd != nullptr)
 	{
 		// Register a notification handler for EventExposureEnd
-		eventExposureEnd->eventAddNotification(
+		notificationToken = eventExposureEnd->eventAddNotification(
 			[&map, &realWorld](auto&)
 			{
 				// Extract frame ID from event data
@@ -148,6 +158,11 @@ static void runTest(ic4::Grabber& grabber, RealWorld& realWorld, int numCycles, 
 	// Setup stream
 	grabber.streamSetup(sink);
 
+	// Stop callbacks before the listener's referenced variables go out of scope.
+	auto stopStream = ic4_examples::console::make_scope_exit([&grabber] {
+		grabber.streamStop(ic4::Error::Ignore());
+	});
+
 	// Request real-world scene for first frame.
 	realWorld.beginSetupScene(0);
 
@@ -176,8 +191,6 @@ static void runTest(ic4::Grabber& grabber, RealWorld& realWorld, int numCycles, 
 	}
 
 	auto end = std::chrono::high_resolution_clock::now();
-
-	grabber.streamStop();
 
 	auto dt_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
 	std::cout << std::endl;

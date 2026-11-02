@@ -11,6 +11,6 @@ add_executable( event-exposure-end
 
 target_include_directories( event-exposure-end	PRIVATE		"../../common" )
 target_link_libraries( event-exposure-end		PRIVATE		ic4::core )
-set_target_properties( event-exposure-end		PROPERTIES	CXX_STANDARD 14 )
+set_target_properties( event-exposure-end		PROPERTIES	CXX_STANDARD 17 )
 
 ic4_copy_runtime_to_target(event-exposure-end)
