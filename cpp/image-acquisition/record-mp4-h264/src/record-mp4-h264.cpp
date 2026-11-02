@@ -45,8 +45,10 @@ public:
 			{
 				std::cerr << "Failed to add frame to video file: " << err.message() << std::endl;
 			}
-
-			num_frames_written_ += 1;
+			else
+			{
+				num_frames_written_ += 1;
+			}
 		}
 	}
 
