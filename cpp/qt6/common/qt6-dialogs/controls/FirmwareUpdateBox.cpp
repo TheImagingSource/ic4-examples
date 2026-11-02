@@ -320,6 +320,8 @@ void FirmwareUpdateBox::onOpenFileDialog()
 
 void FirmwareUpdateBox::onFilePathChanged(const QString& new_file_path)
 {
+    _write_fw_button->setEnabled(false);
+
     if (new_file_path.endsWith(".fwpack") && QFileInfo::exists(new_file_path))
     {
         ic4::Error err;
@@ -338,7 +340,6 @@ void FirmwareUpdateBox::onFilePathChanged(const QString& new_file_path)
     {
         // Reset status label in case we displayed an error message
         setStatusText(tr(DEFAULT_STATUS_MSG));
-        _write_fw_button->setEnabled(false);
     }
 }
 
