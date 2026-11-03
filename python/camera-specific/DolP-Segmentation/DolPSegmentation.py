@@ -62,13 +62,16 @@ class Listener(ic4.QueueSinkListener):
                 intensity,
             )
         else:
-            # Use polarization channels 1–3 for thresholding and 6–4 (reversed)
+            # Average the RGB DoLP and intensity channels for one decision per pixel.
+            # Keep a singleton channel dimension to apply the mask to all BGR components.
+            dolp = np.mean(src_wrap[:, :, 1:4], axis=2, keepdims=True)
+            intensity = np.mean(src_wrap[:, :, 4:7], axis=2, keepdims=True)
             dest_wrap[:, :, 0:3] = np.where(
                 np.logical_and(
-                    src_wrap[:, :, 1:4] >= self.threshold_dolp,
-                    src_wrap[:, :, 6:3:-1] >= self.threshold_intensity,
+                    dolp >= self.threshold_dolp,
+                    intensity >= self.threshold_intensity,
                 ),
-                [[[0, 0, 255]]],
+                [0, 0, 255],
                 src_wrap[:, :, 6:3:-1],
             )
 
