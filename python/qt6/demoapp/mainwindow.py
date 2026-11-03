@@ -209,7 +209,7 @@ class MainWindow(QMainWindow):
 
         self.update_statistics_timer = QTimer()
         self.update_statistics_timer.timeout.connect(self.onUpdateStatisticsTimer)
-        self.update_statistics_timer.start()
+        self.update_statistics_timer.start(100)
 
     def onCloseDevice(self):
         if self.grabber.is_streaming:
