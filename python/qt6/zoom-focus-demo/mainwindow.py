@@ -15,6 +15,11 @@ FOCUS_MOVE_COMPLETED_EVENT = QEvent.Type(QEvent.Type.User + 4)
 DEVICE_LOST_EVENT = QEvent.Type(QEvent.Type.User + 5)
 UPDATE_IRIS_EVENT = QEvent.Type(QEvent.Type.User + 6)
 
+class MoveCompletedEvent(QEvent):
+    def __init__(self, event_type: QEvent.Type, position: int):
+        QEvent.__init__(self, event_type)
+        self.position = position
+
 class MainWindow(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
@@ -70,9 +75,9 @@ class MainWindow(QMainWindow):
         if ev.type() == UPDATE_FOCUS_AUTO_EVENT:
             self.onUpdateFocusAuto()
         if ev.type() == ZOOM_MOVE_COMPLETED_EVENT:
-            self.onZoomMoveCompleted()
+            self.onZoomMoveCompleted(ev.position)
         if ev.type() == FOCUS_MOVE_COMPLETED_EVENT:
-            self.onFocusMoveCompleted()
+            self.onFocusMoveCompleted(ev.position)
         if ev.type() == DEVICE_LOST_EVENT:
             self.onDeviceLost()
         if ev.type() == UPDATE_IRIS_EVENT:
@@ -178,16 +183,12 @@ class MainWindow(QMainWindow):
         # Change movable IR-Cut filter state
         self.grabber.device_property_map.set_value(ic4.PropId.IR_CUT_FILTER_ENABLE, state == Qt.CheckState.Checked.value)
 
-    def onZoomMoveCompleted(self):
-        # This function is called when the notification event for the ZoomMoveCompleted feature was raised
-        # Read the associated zoom value and log
-        val = self.grabber.device_property_map.find_integer(ic4.PropId.EVENT_ZOOM_MOVE_COMPLETED_ZOOM).value
+    def onZoomMoveCompleted(self, val: int):
+        # Log the position captured by the notification callback.
         self.event_log.appendPlainText(f"Zoom move completed (at {val})")
 
-    def onFocusMoveCompleted(self):
-        # This function is called when the notification event for the FocusMoveCompleted feature was raised
-        # Read the associated focus value and log
-        val = self.grabber.device_property_map.find_integer(ic4.PropId.EVENT_FOCUS_MOVE_COMPLETED_FOCUS).value
+    def onFocusMoveCompleted(self, val: int):
+        # Log the position captured by the notification callback.
         self.event_log.appendPlainText(f"Focus move completed (at {val})")
 
     def onSelectDevice(self):
@@ -386,10 +387,14 @@ class MainWindow(QMainWindow):
             try:
                 # Get ZoomMoveCompleted property
                 self.zoom_move_completed = self.grabber.device_property_map.find_integer(ic4.PropId.EVENT_ZOOM_MOVE_COMPLETED)
+                zoom_completed_position = self.grabber.device_property_map.find_integer(ic4.PropId.EVENT_ZOOM_MOVE_COMPLETED_ZOOM)
                 # ZoomMoveCompleted indicates when the zoom motor movement is done, so register a notification handler
                 # The notification is run on a separate thread, which should not interact with UI elements
-                # Therefore, post an event to the main thread
-                self.zoom_move_completed.event_add_notification(lambda p: QApplication.postEvent(self, QEvent(ZOOM_MOVE_COMPLETED_EVENT)))
+                # Read the event argument inside the callback before posting it to the main thread.
+                def on_zoom_move_completed(p: ic4.Property):
+                    QApplication.postEvent(self, MoveCompletedEvent(ZOOM_MOVE_COMPLETED_EVENT, zoom_completed_position.value))
+
+                self.zoom_move_completed.event_add_notification(on_zoom_move_completed)
 
                 # Enable generation of ZoomMoveCompleted events
                 self.grabber.device_property_map.set_value(ic4.PropId.EVENT_SELECTOR, "ZoomMoveCompleted")
@@ -402,10 +407,14 @@ class MainWindow(QMainWindow):
             try:
                 # Get FocusMoveCompleted property
                 self.focus_move_completed = self.grabber.device_property_map.find_integer(ic4.PropId.EVENT_FOCUS_MOVE_COMPLETED)
+                focus_completed_position = self.grabber.device_property_map.find_integer(ic4.PropId.EVENT_FOCUS_MOVE_COMPLETED_FOCUS)
                 # FocusMoveCompleted indicates when the focus motor movement is done, so register a notification handler
                 # The notification is run on a separate thread, which should not interact with UI elements
-                # Therefore, post an event to the main thread
-                self.focus_move_completed.event_add_notification(lambda p: QApplication.postEvent(self, QEvent(FOCUS_MOVE_COMPLETED_EVENT)))
+                # Read the event argument inside the callback before posting it to the main thread.
+                def on_focus_move_completed(p: ic4.Property):
+                    QApplication.postEvent(self, MoveCompletedEvent(FOCUS_MOVE_COMPLETED_EVENT, focus_completed_position.value))
+
+                self.focus_move_completed.event_add_notification(on_focus_move_completed)
 
                 # Enable generation of FocusMoveCompleted events
                 self.grabber.device_property_map.set_value(ic4.PropId.EVENT_SELECTOR, "FocusMoveCompleted")
