@@ -124,7 +124,7 @@ class MainWindow(QMainWindow):
         self.sld_threshold_dolp.setMaximumWidth(250)
 
         self.sld_threshold_intensity = sldctrl.SliderControlInt(
-            "Intensity Threshold", 10, 0, 255
+            "Intensity Threshold", 30, 0, 255
         )
         self.sld_threshold_intensity.value_changed.connect(
             self.on_threshold_intensity_changed
@@ -280,12 +280,12 @@ class MainWindow(QMainWindow):
 
     def on_threshold_intensity_changed(self, value: int):
         """Event handler of the intensity threshold slider. Pass the new
-        DoLP Threshold to the self.listener
+        intensity threshold to the self.listener
 
         Args:
             value (int): The new value from by the slider
         """
-        self.listener.threshold_intensity = value * 3
+        self.listener.threshold_intensity = value
 
     def closeEvent(self, event: QEvent) -> None:
         """Called by Pyside6, when the window is closed.
