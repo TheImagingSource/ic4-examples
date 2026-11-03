@@ -376,10 +376,9 @@ class MainWindow(QMainWindow):
 
             try:
                 self.video_writer.begin_file(full_path, self.sink.output_image_type, fps)
+                self.capture_to_video = True
             except ic4.IC4Exception as e:
                 QMessageBox.critical(self, "", f"{e}", QMessageBox.StandardButton.Ok)
-
-            self.capture_to_video = True
             
         self.updateControls()
 
