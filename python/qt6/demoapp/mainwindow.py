@@ -293,9 +293,14 @@ class MainWindow(QMainWindow):
             pass
 
     def onDeviceLost(self):
-        QMessageBox.warning(self, "", f"The video capture device is lost!", QMessageBox.StandardButton.Ok)
+        if self.capture_to_video:
+            try:
+                self.capture_to_video = False
+                self.video_writer.finish_file()
+            except ic4.IC4Exception as e:
+                QMessageBox.critical(self, "", f"Finalizing the video file failed: {e}", QMessageBox.StandardButton.Ok)
 
-        # stop video
+        QMessageBox.warning(self, "", f"The video capture device is lost!", QMessageBox.StandardButton.Ok)
 
         self.updateCameraLabel()
         self.updateControls()
