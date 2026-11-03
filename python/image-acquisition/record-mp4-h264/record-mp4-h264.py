@@ -42,8 +42,12 @@ def example_record_mp4_h264():
             buffer = sink.pop_output_buffer()
 
             if self.do_write_frames:
-                self.video_writer.add_frame(buffer)
-                self.counter = self.counter + 1
+                try:
+                    self.video_writer.add_frame(buffer)
+                    self.counter = self.counter + 1
+                except ic4.IC4Exception as ex:
+                    # Report the error instead of letting it escape the callback.
+                    print(f"Failed to write video frame: {ex}")
 
         def enable_recording(self, enable: bool):
             if enable:
