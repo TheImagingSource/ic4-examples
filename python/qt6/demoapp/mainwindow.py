@@ -351,7 +351,7 @@ class MainWindow(QMainWindow):
 
     def onStartStopCaptureVideo(self):
         if self.capture_to_video:
-            self.stopCapturevideo()
+            self.onStopCaptureVideo()
             return
         
         filters = [
