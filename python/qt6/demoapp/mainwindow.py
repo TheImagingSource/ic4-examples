@@ -1,5 +1,6 @@
 
 from threading import Lock
+import sys
 
 from PySide6.QtCore import QStandardPaths, QDir, QTimer, QEvent, QFileInfo, Qt, QCoreApplication
 from PySide6.QtGui import QAction, QKeySequence, QCloseEvent
@@ -62,8 +63,8 @@ class MainWindow(QMainWindow):
                     if self.shoot_photo:
                         self.shoot_photo = False
 
-                        # Send an event to the main thread with a reference to 
-                        # the main thread of our GUI. 
+                        # Send an event to the main thread with a reference to
+                        # the main thread of our GUI.
                         QApplication.postEvent(self, GotPhotoEvent(buf))
 
                 if self.capture_to_video and not self.video_capture_pause:
@@ -75,8 +76,10 @@ class MainWindow(QMainWindow):
         self.sink = ic4.QueueSink(Listener())
 
         self.property_dialog = None
-
-        self.video_writer = ic4.VideoWriter(ic4.VideoWriterType.MP4_H264)
+        if sys.platform == "darwin":
+            self.video_writer = None
+        else:
+            self.video_writer = ic4.VideoWriter(ic4.VideoWriterType.MP4_H264)
 
         self.createUI()
 
@@ -133,23 +136,25 @@ class MainWindow(QMainWindow):
         self.shoot_photo_act.setStatusTip("Shoot and save a photo")
         self.shoot_photo_act.triggered.connect(self.onShootPhoto)
 
-        self.record_start_act = QAction(selector.loadIcon("images/recordstart.png"), "&Capture Video", self)
-        self.record_start_act.setToolTip("Capture vidoeo into MP4 file")
-        self.record_start_act.setCheckable(True)
-        self.record_start_act.triggered.connect(self.onStartStopCaptureVideo)
+        if self.video_writer:
 
-        self.record_pause_act = QAction(selector.loadIcon("images/recordpause.png"), "&Pause Capture Video", self)
-        self.record_pause_act.setStatusTip("Pause video capture")
-        self.record_pause_act.setCheckable(True)
-        self.record_pause_act.triggered.connect(self.onPauseCaptureVideo)
+            self.record_start_act = QAction(selector.loadIcon("images/recordstart.png"), "&Capture Video", self)
+            self.record_start_act.setToolTip("Capture vidoeo into MP4 file")
+            self.record_start_act.setCheckable(True)
+            self.record_start_act.triggered.connect(self.onStartStopCaptureVideo)
 
-        self.record_stop_act = QAction(selector.loadIcon("images/recordstop.png"), "&Stop Capture Video", self)
-        self.record_stop_act.setStatusTip("Stop video capture")
-        self.record_stop_act.triggered.connect(self.onStopCaptureVideo)
+            self.record_pause_act = QAction(selector.loadIcon("images/recordpause.png"), "&Pause Capture Video", self)
+            self.record_pause_act.setStatusTip("Pause video capture")
+            self.record_pause_act.setCheckable(True)
+            self.record_pause_act.triggered.connect(self.onPauseCaptureVideo)
 
-        self.codec_property_act = QAction(selector.loadIcon("images/gear.png"), "&Codec Properties", self)
-        self.codec_property_act.setStatusTip("Configure the video codec")
-        self.codec_property_act.triggered.connect(self.onCodecProperties)
+            self.record_stop_act = QAction(selector.loadIcon("images/recordstop.png"), "&Stop Capture Video", self)
+            self.record_stop_act.setStatusTip("Stop video capture")
+            self.record_stop_act.triggered.connect(self.onStopCaptureVideo)
+
+            self.codec_property_act = QAction(selector.loadIcon("images/gear.png"), "&Codec Properties", self)
+            self.codec_property_act.setStatusTip("Configure the video codec")
+            self.codec_property_act.triggered.connect(self.onCodecProperties)
 
         self.close_device_act = QAction("Close", self)
         self.close_device_act.setStatusTip("Close the currently opened device")
@@ -175,10 +180,11 @@ class MainWindow(QMainWindow):
 
         capture_menu = self.menuBar().addMenu("&Capture")
         capture_menu.addAction(self.shoot_photo_act)
-        capture_menu.addAction(self.record_start_act)
-        capture_menu.addAction(self.record_pause_act)
-        capture_menu.addAction(self.record_stop_act)
-        capture_menu.addAction(self.codec_property_act)
+        if self.video_writer:
+            capture_menu.addAction(self.record_start_act)
+            capture_menu.addAction(self.record_pause_act)
+            capture_menu.addAction(self.record_stop_act)
+            capture_menu.addAction(self.codec_property_act)
 
         toolbar = QToolBar(self)
         self.addToolBar(Qt.TopToolBarArea, toolbar)
@@ -190,11 +196,13 @@ class MainWindow(QMainWindow):
         toolbar.addAction(self.start_live_act)
         toolbar.addSeparator()
         toolbar.addAction(self.shoot_photo_act)
-        toolbar.addSeparator()
-        toolbar.addAction(self.record_start_act)
-        toolbar.addAction(self.record_pause_act)
-        toolbar.addAction(self.record_stop_act)
-        toolbar.addAction(self.codec_property_act)
+
+        if self.video_writer:
+            toolbar.addSeparator()
+            toolbar.addAction(self.record_start_act)
+            toolbar.addAction(self.record_pause_act)
+            toolbar.addAction(self.record_stop_act)
+            toolbar.addAction(self.codec_property_act)
 
         self.video_widget = ic4.pyside6.DisplayWidget()
         self.video_widget.setMinimumSize(640, 480)
@@ -214,7 +222,7 @@ class MainWindow(QMainWindow):
     def onCloseDevice(self):
         if self.grabber.is_streaming:
             self.startStopStream()
-        
+
         try:
             self.grabber.device_close()
         except:
@@ -243,7 +251,7 @@ class MainWindow(QMainWindow):
         if dlg.exec() == 1:
             if not self.property_dialog is None:
                 self.property_dialog.update_grabber(self.grabber)
-            
+
             self.onDeviceOpened()
         self.updateControls()
 
@@ -251,7 +259,7 @@ class MainWindow(QMainWindow):
         if self.property_dialog is None:
             self.property_dialog = ic4.pyside6.PropertyDialog(self.grabber, parent=self, title="Device Properties")
             # set default vis
-        
+
         self.property_dialog.show()
 
     def onDeviceDriverProperties(self):
@@ -275,7 +283,7 @@ class MainWindow(QMainWindow):
     def onUpdateStatisticsTimer(self):
         if not self.grabber.is_device_valid:
             return
-        
+
         try:
             stats = self.grabber.stream_statistics
             text = f"Frames Delivered: {stats.sink_delivered} Dropped: {stats.device_transmission_error}/{stats.device_underrun}/{stats.transform_underrun}/{stats.sink_underrun}"
@@ -337,9 +345,10 @@ class MainWindow(QMainWindow):
         self.start_live_act.setEnabled(self.grabber.is_device_valid)
         self.start_live_act.setChecked(self.grabber.is_streaming)
         self.shoot_photo_act.setEnabled(self.grabber.is_streaming)
-        self.record_stop_act.setEnabled(self.capture_to_video)
-        self.record_pause_act.setChecked(self.video_capture_pause)
-        self.record_start_act.setChecked(self.capture_to_video)
+        if self.video_writer:
+            self.record_stop_act.setEnabled(self.capture_to_video)
+            self.record_pause_act.setChecked(self.video_capture_pause)
+            self.record_start_act.setChecked(self.capture_to_video)
         self.close_device_act.setEnabled(self.grabber.is_device_open)
 
         self.updateTriggerControl(None)
@@ -358,11 +367,11 @@ class MainWindow(QMainWindow):
         if self.capture_to_video:
             self.onStopCaptureVideo()
             return
-        
+
         filters = [
             "MP4 Video Files (*.mp4)"
         ]
-        
+
         dialog = QFileDialog(self, "Capture Video")
         dialog.setNameFilters(filters)
         dialog.setFileMode(QFileDialog.FileMode.AnyFile)
@@ -384,7 +393,7 @@ class MainWindow(QMainWindow):
                 self.capture_to_video = True
             except ic4.IC4Exception as e:
                 QMessageBox.critical(self, "", f"{e}", QMessageBox.StandardButton.Ok)
-            
+
         self.updateControls()
 
     def onStopCaptureVideo(self):
@@ -420,7 +429,7 @@ class MainWindow(QMainWindow):
             "Portable Network Graphics (*.png)",
             "TIFF (*.tif)"
         ]
-        
+
         dialog = QFileDialog(self, "Save Photo")
         dialog.setNameFilters(filters)
         dialog.setFileMode(QFileDialog.FileMode.AnyFile)
