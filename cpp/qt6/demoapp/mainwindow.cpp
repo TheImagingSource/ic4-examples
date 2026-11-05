@@ -837,7 +837,7 @@ void MainWindow::startstopstream()
 			{
 				auto pixel_format_value = _grabber.devicePropertyMap().find(ic4::PropId::PixelFormat).getIntValue();
 
-				if (_display->canRender(ic4::ImageType(ic4::PixelFormat(pixel_format_value)), ic4::Error::Throw()))
+				if (_display && _display->canRender(ic4::ImageType(ic4::PixelFormat(pixel_format_value)), ic4::Error::Throw()))
 				{
 					_grabber.streamSetup(_queuesink, _display);
 				}
